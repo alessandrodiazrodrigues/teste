@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fluxograma Integrado - Hospitais Parceiros Prevent Senior</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            padding: 30px;
+            position: relative;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #0066cc;
+        }
+        
+        .header h1 {
+            color: #0066cc;
+            font-size: 2.2em;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+        
+        .header p {
+            color: #666;
+            font-size: 1.1em;
+            font-weight: 500;
+        }
+        
+        .flowchart-container {
+            position: relative;
+            min-height: 800px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 30px;
+            overflow-x: auto;
+        }
+        
+        .region {
+            position: absolute;
+            border: 2px solid #ddd;
+            border-radius: 15px;
+            background: rgba(255,255,255,0.9);
+            padding: 20px;
+            min-height: 200px;
+        }
+        
+        .region-title {
+            font-weight: bold;
+            color: #0066cc;
+            font-size: 1.3em;
+            margin-bottom: 15px;
+            text-align: center;
+            padding: 8px;
+            background: #e6f2ff;
+            border-radius: 8px;
+        }
+        
+        .hospital {
+            background: #0066cc;
+            color: white;
+            padding: 12px 16px;
+            border-radius: 10px;
+            font-weight: bold;
+            text-align: center;
+            margin: 10px 0;
+            min-width: 200px;
+            box-shadow: 0 4px 12px rgba(0,102,204,0.3);
+        }
+        
+        .ambulatorio {
+            background: #28a745;
+            color: white;
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-weight: 600;
+            text-align: center;
+            margin: 8px 0;
+            min-width: 180px;
+            font-size: 0.9em;
+            box-shadow: 0 3px 10px rgba(40,167,69,0.3);
+        }
+        
+        .diagnostico {
+            background: #ffc107;
+            color: #333;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-weight: 600;
+            text-align: center;
+            margin: 6px 0;
+            min-width: 160px;
+            font-size: 0.85em;
+            box-shadow: 0 2px 8px rgba(255,193,7,0.3);
+        }
+        
+        .arrow {
+            position: absolute;
+            color: #0066cc;
+            font-size: 2em;
+            font-weight: bold;
+            z-index: 10;
+        }
+        
+        .arrow-text {
+            position: absolute;
+            background: #fff;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            font-weight: 600;
+            color: #0066cc;
+            border: 1px solid #0066cc;
+            white-space: nowrap;
+        }
+        
+        /* Regiões específicas */
+        .centro-sul {
+            top: 50px;
+            left: 50px;
+            width: 350px;
+            border-color: #dc3545;
+        }
+        
+        .zona-leste {
+            top: 50px;
+            right: 50px;
+            width: 380px;
+            border-color: #17a2b8;
+        }
+        
+        .abc {
+            bottom: 50px;
+            left: 50px;
+            width: 350px;
+            border-color: #6f42c1;
+        }
+        
+        .itaquera-special {
+            bottom: 50px;
+            right: 50px;
+            width: 380px;
+            border-color: #fd7e14;
+        }
+        
+        .legend {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9em;
+        }
+        
+        .legend-color {
+            width: 20px;
+            height: 15px;
+            border-radius: 3px;
+        }
+        
+        .distance {
+            font-size: 0.75em;
+            color: #666;
+            font-weight: normal;
+        }
+        
+        .special-note {
+            background: #fff3cd;
+            border: 2px solid #ffeaa7;
+            color: #856404;
+            padding: 8px;
+            border-radius: 6px;
+            font-size: 0.8em;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏥 REDE PREVENT SENIOR - FLUXOGRAMA INTEGRADO</h1>
+            <p>Estratégia de Continuidade do Cuidado: Hospital → Ambulatório → APS/Paliativo/Assiste</p>
+        </div>
+        
+        <div class="flowchart-container">
+            <!-- REGIÃO CENTRO-SUL -->
+            <div class="region centro-sul">
+                <div class="region-title">🏙️ CENTRO-SUL</div>
+                <div class="hospital">🏥 CRUZ AZUL<br><span class="distance">(16→36 leitos)</span></div>
+                
+                <div class="arrow" style="top: 80px; left: 300px;">➡️</div>
+                
+                <div class="ambulatorio">🏥 MADRID<br><span class="distance">(3 km)</span></div>
+                
+                <div style="margin-top: 15px; font-weight: bold; color: #666; font-size: 0.9em;">APOIO DIAGNÓSTICO:</div>
+                <div class="diagnostico">CDB Paes de Barros<br><span class="distance">(4 km - Lab)</span></div>
+                <div class="diagnostico">Med. Diag. Mooca<br><span class="distance">(6 km - Cardio/Imagem)</span></div>
+            </div>
+            
+            <!-- REGIÃO ZONA LESTE -->
+            <div class="region zona-leste">
+                <div class="region-title">🌅 ZONA LESTE</div>
+                <div class="hospital">🏥 SANTA CLARA</div>
+                
+                <div class="arrow" style="top: 80px; right: 300px;">⬅️</div>
+                
+                <div class="ambulatorio">🏥 NÚCLEO ISTAMBUL<br><span class="distance">(5 km)</span></div>
+                
+                <div style="margin-top: 15px; font-weight: bold; color: #666; font-size: 0.9em;">APOIO DIAGNÓSTICO:</div>
+                <div class="diagnostico">Núcleo Tatuapé<br><span class="distance">(5,8 km - Imagem)</span></div>
+                <div class="diagnostico">Hospital Nápoles<br><span class="distance">(8 km - TC)</span></div>
+            </div>
+            
+            <!-- REGIÃO ABC -->
+            <div class="region abc">
+                <div class="region-title">🏭 ABC</div>
+                <div class="hospital">🏥 NEOMATER<br><span class="distance">(13 leitos: 10+3UTI)</span></div>
+                
+                <div class="arrow" style="bottom: 120px; left: 300px;">➡️</div>
+                
+                <div class="ambulatorio">🏥 NÚCLEO SANTO ANDRÉ<br><span class="distance">+ CLINOVI</span></div>
+                
+                <div style="margin-top: 10px; font-weight: bold; color: #666; font-size: 0.9em;">SUPORTE:</div>
+                <div class="diagnostico">Rede ABC Completa</div>
+            </div>
+            
+            <!-- ITAQUERA ESPECIAL -->
+            <div class="region itaquera-special">
+                <div class="region-title">🏥 ZONA LESTE ESPECIAL</div>
+                <div class="hospital">🏥 STA MARCELINA ITAQUERA<br><span class="distance">(40,8% Corporate PS)</span></div>
+                
+                <div class="special-note">
+                    <strong>ESTRATÉGIA DIFERENCIADA:</strong><br>
+                    • Ambulatório INTERNO credenciado<br>
+                    • Absorção carteira Corporate<br>
+                    • APS 80-/80+ + Especialidades
+                </div>
+                
+                <div class="ambulatorio" style="background: #e74c3c;">🏥 AMBULATÓRIO INTERNO<br><span class="distance">(a ser estruturado)</span></div>
+                <div class="ambulatorio">🏥 NÚCLEO ISTAMBUL<br><span class="distance">(11 km - apoio)</span></div>
+                
+                <div style="margin-top: 10px; font-weight: bold; color: #666; font-size: 0.9em;">APOIO DIAGNÓSTICO:</div>
+                <div class="diagnostico">Hermes Pardini Itaquera<br><span class="distance">(Lab próximo)</span></div>
+                <div class="diagnostico">Hospital Nápoles<br><span class="distance">(15 km - TC)</span></div>
+            </div>
+            
+            <!-- SETAS CENTRAIS DE FLUXO -->
+            <div class="arrow-text" style="top: 20px; left: 50%; transform: translateX(-50%);">ENTRADA: Overflow dos PS Prevent Senior</div>
+            
+            <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #fff; padding: 20px; border: 3px solid #0066cc; border-radius: 15px; text-align: center; box-shadow: 0 6px 20px rgba(0,0,0,0.1);">
+                <div style="font-weight: bold; color: #0066cc; font-size: 1.2em; margin-bottom: 10px;">🎯 MODELO INTEGRADO</div>
+                <div style="font-size: 0.9em; color: #333; line-height: 1.6;">
+                    <strong>APS 80-/80+</strong> → <strong>Assiste</strong> ↔ <strong>Paliativo</strong><br>
+                    <em>+ TCs Crônicos em paralelo</em><br><br>
+                    <span style="color: #28a745; font-weight: bold;">ALTA ORGANIZADA</span><br>
+                    <span style="color: #666;">Mesmo médico na continuidade</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-color" style="background: #0066cc;"></div>
+                <span>Hospitais Parceiros</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #28a745;"></div>
+                <span>Ambulatórios Referência</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #ffc107;"></div>
+                <span>Apoio Diagnóstico</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #e74c3c;"></div>
+                <span>Estratégia Especial</span>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Adiciona interatividade hover
+        document.querySelectorAll('.hospital, .ambulatorio, .diagnostico').forEach(element => {
+            element.addEventListener('mouseenter', function() {
+                this.style.transform = 'scale(1.05)';
+                this.style.transition = 'transform 0.2s ease';
+            });
+            
+            element.addEventListener('mouseleave', function() {
+                this.style.transform = 'scale(1)';
+            });
+        });
+    </script>
+</body>
+</html>

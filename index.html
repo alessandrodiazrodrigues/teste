@@ -1454,7 +1454,7 @@ function renderCards(){
         </div>
         
         <div style="background: var(--destaque); border: 1px solid rgba(143, 211, 244, 0.5); border-radius: 8px; padding: 10px;">
-          <div style="font-size: 10px; color: #000000; font-weight: 700; text-transform: uppercase; margin-bottom: 3px;">Previsão Alta</div>
+          <div style="font-size: 10px; color: #000000; font-weight: 700; text-transform: uppercase; margin-bottom: 3px;">Prev Alta</div>
           <div style="color: #000000; font-weight: 700; font-size: 12px;">${l.prevAlta||"—"}</div>
         </div>
       </div>
@@ -1562,7 +1562,7 @@ function openAdmissao(leito){
     </div>
 
     <div style="margin-bottom: 20px;">
-      <label style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px; display: block; font-weight: 600; text-transform: uppercase;">Previsão de alta</label>
+      <label style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px; display: block; font-weight: 600; text-transform: uppercase;">Prev alta</label>
       <select id="a_prev" style="width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--card); color: var(--text); font-weight: 600;">
         ${PREVISAO_ALTA_OPTIONS.map(prev => `<option value="${prev}">${prev}</option>`).join('')}
       </select>
@@ -1613,11 +1613,11 @@ function openAtualizacao(leito){
     <!-- DADOS EDITÁVEIS -->
     <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 15px;">
       <div>
-        <label style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px; display: block; font-weight: 600; text-transform: uppercase;">Iniciais (bloqueado)</label>
+        <label style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px; display: block; font-weight: 600; text-transform: uppercase;">Iniciais</label>
         <input value="${initials(l.nome)||''}" disabled style="width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; background: rgba(0,0,0,0.2); color: var(--text-muted); font-weight: 600;" />
       </div>
       <div>
-        <label style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px; display: block; font-weight: 600; text-transform: uppercase;">Matrícula (bloqueado)</label>
+        <label style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px; display: block; font-weight: 600; text-transform: uppercase;">Matrícula</label>
         <input value="${l.matricula||''}" disabled style="width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; background: rgba(0,0,0,0.2); color: var(--text-muted); font-weight: 600;" />
       </div>
       <div>
@@ -1642,7 +1642,7 @@ function openAtualizacao(leito){
         </select>
       </div>
       <div>
-        <label style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px; display: block; font-weight: 600; text-transform: uppercase;">Previsão de alta</label>
+        <label style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px; display: block; font-weight: 600; text-transform: uppercase;">Prev alta</label>
         <select id="u_prev" style="width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--card); color: var(--text); font-weight: 600;">
           ${PREVISAO_ALTA_OPTIONS.map(prev => `<option value="${prev}" ${l.prevAlta === prev ? 'selected' : ''}>${prev}</option>`).join('')}
         </select>

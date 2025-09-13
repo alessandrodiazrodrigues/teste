@@ -820,17 +820,79 @@
     }
     /* =================== CORREÇÕES DE LAYOUT =================== */
 
-/* =================== CORREÇÃO FINAL - FONTES E FUNDO =================== */
+
+    /* =================== CORREÇÃO FINAL COMPLETA - FONTES E FUNDO =================== */
 
 /* ALTERAR FUNDO GERAL DA PÁGINA PARA BRANCO (área em volta dos cards) */
 body {
   background: #ffffff !important; /* FUNDO BRANCO para toda a página */
 }
 
-/* CORRIGIR: Área dos botões hospitais - MESMA COR DOS CARDS (azul escuro) */
+/* CORRIGIR: Área dos botões hospitais - AZUL ESCURO igual aos cards */
 .hospital-selector {
-  background: rgba(26, 31, 46, 0.5) !important; /* MESMA COR DOS CARDS */
+  display: flex; 
+  justify-content: center; 
+  gap: 20px; 
+  margin: 20px 0 30px 0;
+  padding: 20px; 
+  background: var(--nav-header) !important; /* AZUL ESCURO IGUAL AOS CARDS */
+  border-radius: 16px;
   border: 1px solid var(--border) !important;
+  flex-wrap: wrap;
+}
+
+/* CORRIGIR: Botões hospitais - fontes brancas por padrão */
+.hospital-btn {
+  background: var(--gradient-button); 
+  border: 1px solid var(--border);
+  color: var(--text-white) !important; /* FONTE BRANCA para todos botões não ativos */
+  border-radius: 12px; 
+  padding: 12px 24px;
+  cursor: pointer; 
+  font-weight: 600; 
+  text-transform: uppercase;
+  letter-spacing: 0.5px; 
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(96, 165, 250, 0.3);
+  font-size: 16px;
+  flex: 1;
+  min-width: 200px;
+}
+
+.hospital-btn:hover {
+  background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
+  box-shadow: 0 4px 16px rgba(96, 165, 250, 0.4);
+  transform: translateY(-2px);
+}
+
+/* ESPECIAL: Neomater ativo - fundo branco, fonte azul escura */
+.hospital-btn[data-hospital="H1"].active {
+  background: var(--hospital-neomater) !important; /* FUNDO BRANCO */
+  color: var(--hospital-neomater-text) !important; /* FONTE AZUL ESCURA */
+  border-color: var(--hospital-neomater-text);
+  box-shadow: 0 4px 16px rgba(255, 255, 255, 0.5);
+}
+
+/* OUTROS HOSPITAIS ATIVOS: fontes brancas sobre fundos coloridos */
+.hospital-btn[data-hospital="H2"].active {
+  background: var(--hospital-cruz-azul) !important;
+  color: #ffffff !important; /* FONTE BRANCA */
+  border-color: var(--hospital-cruz-azul);
+  box-shadow: 0 4px 16px rgba(96, 165, 250, 0.5);
+}
+
+.hospital-btn[data-hospital="H3"].active {
+  background: var(--hospital-santa-marcelina) !important;
+  color: #ffffff !important; /* FONTE BRANCA */
+  border-color: var(--hospital-santa-marcelina);
+  box-shadow: 0 4px 16px rgba(139, 92, 246, 0.5);
+}
+
+.hospital-btn[data-hospital="H4"].active {
+  background: var(--hospital-santa-clara) !important;
+  color: #ffffff !important; /* FONTE BRANCA */
+  border-color: var(--hospital-santa-clara);
+  box-shadow: 0 4px 16px rgba(245, 158, 11, 0.5);
 }
 
 /* CORRIGIR: Container principal com fundo branco mas sem alterar cards */

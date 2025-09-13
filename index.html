@@ -818,6 +818,80 @@
     .system-footer p {
       margin: 5px 0;
     }
+    /* =================== CORREÇÕES DE LAYOUT =================== */
+
+/* CORREÇÃO: Fundo dos cards em BRANCO conforme solicitado */
+.card {
+  background: #ffffff !important; /* FUNDO BRANCO */
+  color: #000000 !important; /* TEXTO PRETO */
+}
+
+.card .field {
+  background: rgba(0, 0, 0, 0.05) !important; /* Cinza claro para campos */
+  border: 1px solid rgba(0, 0, 0, 0.1) !important;
+  color: #000000 !important;
+}
+
+.card .field .label {
+  color: #666666 !important; /* Labels em cinza escuro */
+}
+
+.card .field .value {
+  color: #000000 !important; /* Valores em preto */
+}
+
+/* CORREÇÃO: Área dos botões hospitais na mesma cor dos cards */
+.hospital-selector {
+  background: #ffffff !important; /* FUNDO BRANCO igual aos cards */
+  border: 1px solid rgba(0, 0, 0, 0.1) !important;
+}
+
+/* CORREÇÃO: Títulos das seções em BRANCO */
+.section-title {
+  color: #ffffff !important;
+  background: var(--text-accent) !important;
+  padding: 8px 12px !important;
+  border-radius: 6px !important;
+  margin-bottom: 8px !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+}
+
+/* CORREÇÃO: Box do leito centralizado e mesmo tamanho */
+.leito-badge {
+  background: var(--status-vago);
+  color: #ffffff;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  padding: 10px 12px !important; /* MESMO PADDING que outros campos */
+  border-radius: 8px;
+  font-size: 12px;
+  text-align: center !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-height: 40px !important; /* MESMA ALTURA que outros campos */
+}
+
+.leito-badge.ocupado {
+  background: var(--status-uso);
+  color: #000000;
+}
+
+/* Correção para chips de concessões e linhas */
+.chip-item {
+  font-size: 10px;
+  background: rgba(96, 165, 250, 0.1);
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  color: var(--text-accent);
+  padding: 2px 6px;
+  border-radius: 999px;
+  font-weight: 600;
+  margin: 2px;
+  display: inline-block;
+}
   </style>
 </head>
 
@@ -1442,6 +1516,8 @@ function elapsedSince(iso){
   return { text: `${days}d ${hours}h`, days: days };
 }
 
+// =================== FUNÇÃO CORRIGIDA: renderCards =================== 
+
 function renderCards(){
   const container = document.getElementById("cardsContainer");
   if(!container) return;
@@ -1453,7 +1529,7 @@ function renderCards(){
     container.innerHTML = `
       <div class="card" style="grid-column: 1 / -1; text-align: center; padding: 40px;">
         <h3 style="color: var(--text-accent); margin: 0 0 10px 0;">Carregando dados...</h3>
-        <p style="color: var(--text-muted); margin: 0;">Hospital: ${HOSPITAIS[currentHospital]?.nome}</p>
+        <p style="color: #666666; margin: 0;">Hospital: ${HOSPITAIS[currentHospital]?.nome}</p>
       </div>
     `;
     return;
@@ -1463,103 +1539,101 @@ function renderCards(){
     const card = document.createElement("div");
     card.className = "card";
 
-    // LAYOUT 3x3 CONFORME MANUAL
+    // LAYOUT 3x3 CORRIGIDO conforme suas especificações
     card.innerHTML = `
-      <!-- LINHA 1: Hospital / Leito / Tipo -->
+      <!-- LINHA 1: Hospital / Leito / Tipo - DIVISÃO EXATA 1/3 -->
       <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 12px;">
-        <div style="background: rgba(96, 165, 250, 0.05); border: 1px solid var(--border); border-radius: 8px; padding: 8px;">
-          <div style="font-size: 10px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; margin-bottom: 3px;">Hospital</div>
-          <div style="color: var(--text); font-weight: 600; font-size: 12px;">${HOSPITAIS[l.hospital]?.nome || 'Hospital'}</div>
+        <div style="background: rgba(0, 0, 0, 0.05); border: 1px solid rgba(0, 0, 0, 0.1); border-radius: 8px; padding: 10px; min-height: 40px; display: flex; flex-direction: column; justify-content: center;">
+          <div style="font-size: 10px; color: #666666; font-weight: 600; text-transform: uppercase; margin-bottom: 3px;">Hospital</div>
+          <div style="color: #000000; font-weight: 600; font-size: 12px;">${HOSPITAIS[l.hospital]?.nome || 'Hospital'}</div>
         </div>
         
-        <div style="text-align: center;">
-          <div style="
-            background: ${l.status === 'Vago' ? 'var(--status-vago)' : 'var(--status-uso)'};
-            color: ${l.status === 'Vago' ? '#ffffff' : '#000000'};
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            padding: 8px 12px;
-            border-radius: 8px;
-            font-size: 12px;
-            border: 2px solid ${l.status === 'Vago' ? 'var(--status-vago)' : 'var(--status-uso)'};
-          ">
+        <div style="min-height: 40px; display: flex; align-items: center; justify-content: center;">
+          <div class="leito-badge ${l.status === 'Vago' ? '' : 'ocupado'}" style="width: 100%;">
             LEITO ${l.leito}
           </div>
         </div>
         
-        <div style="background: rgba(96, 165, 250, 0.05); border: 1px solid var(--border); border-radius: 8px; padding: 8px;">
-          <div style="font-size: 10px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; margin-bottom: 3px;">Tipo</div>
-          <div style="color: var(--text); font-weight: 600; font-size: 12px;">${l.tipo === 'UTI' ? 'UTI' : 'ENF/APTO'}</div>
+        <div style="background: rgba(0, 0, 0, 0.05); border: 1px solid rgba(0, 0, 0, 0.1); border-radius: 8px; padding: 10px; min-height: 40px; display: flex; flex-direction: column; justify-content: center;">
+          <div style="font-size: 10px; color: #666666; font-weight: 600; text-transform: uppercase; margin-bottom: 3px;">Tipo</div>
+          <div style="color: #000000; font-weight: 600; font-size: 12px;">${l.tipo === 'UTI' ? 'UTI' : 'ENF/APTO'}</div>
         </div>
       </div>
 
-      <!-- LINHA 2: Iniciais / Matrícula / Idade -->
+      <!-- LINHA 2: Iniciais / Matrícula / Idade - DIVISÃO EXATA 1/3 -->
       <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 12px;">
-        <div style="background: rgba(96, 165, 250, 0.05); border: 1px solid var(--border); border-radius: 8px; padding: 8px;">
-          <div style="font-size: 10px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; margin-bottom: 3px;">Iniciais</div>
-          <div style="color: var(--text); font-weight: 600; font-size: 12px;">${l.status==="Em uso"?initials(l.nome):"—"}</div>
+        <div style="background: rgba(0, 0, 0, 0.05); border: 1px solid rgba(0, 0, 0, 0.1); border-radius: 8px; padding: 10px;">
+          <div style="font-size: 10px; color: #666666; font-weight: 600; text-transform: uppercase; margin-bottom: 3px;">Iniciais</div>
+          <div style="color: #000000; font-weight: 600; font-size: 12px;">${l.status==="Em uso"?initials(l.nome):"—"}</div>
         </div>
         
-        <div style="background: rgba(96, 165, 250, 0.05); border: 1px solid var(--border); border-radius: 8px; padding: 8px;">
-          <div style="font-size: 10px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; margin-bottom: 3px;">Matrícula</div>
-          <div style="color: var(--text); font-weight: 600; font-size: 12px;">${l.matricula||"—"}</div>
+        <div style="background: rgba(0, 0, 0, 0.05); border: 1px solid rgba(0, 0, 0, 0.1); border-radius: 8px; padding: 10px;">
+          <div style="font-size: 10px; color: #666666; font-weight: 600; text-transform: uppercase; margin-bottom: 3px;">Matrícula</div>
+          <div style="color: #000000; font-weight: 600; font-size: 12px;">${l.matricula||"—"}</div>
         </div>
         
-        <div style="background: rgba(96, 165, 250, 0.05); border: 1px solid var(--border); border-radius: 8px; padding: 8px;">
-          <div style="font-size: 10px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; margin-bottom: 3px;">Idade</div>
-          <div style="color: var(--text); font-weight: 600; font-size: 12px;">${l.idade ? l.idade + ' anos' : "—"}</div>
+        <div style="background: rgba(0, 0, 0, 0.05); border: 1px solid rgba(0, 0, 0, 0.1); border-radius: 8px; padding: 10px;">
+          <div style="font-size: 10px; color: #666666; font-weight: 600; text-transform: uppercase; margin-bottom: 3px;">Idade</div>
+          <div style="color: #000000; font-weight: 600; font-size: 12px;">${l.idade ? l.idade + ' anos' : "—"}</div>
         </div>
       </div>
 
-      <!-- LINHA 3: PPS / SPICT-BR / Previsão de Alta (DESTAQUE) -->
+      <!-- LINHA 3: PPS / SPICT-BR / Previsão de Alta - DIVISÃO EXATA 1/3 -->
       <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 15px;">
-        <div style="background: rgba(96, 165, 250, 0.05); border: 1px solid var(--border); border-radius: 8px; padding: 8px;">
-          <div style="font-size: 10px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; margin-bottom: 3px;">PPS</div>
-          <div style="color: var(--text); font-weight: 600; font-size: 12px;">${l.pps||"—"}</div>
+        <div style="background: rgba(0, 0, 0, 0.05); border: 1px solid rgba(0, 0, 0, 0.1); border-radius: 8px; padding: 10px;">
+          <div style="font-size: 10px; color: #666666; font-weight: 600; text-transform: uppercase; margin-bottom: 3px;">PPS</div>
+          <div style="color: #000000; font-weight: 600; font-size: 12px;">${l.pps||"—"}</div>
         </div>
         
-        <div style="background: rgba(96, 165, 250, 0.05); border: 1px solid var(--border); border-radius: 8px; padding: 8px;">
-          <div style="font-size: 10px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; margin-bottom: 3px;">SPICT-BR</div>
-          <div style="color: var(--text); font-weight: 600; font-size: 12px;">${l.spict==="elegivel"?"Elegível":(l.spict==="nao_elegivel"?"Não elegível":"—")}</div>
+        <div style="background: rgba(0, 0, 0, 0.05); border: 1px solid rgba(0, 0, 0, 0.1); border-radius: 8px; padding: 10px;">
+          <div style="font-size: 10px; color: #666666; font-weight: 600; text-transform: uppercase; margin-bottom: 3px;">SPICT-BR</div>
+          <div style="color: #000000; font-weight: 600; font-size: 12px;">${l.spict==="elegivel"?"Elegível":(l.spict==="nao_elegivel"?"Não elegível":"—")}</div>
         </div>
         
         <div style="
           background: var(--destaque);
           border: 1px solid rgba(143, 211, 244, 0.5);
           border-radius: 8px;
-          padding: 8px;
+          padding: 10px;
         ">
           <div style="font-size: 10px; color: #000000; font-weight: 700; text-transform: uppercase; margin-bottom: 3px;">Previsão Alta</div>
           <div style="color: #000000; font-weight: 700; font-size: 12px;">${l.prevAlta||"—"}</div>
         </div>
       </div>
 
-      <!-- LINHA 4: CONCESSÕES PREVISTAS NA ALTA -->
+      <!-- LINHA 4: CONCESSÕES PREVISTAS NA ALTA - TÍTULO BRANCO -->
       <div style="margin-bottom: 15px;">
-        <div style="font-size: 11px; color: var(--text-accent); font-weight: 700; text-transform: uppercase; margin-bottom: 8px; border-bottom: 1px solid var(--border); padding-bottom: 4px;">
+        <div class="section-title">
           CONCESSÕES PREVISTAS NA ALTA
         </div>
-        <div style="display: flex; flex-wrap: wrap; gap: 4px; min-height: 24px;">
-          ${(l.concessoes||[]).map(c=>`<span style="font-size: 10px; background: rgba(96, 165, 250, 0.1); border: 1px solid var(--border); color: var(--text-accent); padding: 2px 6px; border-radius: 999px; font-weight: 600;">${c}</span>`).join("")||'<span style="color: var(--text-muted); font-size: 10px;">Nenhuma</span>'}
+        <div style="display: flex; flex-wrap: wrap; gap: 4px; min-height: 24px; background: rgba(0, 0, 0, 0.03); border-radius: 6px; padding: 8px;">
+          ${(l.concessoes||[]).map(c=>`<span class="chip-item">${c}</span>`).join("")||'<span style="color: #666666; font-size: 10px;">Nenhuma</span>'}
         </div>
       </div>
 
-      <!-- LINHA 5: LINHA DE CUIDADOS PROPOSTA NA ALTA -->
+      <!-- LINHA 5: LINHA DE CUIDADOS PROPOSTA NA ALTA - TÍTULO BRANCO -->
       <div style="margin-bottom: 15px;">
-        <div style="font-size: 11px; color: var(--text-accent); font-weight: 700; text-transform: uppercase; margin-bottom: 8px; border-bottom: 1px solid var(--border); padding-bottom: 4px;">
+        <div class="section-title">
           LINHA DE CUIDADOS PROPOSTA NA ALTA
         </div>
-        <div style="display: flex; flex-wrap: wrap; gap: 4px; min-height: 24px;">
-          ${(l.linhas||[]).map(linha=>`<span style="font-size: 10px; background: rgba(96, 165, 250, 0.1); border: 1px solid var(--border); color: var(--text-accent); padding: 2px 6px; border-radius: 999px; font-weight: 600;">${linha}</span>`).join("")||'<span style="color: var(--text-muted); font-size: 10px;">Nenhuma</span>'}
+        <div style="display: flex; flex-wrap: wrap; gap: 4px; min-height: 24px; background: rgba(0, 0, 0, 0.03); border-radius: 6px; padding: 8px;">
+          ${(l.linhas||[]).map(linha=>`<span class="chip-item">${linha}</span>`).join("")||'<span style="color: #666666; font-size: 10px;">Nenhuma</span>'}
         </div>
       </div>
 
-      <!-- LINHA 6: ADMISSÃO + BOTÕES -->
-      <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 12px; border-top: 1px solid var(--border);">
-        <div style="flex: 1;">
-          <div style="font-size: 10px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; margin-bottom: 3px;">ADMISSÃO</div>
-          <div style="color: var(--text); font-weight: 600; font-size: 11px;">${l.admAt ? fmtDateTime(l.admAt) : "—"}</div>
+      <!-- LINHA 6: ADMISSÃO + INTERNADO HÁ + BOTÕES -->
+      <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 12px; border-top: 1px solid rgba(0, 0, 0, 0.1);">
+        <div style="flex: 1; display: flex; gap: 20px;">
+          <div>
+            <div style="font-size: 10px; color: #666666; font-weight: 600; text-transform: uppercase; margin-bottom: 3px;">ADMISSÃO</div>
+            <div style="color: #000000; font-weight: 600; font-size: 11px;">${l.admAt ? fmtDateTime(l.admAt) : "—"}</div>
+          </div>
+          ${l.status === "Em uso" ? `
+          <div>
+            <div style="font-size: 10px; color: #666666; font-weight: 600; text-transform: uppercase; margin-bottom: 3px;">INTERNADO HÁ</div>
+            <div style="color: #000000; font-weight: 600; font-size: 11px;">${elapsedSince(l.admAt).text}</div>
+          </div>
+          ` : ''}
         </div>
         
         <div style="display: flex; gap: 8px;">
@@ -1585,7 +1659,6 @@ function renderCards(){
     container.appendChild(card);
   });
 }
-
 // =================== SEÇÃO 11: MODAIS DE FORMULÁRIOS =================== 
 
 function openAdmissao(leito){
@@ -1673,6 +1746,7 @@ function openAdmissao(leito){
   openModal("#modalAdmissao");
 }
 
+
 function openAtualizacao(leito){
   selectedLeito = leito;
   const l = banco[currentHospital].find(x=>x.leito===leito);
@@ -1680,35 +1754,31 @@ function openAtualizacao(leito){
   
   const content = document.getElementById('atualizacaoContent');
   content.innerHTML = `
-    <!-- INFO DO LEITO -->
+    <!-- INFO DO LEITO - LAYOUT 1/3 CORRIGIDO -->
     <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 20px; padding: 15px; background: rgba(96, 165, 250, 0.05); border-radius: 8px;">
       <div><span style="font-size: 12px; color: var(--text-muted); font-weight: 600; text-transform: uppercase;">Hospital</span><div style="color: var(--text-accent); font-weight: 600;">${HOSPITAIS[currentHospital].nome}</div></div>
       <div><span style="font-size: 12px; color: var(--text-muted); font-weight: 600; text-transform: uppercase;">Leito</span><div style="color: var(--text-accent); font-weight: 600;">Leito ${leito}</div></div>
-      <div><span style="font-size: 12px; color: var(--text-muted); font-weight: 600; text-transform: uppercase;">Tipo</span><div style="color: var(--text-accent); font-weight: 600;">${l.tipo}</div></div>
+      <div><span style="font-size: 12px; color: var(--text-muted); font-weight: 600; text-transform: uppercase;">Tipo</span><div style="color: var(--text-accent); font-weight: 600;">${l.tipo === 'UTI' ? 'UTI' : 'ENF/APTO'}</div></div>
     </div>
 
-    <!-- DADOS BLOQUEADOS -->
+    <!-- LINHA 1: INICIAIS / MATRÍCULA / IDADE (não mais admissão) -->
     <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 15px;">
       <div>
-        <label style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px; display: block; font-weight: 600; text-transform: uppercase;">Nome (bloqueado)</label>
-        <input value="${l.nome||''}" disabled style="width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; background: rgba(0,0,0,0.2); color: var(--text-muted); font-weight: 600;" />
+        <label style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px; display: block; font-weight: 600; text-transform: uppercase;">Iniciais (bloqueado)</label>
+        <input value="${initials(l.nome)||''}" disabled style="width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; background: rgba(0,0,0,0.2); color: var(--text-muted); font-weight: 600;" />
       </div>
       <div>
         <label style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px; display: block; font-weight: 600; text-transform: uppercase;">Matrícula (bloqueado)</label>
         <input value="${l.matricula||''}" disabled style="width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; background: rgba(0,0,0,0.2); color: var(--text-muted); font-weight: 600;" />
       </div>
       <div>
-        <label style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px; display: block; font-weight: 600; text-transform: uppercase;">Admissão (bloqueado)</label>
-        <input value="${fmtDateTime(l.admAt)||''}" disabled style="width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; background: rgba(0,0,0,0.2); color: var(--text-muted); font-weight: 600;" />
-      </div>
-    </div>
-
-    <!-- DADOS EDITÁVEIS -->
-    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 15px;">
-      <div>
         <label style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px; display: block; font-weight: 600; text-transform: uppercase;">Idade</label>
         <input id="u_idade" type="number" min="0" max="120" value="${l.idade||''}" style="width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--card); color: var(--text); font-weight: 600;" />
       </div>
+    </div>
+
+    <!-- LINHA 2: PPS / SPICT-BR / PREVISÃO -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 15px;">
       <div>
         <label style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px; display: block; font-weight: 600; text-transform: uppercase;">PPS</label>
         <select id="u_pps" style="width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--card); color: var(--text); font-weight: 600;">
@@ -1723,13 +1793,12 @@ function openAtualizacao(leito){
           <option value="nao_elegivel" ${l.spict === 'nao_elegivel' ? 'selected' : ''}>Não elegível</option>
         </select>
       </div>
-    </div>
-
-    <div style="margin-bottom: 20px;">
-      <label style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px; display: block; font-weight: 600; text-transform: uppercase;">Previsão de alta</label>
-      <select id="u_prev" style="width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--card); color: var(--text); font-weight: 600;">
-        ${PREVISAO_ALTA_OPTIONS.map(prev => `<option value="${prev}" ${l.prevAlta === prev ? 'selected' : ''}>${prev}</option>`).join('')}
-      </select>
+      <div>
+        <label style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px; display: block; font-weight: 600; text-transform: uppercase;">Previsão de alta</label>
+        <select id="u_prev" style="width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--card); color: var(--text); font-weight: 600;">
+          ${PREVISAO_ALTA_OPTIONS.map(prev => `<option value="${prev}" ${l.prevAlta === prev ? 'selected' : ''}>${prev}</option>`).join('')}
+        </select>
+      </div>
     </div>
 
     <!-- CONCESSÕES PREVISTAS NA ALTA -->
@@ -1756,8 +1825,14 @@ function openAtualizacao(leito){
       </div>
     </div>
 
-    <div style="font-size: 11px; color: var(--text-accent); font-weight: 600;">
-      Internado há ${elapsedSince(l.admAt).text}
+    <!-- ADMISSÃO + INTERNADO HÁ (movido para cá) -->
+    <div style="display: flex; gap: 20px; padding: 12px; background: rgba(0,0,0,0.05); border-radius: 8px; font-size: 11px; color: var(--text-muted);">
+      <div>
+        <strong>Admissão:</strong> ${fmtDateTime(l.admAt)||'N/A'}
+      </div>
+      <div>
+        <strong>Internado há:</strong> ${elapsedSince(l.admAt).text}
+      </div>
     </div>
   `;
   

@@ -820,43 +820,47 @@
     }
     /* =================== CORREÇÕES DE LAYOUT =================== */
 
-/* VOLTAR cards para azul escuro original */
-.card {
-  background: var(--gradient-card) !important; /* VOLTAR azul escuro */
-  color: var(--text) !important; /* VOLTAR texto branco */
-}
-
-.card .field {
-  background: rgba(96, 165, 250, 0.05) !important; /* VOLTAR fundo original */
-  border: 1px solid var(--border) !important;
-  color: var(--text) !important;
-}
-
-.card .field .label {
-  color: var(--text-muted) !important; /* VOLTAR cor original */
-}
-
-.card .field .value {
-  color: var(--text) !important; /* VOLTAR cor original */
-}
-
-/* VOLTAR área dos botões hospitais para azul escuro original */
-.hospital-selector {
-  background: rgba(26, 31, 46, 0.5) !important; /* VOLTAR azul escuro original */
-  border: 1px solid var(--border) !important;
-}
+/* =================== CORREÇÃO FINAL - FONTES E FUNDO =================== */
 
 /* ALTERAR FUNDO GERAL DA PÁGINA PARA BRANCO (área em volta dos cards) */
 body {
   background: #ffffff !important; /* FUNDO BRANCO para toda a página */
 }
 
+/* CORRIGIR: Área dos botões hospitais - MESMA COR DOS CARDS (azul escuro) */
+.hospital-selector {
+  background: rgba(26, 31, 46, 0.5) !important; /* MESMA COR DOS CARDS */
+  border: 1px solid var(--border) !important;
+}
+
+/* CORRIGIR: Container principal com fundo branco mas sem alterar cards */
 main {
   background: rgba(255, 255, 255, 0.95) !important; /* FUNDO BRANCO para área principal */
   border: 1px solid #e5e5e5 !important;
 }
 
-/* Manter títulos das seções em branco sobre fundo azul */
+/* MANTER: Cards no azul escuro original */
+.card {
+  background: var(--gradient-card) !important; /* Azul escuro original */
+  color: var(--text) !important; /* Texto branco original */
+}
+
+/* MANTER: Fontes brancas nos campos dos cards */
+.card .field {
+  background: rgba(96, 165, 250, 0.05) !important;
+  border: 1px solid var(--border) !important;
+  color: var(--text) !important; /* BRANCO */
+}
+
+.card .field .label {
+  color: var(--text-muted) !important; /* BRANCO acinzentado */
+}
+
+.card .field .value {
+  color: var(--text) !important; /* BRANCO */
+}
+
+/* MANTER: Títulos das seções em branco sobre fundo azul */
 .section-title {
   color: #ffffff !important;
   background: var(--text-accent) !important;
@@ -868,7 +872,7 @@ main {
   text-transform: uppercase !important;
 }
 
-/* Box do leito centralizado e mesmo tamanho (mantido) */
+/* MANTER: Box do leito centralizado */
 .leito-badge {
   background: var(--status-vago);
   color: #ffffff;
@@ -890,12 +894,12 @@ main {
   color: #000000;
 }
 
-/* Chips de concessões e linhas (mantidos) */
+/* MANTER: Chips com fontes azuis */
 .chip-item {
   font-size: 10px;
   background: rgba(96, 165, 250, 0.1);
   border: 1px solid var(--border);
-  color: var(--text-accent);
+  color: var(--text-accent) !important; /* AZUL para os chips */
   padding: 2px 6px;
   border-radius: 999px;
   font-weight: 600;

@@ -820,33 +820,43 @@
     }
     /* =================== CORREÇÕES DE LAYOUT =================== */
 
-/* CORREÇÃO: Fundo dos cards em BRANCO conforme solicitado */
+/* VOLTAR cards para azul escuro original */
 .card {
-  background: #ffffff !important; /* FUNDO BRANCO */
-  color: #000000 !important; /* TEXTO PRETO */
+  background: var(--gradient-card) !important; /* VOLTAR azul escuro */
+  color: var(--text) !important; /* VOLTAR texto branco */
 }
 
 .card .field {
-  background: rgba(0, 0, 0, 0.05) !important; /* Cinza claro para campos */
-  border: 1px solid rgba(0, 0, 0, 0.1) !important;
-  color: #000000 !important;
+  background: rgba(96, 165, 250, 0.05) !important; /* VOLTAR fundo original */
+  border: 1px solid var(--border) !important;
+  color: var(--text) !important;
 }
 
 .card .field .label {
-  color: #666666 !important; /* Labels em cinza escuro */
+  color: var(--text-muted) !important; /* VOLTAR cor original */
 }
 
 .card .field .value {
-  color: #000000 !important; /* Valores em preto */
+  color: var(--text) !important; /* VOLTAR cor original */
 }
 
-/* CORREÇÃO: Área dos botões hospitais na mesma cor dos cards */
+/* VOLTAR área dos botões hospitais para azul escuro original */
 .hospital-selector {
-  background: #ffffff !important; /* FUNDO BRANCO igual aos cards */
-  border: 1px solid rgba(0, 0, 0, 0.1) !important;
+  background: rgba(26, 31, 46, 0.5) !important; /* VOLTAR azul escuro original */
+  border: 1px solid var(--border) !important;
 }
 
-/* CORREÇÃO: Títulos das seções em BRANCO */
+/* ALTERAR FUNDO GERAL DA PÁGINA PARA BRANCO (área em volta dos cards) */
+body {
+  background: #ffffff !important; /* FUNDO BRANCO para toda a página */
+}
+
+main {
+  background: rgba(255, 255, 255, 0.95) !important; /* FUNDO BRANCO para área principal */
+  border: 1px solid #e5e5e5 !important;
+}
+
+/* Manter títulos das seções em branco sobre fundo azul */
 .section-title {
   color: #ffffff !important;
   background: var(--text-accent) !important;
@@ -858,21 +868,21 @@
   text-transform: uppercase !important;
 }
 
-/* CORREÇÃO: Box do leito centralizado e mesmo tamanho */
+/* Box do leito centralizado e mesmo tamanho (mantido) */
 .leito-badge {
   background: var(--status-vago);
   color: #ffffff;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 1px;
-  padding: 10px 12px !important; /* MESMO PADDING que outros campos */
+  padding: 10px 12px !important;
   border-radius: 8px;
   font-size: 12px;
   text-align: center !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
-  min-height: 40px !important; /* MESMA ALTURA que outros campos */
+  min-height: 40px !important;
 }
 
 .leito-badge.ocupado {
@@ -880,11 +890,11 @@
   color: #000000;
 }
 
-/* Correção para chips de concessões e linhas */
+/* Chips de concessões e linhas (mantidos) */
 .chip-item {
   font-size: 10px;
   background: rgba(96, 165, 250, 0.1);
-  border: 1px solid rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--border);
   color: var(--text-accent);
   padding: 2px 6px;
   border-radius: 999px;

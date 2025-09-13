@@ -11,6 +11,7 @@
 - Timer 4 minutos no header
 - Cores header/menu = fundo cards (#1a1f2e)
 - Meta tags e bibliotecas externas
+- 🔧 MENU LATERAL CORRIGIDO
 
 📁 ESTRUTURA:
 - SEÇÃO 1: HEAD + META TAGS (linhas 10-30)
@@ -338,11 +339,13 @@
       display: block;
       padding: 8px;
       border-radius: 8px;
-      transition: background 0.3s ease;
+      transition: all 0.3s ease;
+      user-select: none;
     }
 
     .hamburger-menu:hover {
       background: rgba(255, 255, 255, 0.1);
+      transform: scale(1.1);
     }
 
     .brand h1 {
@@ -392,7 +395,7 @@
       box-shadow: 0 4px 16px rgba(96, 165, 250, 0.4);
     }
 
-    /* =================== MENU LATERAL =================== */
+    /* =================== MENU LATERAL CORRIGIDO =================== */
     #side-menu {
       position: fixed; 
       top: 0; 
@@ -407,6 +410,7 @@
       transition: left 0.3s ease; 
       display: flex; 
       flex-direction: column;
+      overflow: hidden;
     }
 
     #side-menu.open {
@@ -428,10 +432,12 @@
       text-transform: uppercase; 
       letter-spacing: 0.5px;
       display: block;
+      transition: all 0.3s ease;
     }
 
     .close-menu-btn:hover {
       background: rgba(255,255,255,0.25);
+      transform: scale(1.05);
     }
 
     .menu-items {
@@ -454,6 +460,7 @@
       border-left: 4px solid transparent;
       transition: all 0.3s ease; 
       height: 60px;
+      cursor: pointer;
     }
 
     .side-menu-item:hover {
@@ -524,6 +531,7 @@
       text-transform: uppercase;
       letter-spacing: 0.5px; 
       border-bottom: 1px solid var(--border);
+      transition: background 0.3s ease;
     }
 
     .settings-dropdown-item:last-child {
@@ -557,6 +565,7 @@
       background: rgba(26, 31, 46, 0.5); 
       border-radius: 16px;
       border: 1px solid var(--border);
+      flex-wrap: wrap;
     }
 
     .hospital-btn {
@@ -572,6 +581,8 @@
       transition: all 0.3s ease;
       box-shadow: 0 4px 12px rgba(96, 165, 250, 0.3);
       font-size: 16px;
+      flex: 1;
+      min-width: 200px;
     }
 
     .hospital-btn:hover {
@@ -673,14 +684,15 @@
       flex-shrink: 0;
     }
 
-    /* =================== SEÇÃO 4: RESPONSIVIDADE MOBILE =================== */
+    /* =================== SEÇÃO 4: RESPONSIVIDADE MOBILE CORRIGIDA =================== */
     @media (max-width: 1024px) {
       body.menu-open {
-        padding-left: 0;
+        padding-left: 0; /* Menu overlay em tablets/mobile */
       }
 
       #side-menu {
         width: 280px;
+        z-index: 1001;
       }
     }
 
@@ -696,6 +708,8 @@
       
       .hospital-btn {
         width: 100%;
+        min-width: auto;
+        flex: none;
       }
 
       .header-right {
@@ -711,6 +725,11 @@
         margin: 20px;
         padding: 30px 20px;
       }
+
+      .hamburger-menu {
+        font-size: 20px;
+        padding: 6px;
+      }
     }
 
     @media (max-width: 480px) {
@@ -722,6 +741,33 @@
       .card {
         margin-bottom: 16px;
       }
+
+      .header-left {
+        gap: 10px;
+      }
+
+      .brand h1 {
+        font-size: 16px;
+      }
+    }
+
+    /* =================== OVERLAY PARA FECHAR MENU =================== */
+    .menu-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      display: none;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .menu-overlay.show {
+      display: block;
+      opacity: 1;
     }
 
     /* =================== UTILIDADES =================== */
@@ -776,6 +822,9 @@
 </head>
 
 <body>
+  <!-- =================== OVERLAY PARA FECHAR MENU =================== -->
+  <div id="menuOverlay" class="menu-overlay"></div>
+
   <!-- =================== MODAL DE AUTENTICAÇÃO OBRIGATÓRIA =================== -->
   <div id="authModal">
     <div class="auth-container">
@@ -869,19 +918,35 @@
         </button>
       </div>
       
-      <div class="grid" id="cardsContainer"></div>
+      <div class="grid" id="cardsContainer">
+        <!-- Cards serão renderizados aqui pela Parte 2 -->
+        <div class="card" style="text-align: center; padding: 40px;">
+          <h3 style="color: var(--text-accent); margin: 0 0 10px 0;">Sistema Pronto!</h3>
+          <p style="color: var(--text-muted); margin: 0;">Aguardando PARTE 2/4 - Sistema de Dados + API + Cards</p>
+        </div>
+      </div>
     </section>
 
     <!-- Dashboard Hospitalar -->
     <section id="dash1" class="hidden">
       <h2 style="margin-bottom:20px; color: var(--text-white);">Dashboard Hospitalar</h2>
-      <div id="dashboardContainer"></div>
+      <div id="dashboardContainer">
+        <div class="card" style="text-align: center; padding: 40px;">
+          <h3 style="color: var(--text-accent); margin: 0 0 10px 0;">Em Desenvolvimento</h3>
+          <p style="color: var(--text-muted); margin: 0;">Aguardando PARTE 3/4 - Dashboards + Gráficos</p>
+        </div>
+      </div>
     </section>
     
     <!-- Rede Hospitalar Externa -->
     <section id="dash2" class="hidden">
       <h2 style="margin-bottom:20px; color: var(--text-white);">Rede Hospitalar Externa</h2>
-      <div id="executiveDashboardContainer"></div>
+      <div id="executiveDashboardContainer">
+        <div class="card" style="text-align: center; padding: 40px;">
+          <h3 style="color: var(--text-accent); margin: 0 0 10px 0;">Em Desenvolvimento</h3>
+          <p style="color: var(--text-muted); margin: 0;">Aguardando PARTE 3/4 - Dashboards + Gráficos</p>
+        </div>
+      </div>
     </section>
 
     <!-- Rodapé do Sistema -->
@@ -902,7 +967,11 @@
         <button class="btn" data-close="#modalAdmissao">Fechar</button>
       </header>
       <div class="content">
-        <div id="admissaoContent"></div>
+        <div id="admissaoContent">
+          <p style="text-align: center; color: var(--text-muted);">
+            Formulário será implementado na PARTE 2/4
+          </p>
+        </div>
       </div>
       <div class="actions">
         <button class="btn" id="a_cancel">Cancelar</button>
@@ -919,7 +988,11 @@
         <button class="btn" data-close="#modalAtualizacao">Fechar</button>
       </header>
       <div class="content">
-        <div id="atualizacaoContent"></div>
+        <div id="atualizacaoContent">
+          <p style="text-align: center; color: var(--text-muted);">
+            Formulário será implementado na PARTE 2/4
+          </p>
+        </div>
       </div>
       <div class="actions">
         <button class="btn" id="u_cancel">Cancelar</button>
@@ -937,7 +1010,11 @@
         <button class="btn" data-close="#modalAdmin">Fechar</button>
       </header>
       <div class="content">
-        <div id="adminContent"></div>
+        <div id="adminContent">
+          <p style="text-align: center; color: var(--text-muted);">
+            Área ADM será implementada na PARTE 4/4
+          </p>
+        </div>
       </div>
     </div>
   </div>
@@ -950,7 +1027,11 @@
         <button class="btn" data-close="#modalQRScan">Fechar</button>
       </header>
       <div class="content">
-        <div id="qrContent"></div>
+        <div id="qrContent">
+          <p style="text-align: center; color: var(--text-muted);">
+            Sistema QR será implementado na PARTE 4/4
+          </p>
+        </div>
       </div>
     </div>
   </div>
@@ -963,7 +1044,11 @@
         <button class="btn" data-close="#modalBulkQR">Fechar</button>
       </header>
       <div class="content">
-        <div id="bulkQRContent"></div>
+        <div id="bulkQRContent">
+          <p style="text-align: center; color: var(--text-muted);">
+            Geração QR será implementada na PARTE 4/4
+          </p>
+        </div>
       </div>
     </div>
   </div>
@@ -1005,7 +1090,7 @@
   </div>
 
 <script>
-// =================== SEÇÃO 7: SISTEMA DE AUTENTICAÇÃO =================== 
+// =================== SEÇÃO 7: SISTEMA DE AUTENTICAÇÃO CORRIGIDO =================== 
 
 // Configurações Globais
 const SYSTEM_PASSWORD = '170284'; // SENHA OBRIGATÓRIA CONFORME MANUAL
@@ -1102,7 +1187,7 @@ function initUpdateTimer() {
     if (timeLeft <= 0) {
       timeLeft = UPDATE_INTERVAL / 1000;
       // Trigger auto-refresh aqui (será implementado na Parte 2)
-      console.log('Auto-refresh executado');
+      console.log('🔄 Auto-refresh executado');
     }
 
     const minutes = Math.floor(timeLeft / 60);
@@ -1111,15 +1196,17 @@ function initUpdateTimer() {
   }, 1000);
 }
 
-// Sistema de Menu Lateral
+// Sistema de Menu Lateral CORRIGIDO
 function initMenuSystem() {
   const hamburgerMenu = document.getElementById('hamburgerMenu');
   const closeMenuBtn = document.getElementById('closeMenuBtn');
   const sideMenu = document.getElementById('side-menu');
+  const menuOverlay = document.getElementById('menuOverlay');
   const body = document.body;
 
   hamburgerMenu.addEventListener('click', toggleMenu);
   closeMenuBtn.addEventListener('click', closeMenu);
+  menuOverlay.addEventListener('click', closeMenu);
 
   function toggleMenu() {
     if (sideMenu.classList.contains('open')) {
@@ -1132,12 +1219,30 @@ function initMenuSystem() {
   function openMenu() {
     body.classList.add('menu-open');
     sideMenu.classList.add('open');
+    menuOverlay.classList.add('show');
+    
+    // Prevent body scroll when menu is open on mobile
+    if (window.innerWidth <= 1024) {
+      body.style.overflow = 'hidden';
+    }
   }
 
   function closeMenu() {
     body.classList.remove('menu-open');
     sideMenu.classList.remove('open');
+    menuOverlay.classList.remove('show');
+    body.style.overflow = '';
   }
+
+  // Close menu on window resize if mobile
+  window.addEventListener('resize', () => {
+    if (window.innerWidth > 1024) {
+      menuOverlay.classList.remove('show');
+      body.style.overflow = '';
+    } else if (sideMenu.classList.contains('open')) {
+      body.style.overflow = 'hidden';
+    }
+  });
 
   // Menu items navigation
   document.querySelectorAll('.side-menu-item').forEach(item => {
@@ -1194,16 +1299,13 @@ function setActiveTab(tab) {
   // Trigger specific initialization for each tab
   switch(tab) {
     case 'leitos':
-      // Will be implemented in Part 2
-      console.log('Leitos tab activated');
+      console.log('🏥 Leitos tab activated');
       break;
     case 'dash1':
-      // Will be implemented in Part 3
-      console.log('Dashboard Hospitalar activated');
+      console.log('📊 Dashboard Hospitalar activated');
       break;
     case 'dash2':
-      // Will be implemented in Part 3
-      console.log('Rede Hospitalar Externa activated');
+      console.log('🌐 Rede Hospitalar Externa activated');
       break;
   }
 }
@@ -1244,17 +1346,29 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Refresh button
   document.getElementById('refreshBtn').addEventListener('click', () => {
-    console.log('Manual refresh triggered');
+    console.log('🔄 Manual refresh triggered');
     // Will be implemented in Part 2
+  });
+
+  // Hospital selector buttons (placeholder for Part 2)
+  document.querySelectorAll('.hospital-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      // Remove active from all
+      document.querySelectorAll('.hospital-btn').forEach(b => b.classList.remove('active'));
+      // Add active to clicked
+      btn.classList.add('active');
+      console.log('🏥 Hospital selected:', btn.dataset.hospital);
+    });
   });
 });
 
 // Inicialização Principal do Sistema
 function initializeSystem() {
   console.log('🏥 Archipelago Dashboard V3.0 - Sistema Inicializado');
-  console.log('✅ Autenticação aprovada');
+  console.log('✅ Autenticação aprovada - Senha 170284');
   console.log('⏱️ Timer 4 minutos configurado');
   console.log('🎨 55 cores Pantone carregadas');
+  console.log('📱 Menu lateral corrigido');
   
   initMenuSystem();
   initUpdateTimer();
@@ -1262,7 +1376,8 @@ function initializeSystem() {
   // Set default active tab
   setActiveTab('leitos');
   
-  console.log('🚀 Pronto para Parte 2/4 - Sistema de Dados + API + Cards');
+  console.log('🚀 PARTE 1/4 CONCLUÍDA - Pronto para Parte 2/4');
+  console.log('📋 Próximo: Sistema de Dados + API + Cards');
 }
 
 // Auto-inicialização quando página carrega
@@ -1277,7 +1392,7 @@ function checkQRParams() {
   const leito = params.get('leito');
   
   if (h && leito && ["H1","H2","H3","H4"].includes(h)) {
-    console.log('QR Code detectado:', h, leito);
+    console.log('📱 QR Code detectado:', h, leito);
     isQRMode = true;
     // QR mode will be fully implemented in Part 4
   }
@@ -1290,11 +1405,20 @@ window.addEventListener('load', () => {
   }
 });
 
-console.log('📁 PARTE 1/4 CARREGADA - Estrutura + CSS + Autenticação');
+// Debug functions para testar menu (remover na produção)
+window.debugMenu = {
+  open: () => document.getElementById('side-menu').classList.add('open'),
+  close: () => document.getElementById('side-menu').classList.remove('open'),
+  toggle: () => document.getElementById('side-menu').classList.toggle('open')
+};
+
+console.log('📁 PARTE 1/4 CARREGADA E CORRIGIDA');
+console.log('✅ Menu lateral funcionando');
+console.log('✅ Autenticação 170284 obrigatória');
+console.log('✅ Timer 4 minutos ativo');
+console.log('✅ 55 cores Pantone carregadas');
 console.log('🔄 Aguardando Parte 2/4 - Sistema de Dados + API + Cards');
 
 </script>
 </body>
-
-  
 </html>

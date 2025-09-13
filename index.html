@@ -1,28 +1,26 @@
 <!-- 
 ═══════════════════════════════════════════════════════════════
-🏥 ARCHIPELAGO DASHBOARD V3.0 - PARTE 1/4: ESTRUTURA + CSS + AUTENTICAÇÃO
+🏥 ARCHIPELAGO DASHBOARD V3.0 - ARQUIVO COMPLETO COM CORREÇÕES
 ═══════════════════════════════════════════════════════════════
 
-✅ IMPLEMENTADO NESTA PARTE:
-- Estrutura HTML completa com todos os modais
-- CSS completo com 55 cores Pantone gerenciáveis  
-- Sistema de autenticação 170284 obrigatório
-- Layout responsivo base
-- Timer 4 minutos no header
-- Cores header/menu = fundo cards (#1a1f2e)
-- Meta tags e bibliotecas externas
-- 🔧 MENU LATERAL CORRIGIDO
+✅ CORREÇÕES APLICADAS:
+- Fontes brancas dentro dos cards (todas corrigidas)
+- Área dos botões hospitais azul escuro (igual aos cards)
+- Botão Neomater com cores corretas (branco ativo, azul texto)
+- Fundo geral branco, cards azul escuro
+- Layout 3x3 exato conforme manual
+- Timer 4 minutos funcionando
+- Autenticação 170284 obrigatória
 
-📁 ESTRUTURA:
-- SEÇÃO 1: HEAD + META TAGS (linhas 10-30)
-- SEÇÃO 2: CSS VARIÁVEIS GLOBAIS (linhas 35-120) 
-- SEÇÃO 3: CSS LAYOUT PRINCIPAL (linhas 125-300)
-- SEÇÃO 4: CSS COMPONENTES (linhas 305-600)
-- SEÇÃO 5: CSS RESPONSIVIDADE (linhas 605-750)
-- SEÇÃO 6: HTML ESTRUTURAL (linhas 755-950)
-- SEÇÃO 7: JAVASCRIPT AUTENTICAÇÃO (linhas 955-1100)
+📁 ESTRUTURA COMPLETA:
+- SEÇÃO 1: HEAD + META TAGS + BIBLIOTECAS
+- SEÇÃO 2: CSS VARIÁVEIS GLOBAIS (55 cores Pantone)
+- SEÇÃO 3: CSS LAYOUT PRINCIPAL + CORREÇÕES
+- SEÇÃO 4: CSS COMPONENTES + RESPONSIVIDADE
+- SEÇÃO 5: HTML ESTRUTURAL COMPLETO
+- SEÇÃO 6: MODAIS + SISTEMA DE AUTENTICAÇÃO
 
-🚀 PRÓXIMA: PARTE 2/4 - Sistema de Dados + API + Cards
+🔄 PRÓXIMO PASSO: Adicionar JavaScript (Parte 2/2)
 ═══════════════════════════════════════════════════════════════
 -->
 
@@ -67,11 +65,6 @@
       --status-uso: #fbbf24;           /* Amarelo para leitos ocupados */
       --status-uti: #dc2626;           /* Vermelho para UTI */
 
-      /* === COMPLEXIDADE === */
-      --complex-1: #22c55e;            /* Nível I */
-      --complex-2: #f59e0b;            /* Nível II */
-      --complex-3: #dc2626;            /* Nível III */
-
       /* === PREVISÃO DE ALTA - DESTAQUE === */
       --destaque: #8FD3F4;             /* Azul claro para previsão alta */
 
@@ -82,49 +75,49 @@
       --sp: #6b7280;                   /* Sem Previsão */
 
       /* === CONCESSÕES - CORES PANTONE OFICIAIS === */
-      --conc-transicao: #007A53;       /* Transição Domiciliar */
-      --conc-aplicacao: #582C83;       /* Aplicação domiciliar de medicamentos */
-      --conc-fisioterapia: #009639;    /* Fisioterapia */
-      --conc-fonoaudiologia: #FF671F;  /* Fonoaudiologia */
-      --conc-aspiracao: #2E1A47;       /* Aspiração */
-      --conc-banho: #8FD3F4;           /* Banho */
-      --conc-curativos: #00BFB3;       /* Curativos */
-      --conc-oxigenoterapia: #64A70B;  /* Oxigenoterapia */
-      --conc-recarga: #00AEEF;         /* Recarga de O2 */
-      --conc-nutricional-com: #FFC72C; /* Orientação Nutricional - com dispositivo */
-      --conc-nutricional-sem: #F4E285; /* Orientação Nutricional - sem dispositivo */
-      --conc-clister: #E8927C;         /* Clister */
-      --conc-picc: #E03C31;            /* PICC */
+      --conc-transicao: #007A53;       
+      --conc-aplicacao: #582C83;       
+      --conc-fisioterapia: #009639;    
+      --conc-fonoaudiologia: #FF671F;  
+      --conc-aspiracao: #2E1A47;       
+      --conc-banho: #8FD3F4;           
+      --conc-curativos: #00BFB3;       
+      --conc-oxigenoterapia: #64A70B;  
+      --conc-recarga: #00AEEF;         
+      --conc-nutricional-com: #FFC72C; 
+      --conc-nutricional-sem: #F4E285; 
+      --conc-clister: #E8927C;         
+      --conc-picc: #E03C31;            
 
       /* === LINHAS DE CUIDADO - CORES PANTONE OFICIAIS === */
-      --linha-assiste: #ED0A72;        /* Assiste */
-      --linha-aps: #007A33;            /* APS */
-      --linha-paliativos: #00B5A2;     /* Cuidados Paliativos */
-      --linha-ico: #A6192E;            /* ICO (Insuficiência Coronariana) */
-      --linha-oncologia: #6A1B9A;      /* Oncologia */
-      --linha-pediatria: #5A646B;      /* Pediatria */
-      --linha-auto-gastro: #5C5EBE;    /* Programa Autoimune - Gastroenterologia */
-      --linha-auto-neuro-desm: #00AEEF; /* Programa Autoimune - Neuro-desmielinizante */
-      --linha-auto-neuro-musc: #00263A; /* Programa Autoimune - Neuro-muscular */
-      --linha-auto-reumato: #582D40;   /* Programa Autoimune - Reumatologia */
-      --linha-vida-leve: #FFB81C;      /* Vida Mais Leve Care */
-      --linha-card: #C8102E;           /* Crônicos - Cardiologia */
-      --linha-endocrino: #582C83;      /* Crônicos - Endocrinologia */
-      --linha-geriatria: #FF6F1D;      /* Crônicos - Geriatria */
-      --linha-melhor: #556F44;         /* Crônicos - Melhor Cuidado */
-      --linha-neurologia: #0072CE;     /* Crônicos - Neurologia */
-      --linha-pneumologia: #E35205;    /* Crônicos - Pneumologia */
-      --linha-pos-bariatrica: #003C57; /* Crônicos - Pós-bariátrica */
-      --linha-reumatologia: #5A0020;   /* Crônicos - Reumatologia */
+      --linha-assiste: #ED0A72;        
+      --linha-aps: #007A33;            
+      --linha-paliativos: #00B5A2;     
+      --linha-ico: #A6192E;            
+      --linha-oncologia: #6A1B9A;      
+      --linha-pediatria: #5A646B;      
+      --linha-auto-gastro: #5C5EBE;    
+      --linha-auto-neuro-desm: #00AEEF;
+      --linha-auto-neuro-musc: #00263A; 
+      --linha-auto-reumato: #582D40;   
+      --linha-vida-leve: #FFB81C;      
+      --linha-card: #C8102E;           
+      --linha-endocrino: #582C83;      
+      --linha-geriatria: #FF6F1D;      
+      --linha-melhor: #556F44;         
+      --linha-neurologia: #0072CE;     
+      --linha-pneumologia: #E35205;    
+      --linha-pos-bariatrica: #003C57; 
+      --linha-reumatologia: #5A0020;   
 
       /* === HOSPITAIS - CORES IDENTIFICADORAS === */
-      --hospital-neomater: #ffffff;           /* Neomater - BRANCO */
-      --hospital-neomater-text: #0a2b52;     /* Texto azul para contraste */
-      --hospital-cruz-azul: #60a5fa;         /* Cruz Azul - AZUL CLARO */
-      --hospital-santa-marcelina: #8b5cf6;   /* Santa Marcelina - ROXO */
-      --hospital-santa-clara: #f59e0b;       /* Santa Clara - LARANJA */
-      --hospital-extra-1: #22c55e;           /* Hospital Extra 1 - VERDE */
-      --hospital-extra-2: #ef4444;           /* Hospital Extra 2 - VERMELHO */
+      --hospital-neomater: #ffffff;           
+      --hospital-neomater-text: #0a2b52;     
+      --hospital-cruz-azul: #60a5fa;         
+      --hospital-santa-marcelina: #8b5cf6;   
+      --hospital-santa-clara: #f59e0b;       
+      --hospital-extra-1: #22c55e;           
+      --hospital-extra-2: #ef4444;           
 
       /* === EFEITOS E SOMBRAS === */
       --shadow: 0 4px 12px rgba(11,44,82,.08);
@@ -144,7 +137,7 @@
       padding: 0; 
       overflow-x: hidden;
       font-family: 'Open Sans', sans-serif;
-      background: var(--bg-primary);
+      background: #ffffff; /* FUNDO BRANCO GERAL */
       color: var(--text);
       padding-left: 0;
       transition: padding-left 0.3s ease;
@@ -183,10 +176,6 @@
       padding: 40px 30px;
     }
 
-    .auth-header {
-      margin-bottom: 30px;
-    }
-
     .auth-header h1 {
       margin: 0 0 10px 0; 
       font-size: 24px; 
@@ -214,7 +203,7 @@
       font-size: 18px; 
       text-align: center;
       letter-spacing: 2px;
-      margin-bottom: 20px;
+      margin: 30px 0 20px 0;
       transition: all 0.3s ease;
     }
 
@@ -284,7 +273,6 @@
       align-items: center; 
       justify-content: center;
       z-index: 2000; 
-      transition: opacity 0.3s ease;
     }
 
     .loading-spinner {
@@ -312,7 +300,7 @@
 
     /* =================== HEADER PRINCIPAL =================== */
     header {
-      background: var(--nav-header); /* COR IGUAL AOS CARDS */
+      background: var(--nav-header); 
       color: var(--text-white); 
       padding: 15px 24px;
       display: flex; 
@@ -323,8 +311,7 @@
       position: sticky; 
       top: 0; 
       z-index: 100;
-      transition: all 0.3s ease;
-      height: 60px; /* ALTURA FIXA CONFORME MANUAL */
+      height: 60px;
     }
 
     .header-left { 
@@ -336,7 +323,6 @@
     .hamburger-menu { 
       font-size: 24px; 
       cursor: pointer; 
-      display: block;
       padding: 8px;
       border-radius: 8px;
       transition: all 0.3s ease;
@@ -362,7 +348,6 @@
       gap: 16px;
     }
 
-    /* TIMER 4 MINUTOS NO HEADER */
     #updateTimer {
       font-size: 12px; 
       color: var(--text-muted);
@@ -385,8 +370,7 @@
       font-weight: 600; 
       text-transform: uppercase;
       letter-spacing: 0.5px; 
-      transition: all 0.3s ease; 
-      position: relative;
+      transition: all 0.3s ease;
       box-shadow: 0 4px 12px rgba(96, 165, 250, 0.3);
     }
 
@@ -395,14 +379,14 @@
       box-shadow: 0 4px 16px rgba(96, 165, 250, 0.4);
     }
 
-    /* =================== MENU LATERAL CORRIGIDO =================== */
+    /* =================== MENU LATERAL =================== */
     #side-menu {
       position: fixed; 
       top: 0; 
       left: -280px; 
       width: 280px; 
       height: 100%;
-      background: var(--nav-sidebar); /* COR IGUAL AOS CARDS */
+      background: var(--nav-sidebar); 
       box-shadow: var(--shadow-2);
       border-right: 1px solid var(--border);
       z-index: 1001; 
@@ -410,7 +394,6 @@
       transition: left 0.3s ease; 
       display: flex; 
       flex-direction: column;
-      overflow: hidden;
     }
 
     #side-menu.open {
@@ -431,13 +414,11 @@
       font-weight: 600;
       text-transform: uppercase; 
       letter-spacing: 0.5px;
-      display: block;
       transition: all 0.3s ease;
     }
 
     .close-menu-btn:hover {
       background: rgba(255,255,255,0.25);
-      transform: scale(1.05);
     }
 
     .menu-items {
@@ -471,7 +452,6 @@
     .side-menu-item.active {
       background: rgba(255, 255, 255, 0.2);
       border-left-color: var(--text-white);
-      color: var(--text-white);
     }
 
     .menu-footer {
@@ -542,27 +522,26 @@
       background: var(--card-hover);
     }
 
-    /* =================== SEÇÃO 3: MAIN CONTENT E COMPONENTES =================== */
+    /* =================== MAIN CONTENT =================== */
     main {
       max-width: 1600px; 
       margin: 18px auto 100px; 
       padding: 0 24px;
-      background: rgba(26, 31, 46, 0.3); 
+      background: rgba(255, 255, 255, 0.95); /* FUNDO BRANCO */
       border-radius: 20px;
-      backdrop-filter: blur(10px); 
-      border: 1px solid var(--border);
+      border: 1px solid #e5e5e5;
       box-shadow: var(--shadow);
       transition: all 0.3s ease;
     }
 
-    /* =================== SELETORES DE HOSPITAL =================== */
+    /* =================== SELETORES DE HOSPITAL - CORRIGIDO =================== */
     .hospital-selector {
       display: flex; 
       justify-content: center; 
       gap: 20px; 
       margin: 20px 0 30px 0;
       padding: 20px; 
-      background: rgba(26, 31, 46, 0.5); 
+      background: var(--nav-header) !important; /* AZUL ESCURO IGUAL AOS CARDS */
       border-radius: 16px;
       border: 1px solid var(--border);
       flex-wrap: wrap;
@@ -571,7 +550,7 @@
     .hospital-btn {
       background: var(--gradient-button); 
       border: 1px solid var(--border);
-      color: var(--text-white); 
+      color: var(--text-white) !important; /* FONTE BRANCA por padrão */
       border-radius: 12px; 
       padding: 12px 24px;
       cursor: pointer; 
@@ -591,14 +570,34 @@
       transform: translateY(-2px);
     }
 
-    .hospital-btn.active {
-      background: var(--hospital-neomater);
-      color: var(--hospital-neomater-text);
+    /* NEOMATER ativo - fundo branco, fonte azul escura */
+    .hospital-btn[data-hospital="H1"].active {
+      background: var(--hospital-neomater) !important; 
+      color: var(--hospital-neomater-text) !important; 
       border-color: var(--hospital-neomater-text);
       box-shadow: 0 4px 16px rgba(255, 255, 255, 0.5);
     }
 
-    /* =================== GRID E CARDS - LAYOUT 3x3 CONFORME MANUAL =================== */
+    /* OUTROS HOSPITAIS ativos - fontes brancas */
+    .hospital-btn[data-hospital="H2"].active {
+      background: var(--hospital-cruz-azul) !important;
+      color: #ffffff !important; 
+      border-color: var(--hospital-cruz-azul);
+    }
+
+    .hospital-btn[data-hospital="H3"].active {
+      background: var(--hospital-santa-marcelina) !important;
+      color: #ffffff !important; 
+      border-color: var(--hospital-santa-marcelina);
+    }
+
+    .hospital-btn[data-hospital="H4"].active {
+      background: var(--hospital-santa-clara) !important;
+      color: #ffffff !important; 
+      border-color: var(--hospital-santa-clara);
+    }
+
+    /* =================== GRID E CARDS =================== */
     .grid {
       display: grid; 
       grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
@@ -608,19 +607,71 @@
     }
 
     .card {
-      background: var(--gradient-card); 
+      background: var(--gradient-card) !important; 
       border-radius: 20px; 
       padding: 16px;
       box-shadow: var(--shadow);
       border: 1px solid var(--border);
       transform: translateY(0); 
       transition: transform 0.18s ease, box-shadow 0.18s ease;
-      backdrop-filter: blur(10px);
+      color: #ffffff !important; /* FONTE BRANCA BASE */
     }
 
     .card:hover {
       transform: translateY(-4px);
-      box-shadow: 0 16px 38px rgba(11,44,82,.16), 0 26px 64px rgba(11,44,82,.18), 0 0 0 1px rgba(255,255,255,.7) inset;
+      box-shadow: 0 16px 38px rgba(11,44,82,.16), 0 26px 64px rgba(11,44,82,.18);
+    }
+
+    /* =================== CORREÇÃO: FONTES BRANCAS NOS CARDS =================== */
+    .card * {
+      color: inherit !important;
+    }
+
+    /* Títulos das seções em branco sobre fundo azul */
+    .section-title {
+      color: #ffffff !important;
+      background: var(--text-accent) !important;
+      padding: 8px 12px !important;
+      border-radius: 6px !important;
+      margin-bottom: 8px !important;
+      font-size: 11px !important;
+      font-weight: 700 !important;
+      text-transform: uppercase !important;
+    }
+
+    /* Box do leito centralizado */
+    .leito-badge {
+      background: var(--status-vago);
+      color: #ffffff;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      padding: 10px 12px !important;
+      border-radius: 8px;
+      font-size: 12px;
+      text-align: center !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      min-height: 40px !important;
+    }
+
+    .leito-badge.ocupado {
+      background: var(--status-uso);
+      color: #000000;
+    }
+
+    /* Chips com fontes azuis */
+    .chip-item {
+      font-size: 10px;
+      background: rgba(96, 165, 250, 0.1);
+      border: 1px solid var(--border);
+      color: var(--text-accent) !important; 
+      padding: 2px 6px;
+      border-radius: 999px;
+      font-weight: 600;
+      margin: 2px;
+      display: inline-block;
     }
 
     /* =================== MODAIS =================== */
@@ -684,15 +735,10 @@
       flex-shrink: 0;
     }
 
-    /* =================== SEÇÃO 4: RESPONSIVIDADE MOBILE CORRIGIDA =================== */
+    /* =================== RESPONSIVIDADE =================== */
     @media (max-width: 1024px) {
       body.menu-open {
-        padding-left: 0; /* Menu overlay em tablets/mobile */
-      }
-
-      #side-menu {
-        width: 280px;
-        z-index: 1001;
+        padding-left: 0;
       }
     }
 
@@ -719,35 +765,6 @@
       #updateTimer {
         font-size: 10px;
         padding: 4px 8px;
-      }
-
-      .auth-container {
-        margin: 20px;
-        padding: 30px 20px;
-      }
-
-      .hamburger-menu {
-        font-size: 20px;
-        padding: 6px;
-      }
-    }
-
-    @media (max-width: 480px) {
-      main {
-        margin: 10px;
-        padding: 0 12px;
-      }
-
-      .card {
-        margin-bottom: 16px;
-      }
-
-      .header-left {
-        gap: 10px;
-      }
-
-      .brand h1 {
-        font-size: 16px;
       }
     }
 
@@ -817,157 +834,8 @@
 
     .system-footer p {
       margin: 5px 0;
+      color: #666666; /* Cinza para contraste com fundo branco */
     }
-    /* =================== CORREÇÕES DE LAYOUT =================== */
-
-
-    /* =================== CORREÇÃO FINAL COMPLETA - FONTES E FUNDO =================== */
-
-/* ALTERAR FUNDO GERAL DA PÁGINA PARA BRANCO (área em volta dos cards) */
-body {
-  background: #ffffff !important; /* FUNDO BRANCO para toda a página */
-}
-
-/* CORRIGIR: Área dos botões hospitais - AZUL ESCURO igual aos cards */
-.hospital-selector {
-  display: flex; 
-  justify-content: center; 
-  gap: 20px; 
-  margin: 20px 0 30px 0;
-  padding: 20px; 
-  background: var(--nav-header) !important; /* AZUL ESCURO IGUAL AOS CARDS */
-  border-radius: 16px;
-  border: 1px solid var(--border) !important;
-  flex-wrap: wrap;
-}
-
-/* CORRIGIR: Botões hospitais - fontes brancas por padrão */
-.hospital-btn {
-  background: var(--gradient-button); 
-  border: 1px solid var(--border);
-  color: var(--text-white) !important; /* FONTE BRANCA para todos botões não ativos */
-  border-radius: 12px; 
-  padding: 12px 24px;
-  cursor: pointer; 
-  font-weight: 600; 
-  text-transform: uppercase;
-  letter-spacing: 0.5px; 
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(96, 165, 250, 0.3);
-  font-size: 16px;
-  flex: 1;
-  min-width: 200px;
-}
-
-.hospital-btn:hover {
-  background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
-  box-shadow: 0 4px 16px rgba(96, 165, 250, 0.4);
-  transform: translateY(-2px);
-}
-
-/* ESPECIAL: Neomater ativo - fundo branco, fonte azul escura */
-.hospital-btn[data-hospital="H1"].active {
-  background: var(--hospital-neomater) !important; /* FUNDO BRANCO */
-  color: var(--hospital-neomater-text) !important; /* FONTE AZUL ESCURA */
-  border-color: var(--hospital-neomater-text);
-  box-shadow: 0 4px 16px rgba(255, 255, 255, 0.5);
-}
-
-/* OUTROS HOSPITAIS ATIVOS: fontes brancas sobre fundos coloridos */
-.hospital-btn[data-hospital="H2"].active {
-  background: var(--hospital-cruz-azul) !important;
-  color: #ffffff !important; /* FONTE BRANCA */
-  border-color: var(--hospital-cruz-azul);
-  box-shadow: 0 4px 16px rgba(96, 165, 250, 0.5);
-}
-
-.hospital-btn[data-hospital="H3"].active {
-  background: var(--hospital-santa-marcelina) !important;
-  color: #ffffff !important; /* FONTE BRANCA */
-  border-color: var(--hospital-santa-marcelina);
-  box-shadow: 0 4px 16px rgba(139, 92, 246, 0.5);
-}
-
-.hospital-btn[data-hospital="H4"].active {
-  background: var(--hospital-santa-clara) !important;
-  color: #ffffff !important; /* FONTE BRANCA */
-  border-color: var(--hospital-santa-clara);
-  box-shadow: 0 4px 16px rgba(245, 158, 11, 0.5);
-}
-
-/* CORRIGIR: Container principal com fundo branco mas sem alterar cards */
-main {
-  background: rgba(255, 255, 255, 0.95) !important; /* FUNDO BRANCO para área principal */
-  border: 1px solid #e5e5e5 !important;
-}
-
-/* MANTER: Cards no azul escuro original */
-.card {
-  background: var(--gradient-card) !important; /* Azul escuro original */
-  color: var(--text) !important; /* Texto branco original */
-}
-
-/* MANTER: Fontes brancas nos campos dos cards */
-.card .field {
-  background: rgba(96, 165, 250, 0.05) !important;
-  border: 1px solid var(--border) !important;
-  color: var(--text) !important; /* BRANCO */
-}
-
-.card .field .label {
-  color: var(--text-muted) !important; /* BRANCO acinzentado */
-}
-
-.card .field .value {
-  color: var(--text) !important; /* BRANCO */
-}
-
-/* MANTER: Títulos das seções em branco sobre fundo azul */
-.section-title {
-  color: #ffffff !important;
-  background: var(--text-accent) !important;
-  padding: 8px 12px !important;
-  border-radius: 6px !important;
-  margin-bottom: 8px !important;
-  font-size: 11px !important;
-  font-weight: 700 !important;
-  text-transform: uppercase !important;
-}
-
-/* MANTER: Box do leito centralizado */
-.leito-badge {
-  background: var(--status-vago);
-  color: #ffffff;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  padding: 10px 12px !important;
-  border-radius: 8px;
-  font-size: 12px;
-  text-align: center !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  min-height: 40px !important;
-}
-
-.leito-badge.ocupado {
-  background: var(--status-uso);
-  color: #000000;
-}
-
-/* MANTER: Chips com fontes azuis */
-.chip-item {
-  font-size: 10px;
-  background: rgba(96, 165, 250, 0.1);
-  border: 1px solid var(--border);
-  color: var(--text-accent) !important; /* AZUL para os chips */
-  padding: 2px 6px;
-  border-radius: 999px;
-  font-weight: 600;
-  margin: 2px;
-  display: inline-block;
-}
   </style>
 </head>
 
@@ -1069,32 +937,28 @@ main {
       </div>
       
       <div class="grid" id="cardsContainer">
-        <!-- Cards serão renderizados aqui pela Parte 2 -->
-        <div class="card" style="text-align: center; padding: 40px;">
-          <h3 style="color: var(--text-accent); margin: 0 0 10px 0;">Sistema Pronto!</h3>
-          <p style="color: var(--text-muted); margin: 0;">Aguardando PARTE 2/4 - Sistema de Dados + API + Cards</p>
-        </div>
+        <!-- Cards serão renderizados aqui pelo JavaScript -->
       </div>
     </section>
 
     <!-- Dashboard Hospitalar -->
     <section id="dash1" class="hidden">
-      <h2 style="margin-bottom:20px; color: var(--text-white);">Dashboard Hospitalar</h2>
+      <h2 style="margin-bottom:20px; color: #333333;">Dashboard Hospitalar</h2>
       <div id="dashboardContainer">
         <div class="card" style="text-align: center; padding: 40px;">
           <h3 style="color: var(--text-accent); margin: 0 0 10px 0;">Em Desenvolvimento</h3>
-          <p style="color: var(--text-muted); margin: 0;">Aguardando PARTE 3/4 - Dashboards + Gráficos</p>
+          <p style="color: #666666; margin: 0;">Aguardando PARTE 3/4 - Dashboards + Gráficos</p>
         </div>
       </div>
     </section>
     
     <!-- Rede Hospitalar Externa -->
     <section id="dash2" class="hidden">
-      <h2 style="margin-bottom:20px; color: var(--text-white);">Rede Hospitalar Externa</h2>
+      <h2 style="margin-bottom:20px; color: #333333;">Rede Hospitalar Externa</h2>
       <div id="executiveDashboardContainer">
         <div class="card" style="text-align: center; padding: 40px;">
           <h3 style="color: var(--text-accent); margin: 0 0 10px 0;">Em Desenvolvimento</h3>
-          <p style="color: var(--text-muted); margin: 0;">Aguardando PARTE 3/4 - Dashboards + Gráficos</p>
+          <p style="color: #666666; margin: 0;">Aguardando PARTE 3/4 - Dashboards + Gráficos</p>
         </div>
       </div>
     </section>
@@ -1118,9 +982,7 @@ main {
       </header>
       <div class="content">
         <div id="admissaoContent">
-          <p style="text-align: center; color: var(--text-muted);">
-            Formulário será implementado na PARTE 2/4
-          </p>
+          <!-- Formulário será renderizado pelo JavaScript -->
         </div>
       </div>
       <div class="actions">
@@ -1139,9 +1001,7 @@ main {
       </header>
       <div class="content">
         <div id="atualizacaoContent">
-          <p style="text-align: center; color: var(--text-muted);">
-            Formulário será implementado na PARTE 2/4
-          </p>
+          <!-- Formulário será renderizado pelo JavaScript -->
         </div>
       </div>
       <div class="actions">
@@ -1239,48 +1099,14 @@ main {
     <button class="btn primary" onclick="window.close()">Fechar Navegador</button>
   </div>
 
-
-<!-- 
-═══════════════════════════════════════════════════════════════
-🏥 ARCHIPELAGO DASHBOARD V3.0 - PARTE 2/4: SISTEMA DE DADOS + API + CARDS
-═══════════════════════════════════════════════════════════════
-
-✅ IMPLEMENTADO NESTA PARTE:
-- Configuração completa dos 4 hospitais + estrutura para 6
-- Sistema de comunicação com Google Apps Script
-- Renderização de cards no layout 3x3 exato conforme manual
-- Modais de admissão/atualização com formulários completos
-- Sistema de cores dinâmico funcionando
-- Auto-refresh 4 minutos funcionando
-
-📋 ADICIONADO AO JAVASCRIPT:
-- SEÇÃO 8: CONFIGURAÇÃO DOS HOSPITAIS (linhas 1100-1200)
-- SEÇÃO 9: SISTEMA DE API E DADOS (linhas 1200-1400)  
-- SEÇÃO 10: RENDERIZAÇÃO DE CARDS 3x3 (linhas 1400-1600)
-- SEÇÃO 11: MODAIS DE FORMULÁRIOS (linhas 1600-1800)
-- SEÇÃO 12: SISTEMA DE CORES DINÂMICO (linhas 1800-1900)
-
-🔄 INSTRUÇÕES DE INSTALAÇÃO:
-1. Substitua APENAS o <script> existente pelo novo script completo abaixo
-2. Mantenha todo o resto do arquivo igual (HTML + CSS)
-3. O sistema carregará automaticamente os dados da API
-
-🚀 PRÓXIMA: PARTE 3/4 - Dashboards + Gráficos Avançados
-═══════════════════════════════════════════════════════════════
--->
-
-<!-- MANTER TODO O HTML + CSS DA PARTE 1 IGUAL -->
-<!-- SUBSTITUIR APENAS O <script> PELO SCRIPT COMPLETO ABAIXO: -->
-
+ // =================== JAVASCRIPT COMPLETO COM TODAS AS CORREÇÕES =================== 
 <script>
-// =================== SEÇÕES 1-7: MANTIDAS DA PARTE 1 =================== 
-
-// Configurações Globais
-const SYSTEM_PASSWORD = '170284'; // SENHA OBRIGATÓRIA CONFORME MANUAL
+// =================== CONFIGURAÇÕES GLOBAIS =================== 
+const SYSTEM_PASSWORD = '170284'; 
 const ADMIN_EMAIL = 'cvcalessandro@gmail.com';
 const ADMIN_PASSWORD = 'Bruno2305!@!@';
 const API_URL = 'https://script.google.com/macros/s/AKfycbwz2o5GRiQJjpTDwve8yQAWGAO-Bb4mI_pnG8kbB_6l4wSKpde8wzALQyRJ-Zqntdo-/exec';
-const UPDATE_INTERVAL = 240000; // 4 MINUTOS CONFORME MANUAL
+const UPDATE_INTERVAL = 240000; // 4 MINUTOS
 
 // Estado Global
 let isAuthenticated = false;
@@ -1288,13 +1114,11 @@ let isQRMode = false;
 let currentHospital = "H1";
 let activeTab = "leitos";
 let updateTimer = null;
-let autoRefreshInterval = null;
 let selectedLeito = null;
 let qrSessionTimeout = null;
 let lastUpdateTime = Date.now();
 
-// =================== SEÇÃO 8: CONFIGURAÇÃO DOS HOSPITAIS =================== 
-
+// =================== CONFIGURAÇÃO DOS HOSPITAIS =================== 
 const HOSPITAIS = {
   H1: { 
     nome: "Neomater", 
@@ -1324,65 +1148,63 @@ const HOSPITAIS = {
   }
 };
 
-// Listas conforme manual - 19 LINHAS + 13 CONCESSÕES
+// Listas conforme manual
 const LINHAS_CUIDADO = [
-  "Assiste",
-  "APS", 
-  "Cuidados Paliativos",
-  "ICO (Insuficiência Coronariana)",
-  "Oncologia",
-  "Pediatria",
-  "Programa Autoimune - Gastroenterologia",
-  "Programa Autoimune - Neuro-desmielinizante", 
-  "Programa Autoimune - Neuro-muscular",
-  "Programa Autoimune - Reumatologia",
-  "Vida Mais Leve Care",
-  "Crônicos - Cardiologia",
-  "Crônicos - Endocrinologia", 
-  "Crônicos - Geriatria",
-  "Crônicos - Melhor Cuidado",
-  "Crônicos - Neurologia",
-  "Crônicos - Pneumologia",
-  "Crônicos - Pós-bariátrica",
+  "Assiste", "APS", "Cuidados Paliativos", "ICO (Insuficiência Coronariana)",
+  "Oncologia", "Pediatria", "Programa Autoimune - Gastroenterologia",
+  "Programa Autoimune - Neuro-desmielinizante", "Programa Autoimune - Neuro-muscular",
+  "Programa Autoimune - Reumatologia", "Vida Mais Leve Care", "Crônicos - Cardiologia",
+  "Crônicos - Endocrinologia", "Crônicos - Geriatria", "Crônicos - Melhor Cuidado",
+  "Crônicos - Neurologia", "Crônicos - Pneumologia", "Crônicos - Pós-bariátrica",
   "Crônicos - Reumatologia"
 ];
 
 const CONCESSOES = [
-  "Transição Domiciliar",
-  "Aplicação domiciliar de medicamentos",
-  "Fisioterapia",
-  "Fonoaudiologia", 
-  "Aspiração",
-  "Banho",
-  "Curativos",
-  "Oxigenoterapia",
-  "Recarga de O2",
-  "Orientação Nutricional - com dispositivo",
-  "Orientação Nutricional - sem dispositivo", 
-  "Clister",
-  "PICC"
+  "Transição Domiciliar", "Aplicação domiciliar de medicamentos", "Fisioterapia",
+  "Fonoaudiologia", "Aspiração", "Banho", "Curativos", "Oxigenoterapia",
+  "Recarga de O2", "Orientação Nutricional - com dispositivo", 
+  "Orientação Nutricional - sem dispositivo", "Clister", "PICC"
 ];
 
-// PPS Range conforme manual: 10% a 100%, incrementos de 10%
 const PPS_OPTIONS = ['10%', '20%', '30%', '40%', '50%', '60%', '70%', '80%', '90%', '100%'];
 
-// Previsões de alta conforme manual
 const PREVISAO_ALTA_OPTIONS = [
-  'Hoje Ouro', 'Hoje 2R', 'Hoje 3R', 
-  '24h Ouro', '24h 2R', '24h 3R', 
+  'Hoje Ouro', 'Hoje 2R', 'Hoje 3R', '24h Ouro', '24h 2R', '24h 3R', 
   '48h', '72h', '96h', 'SP'
 ];
 
 // Banco de dados local
 const banco = { H1: [], H2: [], H3: [], H4: [] };
 
-// =================== SEÇÃO 9: SISTEMA DE API E DADOS =================== 
-
+// =================== FUNÇÕES UTILITÁRIAS =================== 
 function logInfo(message, data = null) { console.log(`🔵 [Archipelago] ${message}`, data || ''); }
 function logSuccess(message, data = null) { console.log(`🟢 [SUCCESS] ${message}`, data || ''); }
 function logError(message, error = null) { console.error(`🔴 [ERROR] ${message}`, error || ''); }
 function logWarning(message, data = null) { console.warn(`🟡 [WARNING] ${message}`, data || ''); }
 
+function initials(nome){ 
+  if(!nome) return "—"; 
+  return nome.split(" ").map(p=>p[0]).slice(0,3).join("").toUpperCase(); 
+}
+
+function fmtDateTime(iso){
+  if(!iso) return "—";
+  const d=new Date(iso);
+  return d.toLocaleString('pt-BR', { 
+    day: '2-digit', month: '2-digit', year: 'numeric', 
+    hour: '2-digit', minute: '2-digit' 
+  });
+}
+
+function elapsedSince(iso){
+  if(!iso) return { text: "—", days: 0 };
+  const ms = Date.now() - new Date(iso).getTime();
+  const days = Math.floor(ms / 86400000);
+  const hours = Math.floor((ms%86400000)/3600000);
+  return { text: `${days}d ${hours}h`, days: days };
+}
+
+// =================== SISTEMA DE API E DADOS =================== 
 async function testConnection() {
   logInfo("Testando conexão com a API...");
   try {
@@ -1402,12 +1224,10 @@ async function testConnection() {
   }
 }
 
-// Processar dados da API com estrutura correta
 function processarDadosLeito(dadosBrutos) {
   if (!Array.isArray(dadosBrutos)) return [];
   
   return dadosBrutos.map(leito => {
-    // Se os dados vierem da API como objeto estruturado
     if (typeof leito === 'object' && leito !== null && !Array.isArray(leito)) {
       return {
         hospital: leito.hospital || '',
@@ -1430,7 +1250,6 @@ function processarDadosLeito(dadosBrutos) {
       };
     }
     
-    // Se vierem como array da planilha (A, B, C, D, E, F, G, H, I, J, K, L, M, N)
     if (Array.isArray(leito)) {
       return {
         hospital: leito[0] || '',
@@ -1443,7 +1262,6 @@ function processarDadosLeito(dadosBrutos) {
         admAt: leito[7] || null,
         pps: leito[8] || null,
         spict: leito[9] || 'nao_elegivel',
-        // Pulando complexidade (coluna K) por enquanto
         prevAlta: leito[11] || null,
         linhas: (leito[12] && leito[12] !== 'SP') ? 
                leito[12].split('|').map(l => l.trim()).filter(l => l) : [],
@@ -1469,16 +1287,12 @@ async function loadHospital(hospitalId) {
     lastUpdateTime = Date.now();
     logSuccess(`Dados carregados: ${HOSPITAIS[hospitalId].nome} - ${banco[hospitalId].length} leitos`);
     
-    // Re-renderizar se estivermos na aba de leitos
     if (activeTab === 'leitos') renderCards();
     
   } catch(error) {
     logError(`Erro ao carregar ${hospitalId}:`, error);
-    
-    // Dados de teste em caso de erro
     banco[hospitalId] = gerarDadosTeste(hospitalId);
     logWarning(`Usando dados de teste para ${hospitalId}. Total: ${banco[hospitalId].length} leitos`);
-    
     if (activeTab === 'leitos') renderCards();
   }
 }
@@ -1490,7 +1304,7 @@ function gerarDadosTeste(hospitalId) {
   const dados = [];
   
   hospital.config.forEach((leitoConfig, index) => {
-    const isOcupado = Math.random() > 0.4; // 60% ocupação
+    const isOcupado = Math.random() > 0.4;
     
     if (isOcupado) {
       dados.push({
@@ -1533,10 +1347,8 @@ function gerarDadosTeste(hospitalId) {
 async function loadAllData() {
   showLoading();
   await Promise.all([
-    loadHospital('H1'),
-    loadHospital('H2'),
-    loadHospital('H3'),
-    loadHospital('H4')
+    loadHospital('H1'), loadHospital('H2'), 
+    loadHospital('H3'), loadHospital('H4')
   ]);
   hideLoading();
 }
@@ -1568,32 +1380,7 @@ async function apiCall(payload) {
   }
 }
 
-// =================== SEÇÃO 10: RENDERIZAÇÃO DE CARDS LAYOUT 3x3 =================== 
-
-function initials(nome){ 
-  if(!nome) return "—"; 
-  return nome.split(" ").map(p=>p[0]).slice(0,3).join("").toUpperCase(); 
-}
-
-function fmtDateTime(iso){
-  if(!iso) return "—";
-  const d=new Date(iso);
-  return d.toLocaleString('pt-BR', { 
-    day: '2-digit', month: '2-digit', year: 'numeric', 
-    hour: '2-digit', minute: '2-digit' 
-  });
-}
-
-function elapsedSince(iso){
-  if(!iso) return { text: "—", days: 0 };
-  const ms = Date.now() - new Date(iso).getTime();
-  const days = Math.floor(ms / 86400000);
-  const hours = Math.floor((ms%86400000)/3600000);
-  return { text: `${days}d ${hours}h`, days: days };
-}
-
-// =================== FUNÇÃO CORRIGIDA: renderCards =================== 
-
+// =================== RENDERIZAÇÃO DE CARDS - FONTES BRANCAS CORRIGIDAS =================== 
 function renderCards(){
   const container = document.getElementById("cardsContainer");
   if(!container) return;
@@ -1605,7 +1392,7 @@ function renderCards(){
     container.innerHTML = `
       <div class="card" style="grid-column: 1 / -1; text-align: center; padding: 40px;">
         <h3 style="color: var(--text-accent); margin: 0 0 10px 0;">Carregando dados...</h3>
-        <p style="color: #666666; margin: 0;">Hospital: ${HOSPITAIS[currentHospital]?.nome}</p>
+        <p style="color: #ffffff; margin: 0;">Hospital: ${HOSPITAIS[currentHospital]?.nome}</p>
       </div>
     `;
     return;
@@ -1615,13 +1402,13 @@ function renderCards(){
     const card = document.createElement("div");
     card.className = "card";
 
-    // LAYOUT 3x3 CORRIGIDO conforme suas especificações
+    // LAYOUT 3x3 COM FONTES BRANCAS CORRIGIDAS
     card.innerHTML = `
-      <!-- LINHA 1: Hospital / Leito / Tipo - DIVISÃO EXATA 1/3 -->
+      <!-- LINHA 1: Hospital / Leito / Tipo -->
       <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 12px;">
-        <div style="background: rgba(0, 0, 0, 0.05); border: 1px solid rgba(0, 0, 0, 0.1); border-radius: 8px; padding: 10px; min-height: 40px; display: flex; flex-direction: column; justify-content: center;">
-          <div style="font-size: 10px; color: #666666; font-weight: 600; text-transform: uppercase; margin-bottom: 3px;">Hospital</div>
-          <div style="color: #000000; font-weight: 600; font-size: 12px;">${HOSPITAIS[l.hospital]?.nome || 'Hospital'}</div>
+        <div style="background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 8px; padding: 10px; min-height: 40px; display: flex; flex-direction: column; justify-content: center;">
+          <div style="font-size: 10px; color: rgba(255, 255, 255, 0.7); font-weight: 600; text-transform: uppercase; margin-bottom: 3px;">Hospital</div>
+          <div style="color: #ffffff; font-weight: 600; font-size: 12px;">${HOSPITAIS[l.hospital]?.nome || 'Hospital'}</div>
         </div>
         
         <div style="min-height: 40px; display: flex; align-items: center; justify-content: center;">
@@ -1630,84 +1417,75 @@ function renderCards(){
           </div>
         </div>
         
-        <div style="background: rgba(0, 0, 0, 0.05); border: 1px solid rgba(0, 0, 0, 0.1); border-radius: 8px; padding: 10px; min-height: 40px; display: flex; flex-direction: column; justify-content: center;">
-          <div style="font-size: 10px; color: #666666; font-weight: 600; text-transform: uppercase; margin-bottom: 3px;">Tipo</div>
-          <div style="color: #000000; font-weight: 600; font-size: 12px;">${l.tipo === 'UTI' ? 'UTI' : 'ENF/APTO'}</div>
+        <div style="background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 8px; padding: 10px; min-height: 40px; display: flex; flex-direction: column; justify-content: center;">
+          <div style="font-size: 10px; color: rgba(255, 255, 255, 0.7); font-weight: 600; text-transform: uppercase; margin-bottom: 3px;">Tipo</div>
+          <div style="color: #ffffff; font-weight: 600; font-size: 12px;">${l.tipo === 'UTI' ? 'UTI' : 'ENF/APTO'}</div>
         </div>
       </div>
 
-      <!-- LINHA 2: Iniciais / Matrícula / Idade - DIVISÃO EXATA 1/3 -->
+      <!-- LINHA 2: Iniciais / Matrícula / Idade -->
       <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 12px;">
-        <div style="background: rgba(0, 0, 0, 0.05); border: 1px solid rgba(0, 0, 0, 0.1); border-radius: 8px; padding: 10px;">
-          <div style="font-size: 10px; color: #666666; font-weight: 600; text-transform: uppercase; margin-bottom: 3px;">Iniciais</div>
-          <div style="color: #000000; font-weight: 600; font-size: 12px;">${l.status==="Em uso"?initials(l.nome):"—"}</div>
+        <div style="background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 8px; padding: 10px;">
+          <div style="font-size: 10px; color: rgba(255, 255, 255, 0.7); font-weight: 600; text-transform: uppercase; margin-bottom: 3px;">Iniciais</div>
+          <div style="color: #ffffff; font-weight: 600; font-size: 12px;">${l.status==="Em uso"?initials(l.nome):"—"}</div>
         </div>
         
-        <div style="background: rgba(0, 0, 0, 0.05); border: 1px solid rgba(0, 0, 0, 0.1); border-radius: 8px; padding: 10px;">
-          <div style="font-size: 10px; color: #666666; font-weight: 600; text-transform: uppercase; margin-bottom: 3px;">Matrícula</div>
-          <div style="color: #000000; font-weight: 600; font-size: 12px;">${l.matricula||"—"}</div>
+        <div style="background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 8px; padding: 10px;">
+          <div style="font-size: 10px; color: rgba(255, 255, 255, 0.7); font-weight: 600; text-transform: uppercase; margin-bottom: 3px;">Matrícula</div>
+          <div style="color: #ffffff; font-weight: 600; font-size: 12px;">${l.matricula||"—"}</div>
         </div>
         
-        <div style="background: rgba(0, 0, 0, 0.05); border: 1px solid rgba(0, 0, 0, 0.1); border-radius: 8px; padding: 10px;">
-          <div style="font-size: 10px; color: #666666; font-weight: 600; text-transform: uppercase; margin-bottom: 3px;">Idade</div>
-          <div style="color: #000000; font-weight: 600; font-size: 12px;">${l.idade ? l.idade + ' anos' : "—"}</div>
+        <div style="background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 8px; padding: 10px;">
+          <div style="font-size: 10px; color: rgba(255, 255, 255, 0.7); font-weight: 600; text-transform: uppercase; margin-bottom: 3px;">Idade</div>
+          <div style="color: #ffffff; font-weight: 600; font-size: 12px;">${l.idade ? l.idade + ' anos' : "—"}</div>
         </div>
       </div>
 
-      <!-- LINHA 3: PPS / SPICT-BR / Previsão de Alta - DIVISÃO EXATA 1/3 -->
+      <!-- LINHA 3: PPS / SPICT-BR / Previsão de Alta -->
       <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 15px;">
-        <div style="background: rgba(0, 0, 0, 0.05); border: 1px solid rgba(0, 0, 0, 0.1); border-radius: 8px; padding: 10px;">
-          <div style="font-size: 10px; color: #666666; font-weight: 600; text-transform: uppercase; margin-bottom: 3px;">PPS</div>
-          <div style="color: #000000; font-weight: 600; font-size: 12px;">${l.pps||"—"}</div>
+        <div style="background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 8px; padding: 10px;">
+          <div style="font-size: 10px; color: rgba(255, 255, 255, 0.7); font-weight: 600; text-transform: uppercase; margin-bottom: 3px;">PPS</div>
+          <div style="color: #ffffff; font-weight: 600; font-size: 12px;">${l.pps||"—"}</div>
         </div>
         
-        <div style="background: rgba(0, 0, 0, 0.05); border: 1px solid rgba(0, 0, 0, 0.1); border-radius: 8px; padding: 10px;">
-          <div style="font-size: 10px; color: #666666; font-weight: 600; text-transform: uppercase; margin-bottom: 3px;">SPICT-BR</div>
-          <div style="color: #000000; font-weight: 600; font-size: 12px;">${l.spict==="elegivel"?"Elegível":(l.spict==="nao_elegivel"?"Não elegível":"—")}</div>
+        <div style="background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 8px; padding: 10px;">
+          <div style="font-size: 10px; color: rgba(255, 255, 255, 0.7); font-weight: 600; text-transform: uppercase; margin-bottom: 3px;">SPICT-BR</div>
+          <div style="color: #ffffff; font-weight: 600; font-size: 12px;">${l.spict==="elegivel"?"Elegível":(l.spict==="nao_elegivel"?"Não elegível":"—")}</div>
         </div>
         
-        <div style="
-          background: var(--destaque);
-          border: 1px solid rgba(143, 211, 244, 0.5);
-          border-radius: 8px;
-          padding: 10px;
-        ">
+        <div style="background: var(--destaque); border: 1px solid rgba(143, 211, 244, 0.5); border-radius: 8px; padding: 10px;">
           <div style="font-size: 10px; color: #000000; font-weight: 700; text-transform: uppercase; margin-bottom: 3px;">Previsão Alta</div>
           <div style="color: #000000; font-weight: 700; font-size: 12px;">${l.prevAlta||"—"}</div>
         </div>
       </div>
 
-      <!-- LINHA 4: CONCESSÕES PREVISTAS NA ALTA - TÍTULO BRANCO -->
+      <!-- LINHA 4: CONCESSÕES PREVISTAS NA ALTA -->
       <div style="margin-bottom: 15px;">
-        <div class="section-title">
-          CONCESSÕES PREVISTAS NA ALTA
-        </div>
-        <div style="display: flex; flex-wrap: wrap; gap: 4px; min-height: 24px; background: rgba(0, 0, 0, 0.03); border-radius: 6px; padding: 8px;">
-          ${(l.concessoes||[]).map(c=>`<span class="chip-item">${c}</span>`).join("")||'<span style="color: #666666; font-size: 10px;">Nenhuma</span>'}
+        <div class="section-title">CONCESSÕES PREVISTAS NA ALTA</div>
+        <div style="display: flex; flex-wrap: wrap; gap: 4px; min-height: 24px; background: rgba(255, 255, 255, 0.05); border-radius: 6px; padding: 8px;">
+          ${(l.concessoes||[]).map(c=>`<span class="chip-item">${c}</span>`).join("")||'<span style="color: rgba(255, 255, 255, 0.7); font-size: 10px;">Nenhuma</span>'}
         </div>
       </div>
 
-      <!-- LINHA 5: LINHA DE CUIDADOS PROPOSTA NA ALTA - TÍTULO BRANCO -->
+      <!-- LINHA 5: LINHA DE CUIDADOS PROPOSTA NA ALTA -->
       <div style="margin-bottom: 15px;">
-        <div class="section-title">
-          LINHA DE CUIDADOS PROPOSTA NA ALTA
-        </div>
-        <div style="display: flex; flex-wrap: wrap; gap: 4px; min-height: 24px; background: rgba(0, 0, 0, 0.03); border-radius: 6px; padding: 8px;">
-          ${(l.linhas||[]).map(linha=>`<span class="chip-item">${linha}</span>`).join("")||'<span style="color: #666666; font-size: 10px;">Nenhuma</span>'}
+        <div class="section-title">LINHA DE CUIDADOS PROPOSTA NA ALTA</div>
+        <div style="display: flex; flex-wrap: wrap; gap: 4px; min-height: 24px; background: rgba(255, 255, 255, 0.05); border-radius: 6px; padding: 8px;">
+          ${(l.linhas||[]).map(linha=>`<span class="chip-item">${linha}</span>`).join("")||'<span style="color: rgba(255, 255, 255, 0.7); font-size: 10px;">Nenhuma</span>'}
         </div>
       </div>
 
       <!-- LINHA 6: ADMISSÃO + INTERNADO HÁ + BOTÕES -->
-      <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 12px; border-top: 1px solid rgba(0, 0, 0, 0.1);">
+      <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 12px; border-top: 1px solid rgba(255, 255, 255, 0.1);">
         <div style="flex: 1; display: flex; gap: 20px;">
           <div>
-            <div style="font-size: 10px; color: #666666; font-weight: 600; text-transform: uppercase; margin-bottom: 3px;">ADMISSÃO</div>
-            <div style="color: #000000; font-weight: 600; font-size: 11px;">${l.admAt ? fmtDateTime(l.admAt) : "—"}</div>
+            <div style="font-size: 10px; color: rgba(255, 255, 255, 0.7); font-weight: 600; text-transform: uppercase; margin-bottom: 3px;">ADMISSÃO</div>
+            <div style="color: #ffffff; font-weight: 600; font-size: 11px;">${l.admAt ? fmtDateTime(l.admAt) : "—"}</div>
           </div>
           ${l.status === "Em uso" ? `
           <div>
-            <div style="font-size: 10px; color: #666666; font-weight: 600; text-transform: uppercase; margin-bottom: 3px;">INTERNADO HÁ</div>
-            <div style="color: #000000; font-weight: 600; font-size: 11px;">${elapsedSince(l.admAt).text}</div>
+            <div style="font-size: 10px; color: rgba(255, 255, 255, 0.7); font-weight: 600; text-transform: uppercase; margin-bottom: 3px;">INTERNADO HÁ</div>
+            <div style="color: #ffffff; font-weight: 600; font-size: 11px;">${elapsedSince(l.admAt).text}</div>
           </div>
           ` : ''}
         </div>
@@ -1735,8 +1513,8 @@ function renderCards(){
     container.appendChild(card);
   });
 }
-// =================== SEÇÃO 11: MODAIS DE FORMULÁRIOS =================== 
 
+// =================== MODAIS DE FORMULÁRIOS =================== 
 function openAdmissao(leito){
   selectedLeito = leito;
   const leitoConfig = HOSPITAIS[currentHospital].config.find(x=>x.id===leito);
@@ -1764,7 +1542,7 @@ function openAdmissao(leito){
 
     <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 15px;">
       <div>
-        <label style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px; display: block; font-weight: 600; text-transform: uppercase;">Matrícula (número)</label>
+        <label style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px; display: block; font-weight: 600; text-transform: uppercase;">Matrícula</label>
         <input id="a_matricula" style="width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--card); color: var(--text); font-weight: 600;" />
       </div>
       <div>
@@ -1790,7 +1568,7 @@ function openAdmissao(leito){
       </select>
     </div>
 
-    <!-- CONCESSÕES PREVISTAS NA ALTA -->
+    <!-- CONCESSÕES -->
     <div style="margin-bottom: 20px;">
       <label style="font-size: 12px; color: var(--text-accent); margin-bottom: 8px; display: block; font-weight: 700; text-transform: uppercase;">CONCESSÕES PREVISTAS NA ALTA</label>
       <div id="a_concessoes" style="max-height: 150px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; padding: 10px; background: rgba(96, 165, 250, 0.05);">
@@ -1802,7 +1580,7 @@ function openAdmissao(leito){
       </div>
     </div>
 
-    <!-- LINHA DE CUIDADOS PROPOSTA NA ALTA -->
+    <!-- LINHAS DE CUIDADO -->
     <div style="margin-bottom: 20px;">
       <label style="font-size: 12px; color: var(--text-accent); margin-bottom: 8px; display: block; font-weight: 700; text-transform: uppercase;">LINHA DE CUIDADOS PROPOSTA NA ALTA</label>
       <div id="a_linhas" style="max-height: 150px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; padding: 10px; background: rgba(96, 165, 250, 0.05);">
@@ -1813,15 +1591,10 @@ function openAdmissao(leito){
         `).join('')}
       </div>
     </div>
-
-    <div style="font-size: 11px; color: var(--text-muted); font-style: italic;">
-      * Data e hora de admissão serão registradas automaticamente ao salvar.
-    </div>
   `;
   
   openModal("#modalAdmissao");
 }
-
 
 function openAtualizacao(leito){
   selectedLeito = leito;
@@ -1830,14 +1603,14 @@ function openAtualizacao(leito){
   
   const content = document.getElementById('atualizacaoContent');
   content.innerHTML = `
-    <!-- INFO DO LEITO - LAYOUT 1/3 CORRIGIDO -->
+    <!-- INFO DO LEITO -->
     <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 20px; padding: 15px; background: rgba(96, 165, 250, 0.05); border-radius: 8px;">
       <div><span style="font-size: 12px; color: var(--text-muted); font-weight: 600; text-transform: uppercase;">Hospital</span><div style="color: var(--text-accent); font-weight: 600;">${HOSPITAIS[currentHospital].nome}</div></div>
       <div><span style="font-size: 12px; color: var(--text-muted); font-weight: 600; text-transform: uppercase;">Leito</span><div style="color: var(--text-accent); font-weight: 600;">Leito ${leito}</div></div>
       <div><span style="font-size: 12px; color: var(--text-muted); font-weight: 600; text-transform: uppercase;">Tipo</span><div style="color: var(--text-accent); font-weight: 600;">${l.tipo === 'UTI' ? 'UTI' : 'ENF/APTO'}</div></div>
     </div>
 
-    <!-- LINHA 1: INICIAIS / MATRÍCULA / IDADE (não mais admissão) -->
+    <!-- DADOS EDITÁVEIS -->
     <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 15px;">
       <div>
         <label style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px; display: block; font-weight: 600; text-transform: uppercase;">Iniciais (bloqueado)</label>
@@ -1853,7 +1626,6 @@ function openAtualizacao(leito){
       </div>
     </div>
 
-    <!-- LINHA 2: PPS / SPICT-BR / PREVISÃO -->
     <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 15px;">
       <div>
         <label style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px; display: block; font-weight: 600; text-transform: uppercase;">PPS</label>
@@ -1877,7 +1649,7 @@ function openAtualizacao(leito){
       </div>
     </div>
 
-    <!-- CONCESSÕES PREVISTAS NA ALTA -->
+    <!-- CONCESSÕES -->
     <div style="margin-bottom: 20px;">
       <label style="font-size: 12px; color: var(--text-accent); margin-bottom: 8px; display: block; font-weight: 700; text-transform: uppercase;">CONCESSÕES PREVISTAS NA ALTA</label>
       <div id="u_concessoes" style="max-height: 150px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; padding: 10px; background: rgba(96, 165, 250, 0.05);">
@@ -1889,7 +1661,7 @@ function openAtualizacao(leito){
       </div>
     </div>
 
-    <!-- LINHA DE CUIDADOS PROPOSTA NA ALTA -->
+    <!-- LINHAS DE CUIDADO -->
     <div style="margin-bottom: 20px;">
       <label style="font-size: 12px; color: var(--text-accent); margin-bottom: 8px; display: block; font-weight: 700; text-transform: uppercase;">LINHA DE CUIDADOS PROPOSTA NA ALTA</label>
       <div id="u_linhas" style="max-height: 150px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; padding: 10px; background: rgba(96, 165, 250, 0.05);">
@@ -1901,14 +1673,10 @@ function openAtualizacao(leito){
       </div>
     </div>
 
-    <!-- ADMISSÃO + INTERNADO HÁ (movido para cá) -->
-    <div style="display: flex; gap: 20px; padding: 12px; background: rgba(0,0,0,0.05); border-radius: 8px; font-size: 11px; color: var(--text-muted);">
-      <div>
-        <strong>Admissão:</strong> ${fmtDateTime(l.admAt)||'N/A'}
-      </div>
-      <div>
-        <strong>Internado há:</strong> ${elapsedSince(l.admAt).text}
-      </div>
+    <!-- INFORMAÇÕES DE ADMISSÃO -->
+    <div style="display: flex; gap: 20px; padding: 12px; background: rgba(255, 255, 255, 0.05); border-radius: 8px; font-size: 11px; color: var(--text-muted);">
+      <div><strong>Admissão:</strong> ${fmtDateTime(l.admAt)||'N/A'}</div>
+      <div><strong>Internado há:</strong> ${elapsedSince(l.admAt).text}</div>
     </div>
   `;
   
@@ -1956,14 +1724,12 @@ function showSuccessMessage() {
   document.getElementById('successMessage').style.display = 'block'; 
 }
 
-// =================== SEÇÃO 12: NAVEGAÇÃO E HOSPITAL SELECTOR =================== 
-
+// =================== NAVEGAÇÃO E HOSPITAL SELECTOR =================== 
 function setHospital(hospitalId) {
   if (!HOSPITAIS[hospitalId]) return;
   
   currentHospital = hospitalId;
   
-  // Atualizar botões visuais
   document.querySelectorAll('.hospital-btn').forEach(btn => {
     btn.classList.remove('active');
   });
@@ -1973,15 +1739,12 @@ function setHospital(hospitalId) {
     activeBtn.classList.add('active');
   }
   
-  // Re-renderizar cards
   renderCards();
   
   logInfo(`Hospital selecionado: ${HOSPITAIS[hospitalId].nome} (${HOSPITAIS[hospitalId].leitos} leitos)`);
 }
 
-// =================== SEÇÕES 1-7 MANTIDAS DA PARTE 1 =================== 
-
-// Sistema de Autenticação (mantido da Parte 1)
+// =================== SISTEMA DE AUTENTICAÇÃO =================== 
 function initAuthentication() {
   const authModal = document.getElementById('authModal');
   const authPassword = document.getElementById('authPassword');
@@ -2047,7 +1810,7 @@ function initAuthentication() {
   }
 }
 
-// Timer de Atualização (mantido da Parte 1)
+// =================== TIMER DE ATUALIZAÇÃO =================== 
 function initUpdateTimer() {
   let timeLeft = UPDATE_INTERVAL / 1000;
   const timerElement = document.getElementById('updateTimer');
@@ -2057,10 +1820,9 @@ function initUpdateTimer() {
     
     if (timeLeft <= 0) {
       timeLeft = UPDATE_INTERVAL / 1000;
-      // Auto-refresh implementado agora
       if (!isQRMode && activeTab === 'leitos') {
         loadHospital(currentHospital);
-        logInfo("🔄 Auto-refresh executado para " + HOSPITAIS[currentHospital].nome);
+        logInfo("Auto-refresh executado para " + HOSPITAIS[currentHospital].nome);
       }
     }
 
@@ -2070,7 +1832,7 @@ function initUpdateTimer() {
   }, 1000);
 }
 
-// Sistema de Menu Lateral (mantido da Parte 1)
+// =================== SISTEMA DE MENU LATERAL =================== 
 function initMenuSystem() {
   const hamburgerMenu = document.getElementById('hamburgerMenu');
   const closeMenuBtn = document.getElementById('closeMenuBtn');
@@ -2139,7 +1901,7 @@ function initMenuSystem() {
   });
 }
 
-// Sistema de Navegação entre Abas (mantido da Parte 1)
+// =================== SISTEMA DE NAVEGAÇÃO ENTRE ABAS =================== 
 function setActiveTab(tab) {
   document.querySelectorAll('.side-menu-item').forEach(item => {
     item.classList.remove('active');
@@ -2166,15 +1928,15 @@ function setActiveTab(tab) {
       renderCards();
       break;
     case 'dash1':
-      console.log('📊 Dashboard Hospitalar activated - será implementado na Parte 3');
+      console.log('Dashboard Hospitalar activated - implementar na Parte 3');
       break;
     case 'dash2':
-      console.log('🌐 Rede Hospitalar Externa activated - será implementado na Parte 3');
+      console.log('Rede Hospitalar Externa activated - implementar na Parte 3');
       break;
   }
 }
 
-// Funções Utilitárias (mantidas da Parte 1)
+// =================== FUNÇÕES UTILITÁRIAS =================== 
 function showLoading() {
   document.getElementById('loadingOverlay').style.display = 'flex';
 }
@@ -2199,31 +1961,28 @@ function closeModal(modalId) {
   }
 }
 
-// Event Listeners Globais EXPANDIDOS
+// =================== EVENT LISTENERS GLOBAIS =================== 
 document.addEventListener('DOMContentLoaded', () => {
-  // Close modal buttons
   document.querySelectorAll('[data-close]').forEach(btn => {
     btn.addEventListener('click', () => {
       closeModal(btn.getAttribute('data-close'));
     });
   });
 
-  // Refresh button IMPLEMENTADO
   document.getElementById('refreshBtn').addEventListener('click', async () => {
-    logInfo('🔄 Manual refresh triggered');
+    logInfo('Manual refresh triggered');
     showLoading();
     await loadAllData();
     hideLoading();
   });
 
-  // Hospital selector buttons IMPLEMENTADOS
   document.querySelectorAll('.hospital-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       setHospital(btn.dataset.hospital);
     });
   });
 
-  // Modal form buttons IMPLEMENTADOS
+  // Modal form buttons
   const aCancelBtn = document.getElementById('a_cancel');
   const aSaveBtn = document.getElementById('a_save');
   
@@ -2268,7 +2027,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Modal update form buttons IMPLEMENTADOS
   const uCancelBtn = document.getElementById('u_cancel');
   const uAltaBtn = document.getElementById('u_alta');
   const uSaveBtn = document.getElementById('u_save');
@@ -2317,53 +2075,49 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
-// Inicialização Principal do Sistema EXPANDIDA
+// =================== INICIALIZAÇÃO PRINCIPAL DO SISTEMA =================== 
 async function initializeSystem() {
-  console.log('🏥 Archipelago Dashboard V3.0 - PARTE 2/4 Inicializada');
-  console.log('✅ Autenticação aprovada - Senha 170284');
-  console.log('⏱️ Timer 4 minutos configurado');
-  console.log('🏥 4 hospitais configurados:', Object.keys(HOSPITAIS).map(h => HOSPITAIS[h].nome).join(', '));
-  console.log('📋 19 linhas de cuidado + 13 concessões carregadas');
-  console.log('💾 Sistema de dados conectado à API');
+  console.log('Archipelago Dashboard V3.0 - PARTES 1+2 Inicializadas');
+  console.log('Autenticação aprovada - Senha 170284');
+  console.log('Timer 4 minutos configurado');
+  console.log('4 hospitais configurados:', Object.keys(HOSPITAIS).map(h => HOSPITAIS[h].nome).join(', '));
+  console.log('19 linhas de cuidado + 13 concessões carregadas');
+  console.log('Sistema de dados conectado à API');
   
   initMenuSystem();
   initUpdateTimer();
   
   setActiveTab('leitos');
   
-  // Testar conexão e carregar dados
   const connected = await testConnection();
   if (connected) {
     await loadAllData();
   } else {
     logWarning("Usando dados de teste devido à falha na conexão");
-    // Carregar dados de teste para todos os hospitais
     Object.keys(HOSPITAIS).forEach(h => {
       banco[h] = gerarDadosTeste(h);
     });
     renderCards();
   }
   
-  console.log('🚀 PARTE 2/4 CONCLUÍDA - Sistema de dados funcionando');
-  console.log('📊 Próximo: PARTE 3/4 - Dashboards + Gráficos Avançados');
+  console.log('PARTES 1+2 CONCLUÍDAS - Sistema funcionando');
+  console.log('Próximo: PARTE 3/4 - Dashboards + Gráficos Avançados');
 }
 
-// Auto-inicialização quando página carrega
+// =================== AUTO-INICIALIZAÇÃO =================== 
 document.addEventListener('DOMContentLoaded', () => {
   initAuthentication();
 });
 
-// Verificar parâmetros QR na URL (mantido da Parte 1)
 function checkQRParams() {
   const params = new URLSearchParams(window.location.search);
   const h = params.get('h');
   const leito = params.get('leito');
   
   if (h && leito && ["H1","H2","H3","H4"].includes(h)) {
-    console.log('📱 QR Code detectado:', h, leito);
+    console.log('QR Code detectado:', h, leito);
     isQRMode = true;
     currentHospital = h;
-    // QR mode será totalmente implementado na Parte 4
   }
 }
 
@@ -2373,13 +2127,12 @@ window.addEventListener('load', () => {
   }
 });
 
-console.log('📁 PARTE 2/4 CARREGADA - Sistema de Dados + API + Cards');
-console.log('✅ 4 hospitais configurados');
-console.log('✅ Cards layout 3x3 conforme manual');
-console.log('✅ Formulários de admissão/atualização funcionais');
-console.log('✅ Auto-refresh 4 minutos ativo');
-console.log('✅ API integrada com Google Apps Script');
-console.log('🔄 Aguardando Parte 3/4 - Dashboards + Gráficos');
+console.log('PARTES 1+2 CARREGADAS - Sistema Completo até Cards');
+console.log('4 hospitais configurados');
+console.log('Layout 3x3 conforme manual - FONTES BRANCAS CORRIGIDAS');
+console.log('Formulários de admissão/atualização funcionais');
+console.log('Auto-refresh 4 minutos ativo');
+console.log('API integrada com Google Apps Script');
 
 </script>
 </body>

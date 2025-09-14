@@ -972,6 +972,7 @@
     <p id="successText">Operação realizada com sucesso.</p>
   </div>
   <script>
+<script>
 // =================== CONFIGURAÇÕES GLOBAIS =================== 
 const CONFIG = {
   API_URL: 'https://script.google.com/macros/s/AKfycbzi8YS8acCErJvedwtx6lVr2Wd_VDOfUMsOO1xXM9MNZdedzulMmZZCMHkvI6z99AWJ/exec',
@@ -1113,50 +1114,77 @@ function calcularTempoInternacao(iso) {
   return { text: `${days}d ${hours}h`, days: days };
 }
 
-// =================== SISTEMA DE AUTENTICAÇÃO ===================
+// =================== SISTEMA DE AUTENTICAÇÃO CORRIGIDO ===================
 function initAuthentication() {
+  // Verificar se já está autenticado
   if (localStorage.getItem('archipelago_auth') === 'true') {
+    isAuthenticated = true;
     hideAuthModal();
+    initializeSystem();
     return;
   }
 
+  // Elementos DOM
   const authModal = document.getElementById('authModal');
   const authPassword = document.getElementById('authPassword');
   const authSubmit = document.getElementById('authSubmit');
   const authError = document.getElementById('authError');
 
+  if (!authModal || !authPassword || !authSubmit) {
+    logError('Elementos de autenticação não encontrados');
+    return;
+  }
+
+  // Mostrar modal
   authModal.style.display = 'flex';
 
-  authSubmit.addEventListener('click', authenticate);
-  authPassword.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') authenticate();
-  });
-
+  // Função de autenticação
   function authenticate() {
     const password = authPassword.value.trim();
+    logInfo(`Tentativa de login com senha: ${password}`);
     
     if (password === CONFIG.AUTH_PASSWORD) {
       localStorage.setItem('archipelago_auth', 'true');
       isAuthenticated = true;
       hideAuthModal();
       initializeSystem();
+      logSuccess('Autenticação bem-sucedida');
     } else {
-      authError.classList.add('show');
+      if (authError) {
+        authError.classList.add('show');
+      }
       authPassword.value = '';
       authPassword.focus();
       setTimeout(() => {
-        authError.classList.remove('show');
+        if (authError) {
+          authError.classList.remove('show');
+        }
       }, 2000);
+      logError('Senha incorreta');
     }
   }
 
+  // Event listeners
+  authSubmit.addEventListener('click', authenticate);
+  authPassword.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') authenticate();
+  });
+
+  // Focus no input
+  authPassword.focus();
+
   function hideAuthModal() {
-    authModal.style.opacity = '0';
-    setTimeout(() => {
-      authModal.style.display = 'none';
-    }, 300);
+    const modal = document.getElementById('authModal');
+    if (modal) {
+      modal.style.opacity = '0';
+      setTimeout(() => {
+        modal.style.display = 'none';
+      }, 300);
+    }
   }
 }
+
+// [REST OF THE JAVASCRIPT CONTINUES THE SAME...]
 
 // =================== CARREGAMENTO DE DADOS ===================
 async function loadData() {

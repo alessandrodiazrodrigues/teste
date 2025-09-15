@@ -3,454 +3,102 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Archipelago Dashboard - Sistema de Gestão Hospitalar</title>
+    <title>Archipelago Dashboard</title>
     
-    <!-- Chart.js -->
+    <!-- CSS Modular -->
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/cards.css">
+    <link rel="stylesheet" href="css/mobile.css">
+    
+    <!-- Bibliotecas Externas -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    
-    <!-- QRCode Generator -->
+    <script src="https://unpkg.com/html5-qrcode"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    
-    <!-- QR Scanner -->
-    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
-    
-    <!-- Styles -->
-    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+    <!-- Modal de Autenticação -->
+    <div id="authModal" class="modal-auth">
+        <div class="auth-container">
+            <h1>🏥 Archipelago Dashboard</h1>
+            <p>Sistema de Gestão Hospitalar</p>
+            <input type="password" id="authPassword" placeholder="Senha (6 dígitos)" maxlength="6">
+            <button id="authBtn" onclick="authenticate()">Acessar</button>
+            <div id="authError" class="error-msg"></div>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header id="mainHeader" style="display:none;">
+        <div class="header-left">
+            <span class="hamburger" onclick="toggleMenu()">☰</span>
+            <h1>Archipelago Dashboard</h1>
+        </div>
+        <div class="header-right">
+            <span id="timer">Próxima atualização em: 4:00</span>
+            <button onclick="refreshData()">Atualizar</button>
+        </div>
+    </header>
+
+    <!-- Menu Lateral -->
+    <div id="sideMenu" class="side-menu">
+        <button class="close-btn" onclick="closeMenu()">✕</button>
+        <div class="menu-items">
+            <a href="#" onclick="switchView('leitos')">Leitos</a>
+            <a href="#" onclick="switchView('dash-hospitalar')">Dashboard Hospitalar</a>
+            <a href="#" onclick="switchView('dash-executivo')">Rede Hospitalar Externa</a>
+        </div>
+        <div class="menu-footer">
+            <button onclick="openQRCodes()">Gerar QR Codes</button>
+            <button onclick="openAdmin()">ADM</button>
+        </div>
+    </div>
+
     <!-- Container Principal -->
-    <div id="app">
-        <!-- Tela de Login -->
-        <div id="loginScreen" class="login-screen">
-            <div class="login-container">
-                <div class="login-header">
-                    <img src="https://i.ibb.co/7G3Kzps/1.png" alt="Archipelago Logo" class="login-logo">
-                    <h1>Archipelago Dashboard</h1>
-                    <p>Sistema de Gestão Hospitalar</p>
-                </div>
-                <div class="login-form">
-                    <input type="password" id="passwordInput" placeholder="Digite a senha de acesso" maxlength="6">
-                    <button onclick="authenticate()" id="loginBtn">ENTRAR</button>
-                    <div id="loginError" class="error-message"></div>
-                </div>
+    <main id="mainContent" style="display:none;">
+        <!-- View Leitos -->
+        <div id="viewLeitos" class="view active">
+            <div class="hospital-selector">
+                <button class="hospital-btn active" data-hospital="H1" onclick="selectHospital('H1')">Neomater</button>
+                <button class="hospital-btn" data-hospital="H2" onclick="selectHospital('H2')">Cruz Azul</button>
+                <button class="hospital-btn" data-hospital="H3" onclick="selectHospital('H3')">Santa Marcelina</button>
+                <button class="hospital-btn" data-hospital="H4" onclick="selectHospital('H4')">Santa Clara</button>
             </div>
+            <div id="cardsContainer" class="cards-grid"></div>
         </div>
 
-        <!-- Container Principal Após Login -->
-        <div id="mainApp" class="main-app" style="display: none;">
-            <!-- Header -->
-            <header class="header">
-                <div class="header-left">
-                    <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
-                    <img src="https://i.ibb.co/7G3Kzps/1.png" alt="Logo" class="header-logo">
-                    <h1>Archipelago Dashboard</h1>
-                </div>
-                <div class="header-right">
-                    <span id="currentDateTime"></span>
-                    <button onclick="logout()" class="logout-btn">Sair</button>
-                </div>
-            </header>
-
-            <!-- Sidebar -->
-            <aside id="sidebar" class="sidebar">
-                <nav class="nav-menu">
-                    <button onclick="switchView('cards')" class="nav-btn active" data-view="cards">
-                        <span class="icon">🏥</span>
-                        <span>Gestão de Leitos</span>
-                    </button>
-                    <button onclick="switchView('dashboard-exec')" class="nav-btn" data-view="dashboard-exec">
-                        <span class="icon">📊</span>
-                        <span>Dashboard Executivo</span>
-                    </button>
-                    <button onclick="switchView('dashboard-hosp')" class="nav-btn" data-view="dashboard-hosp">
-                        <span class="icon">📈</span>
-                        <span>Dashboard Hospitalar</span>
-                    </button>
-                    <button onclick="switchView('qrcode')" class="nav-btn" data-view="qrcode">
-                        <span class="icon">📱</span>
-                        <span>QR Code Scanner</span>
-                    </button>
-                    
-                    <div class="nav-separator"></div>
-                    
-                    <button onclick="switchView('config')" class="nav-btn" data-view="config">
-                        <span class="icon">⚙️</span>
-                        <span>Configurações</span>
-                    </button>
-                </nav>
-            </aside>
-
-            <!-- Main Content -->
-            <main id="mainContent" class="main-content">
-                <!-- View: Cards (Gestão de Leitos) -->
-                <div id="cardsView" class="view-container active">
-                    <div class="view-header">
-                        <h2>Gestão de Leitos Hospitalares</h2>
-                        <div class="header-stats">
-                            <div class="stat-badge ocupado">
-                                <span>Ocupados</span>
-                                <strong id="totalOcupados">0</strong>
-                            </div>
-                            <div class="stat-badge vago">
-                                <span>Vagos</span>
-                                <strong id="totalVagos">0</strong>
-                            </div>
-                            <div class="stat-badge total">
-                                <span>Total</span>
-                                <strong id="totalLeitos">49</strong>
-                            </div>
-                        </div>
-                    </div>
-                    <div id="cardsContainer" class="cards-container"></div>
-                </div>
-
-                <!-- View: Dashboard Executivo -->
-                <div id="dashboardExecView" class="view-container" style="display: none;">
-                    <div class="view-header">
-                        <h2>Dashboard Executivo - Rede Hospitalar Externa</h2>
-                    </div>
-                    
-                    <!-- KPIs Row -->
-                    <div class="kpis-row">
-                        <div class="kpi-card">
-                            <div class="kpi-label">Taxa de Ocupação</div>
-                            <div class="kpi-value" id="kpiOcupacao">0%</div>
-                        </div>
-                        <div class="kpi-card">
-                            <div class="kpi-label">Média PPS</div>
-                            <div class="kpi-value" id="kpiPPS">0%</div>
-                        </div>
-                        <div class="kpi-card">
-                            <div class="kpi-label">Previsão Altas Hoje</div>
-                            <div class="kpi-value" id="kpiAltasHoje">0</div>
-                        </div>
-                        <div class="kpi-card">
-                            <div class="kpi-label">Tempo Médio</div>
-                            <div class="kpi-value" id="kpiTempoMedio">0d</div>
-                        </div>
-                    </div>
-
-                    <!-- Gauge e Gráficos -->
-                    <div class="dashboard-grid">
-                        <div class="chart-box">
-                            <h3>Taxa de Ocupação Geral</h3>
-                            <canvas id="gaugeChart"></canvas>
-                        </div>
-                        <div class="chart-box">
-                            <h3>Ocupação por Hospital</h3>
-                            <canvas id="ocupacaoHospitalChart"></canvas>
-                        </div>
-                        <div class="chart-box">
-                            <h3>Concessões por Hospital</h3>
-                            <canvas id="concessoesChart"></canvas>
-                        </div>
-                        <div class="chart-box">
-                            <h3>Linhas de Cuidado</h3>
-                            <canvas id="linhasCuidadoChart"></canvas>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- View: Dashboard Hospitalar -->
-                <div id="dashboardHospView" class="view-container" style="display: none;">
-                    <div class="view-header">
-                        <h2>Dashboard Hospitalar - Análise Detalhada</h2>
-                    </div>
-                    <div id="hospitalDashboards"></div>
-                </div>
-
-                <!-- View: QR Code Scanner -->
-                <div id="qrcodeView" class="view-container" style="display: none;">
-                    <div class="view-header">
-                        <h2>Scanner de QR Code</h2>
-                    </div>
-                    <div class="qr-container">
-                        <div id="qr-reader"></div>
-                        <div id="qr-result" class="qr-result"></div>
-                    </div>
-                </div>
-
-                <!-- View: Configurações -->
-                <div id="configView" class="view-container" style="display: none;">
-                    <div class="view-header">
-                        <h2>Configurações do Sistema</h2>
-                    </div>
-                    <div class="config-grid">
-                        <div class="config-section">
-                            <h3>🎨 Personalização de Cores</h3>
-                            <div class="color-controls">
-                                <div class="color-group">
-                                    <label>Cor Principal (Header)</label>
-                                    <input type="color" id="corHeader" value="#3b82f6">
-                                </div>
-                                <div class="color-group">
-                                    <label>Cor Menu Lateral</label>
-                                    <input type="color" id="corSidebar" value="#60a5fa">
-                                </div>
-                                <div class="color-group">
-                                    <label>Cor de Destaque</label>
-                                    <input type="color" id="corDestaque" value="#10b981">
-                                </div>
-                                <button onclick="aplicarCores()" class="btn-primary">Aplicar Cores</button>
-                                <button onclick="restaurarCores()" class="btn-secondary">Restaurar Padrão</button>
-                            </div>
-                        </div>
-
-                        <div class="config-section">
-                            <h3>👨‍💼 Área Administrativa</h3>
-                            <button onclick="openADM()" class="btn-config">
-                                <span class="icon">🔐</span>
-                                Acessar Painel ADM
-                            </button>
-                        </div>
-
-                        <div class="config-section">
-                            <h3>📱 QR Codes</h3>
-                            <button onclick="gerarQRCodes()" class="btn-config">
-                                <span class="icon">📱</span>
-                                Gerar QR Codes dos Leitos
-                            </button>
-                        </div>
-
-                        <div class="config-section">
-                            <h3>📊 Relatórios</h3>
-                            <button onclick="exportarDados()" class="btn-config">
-                                <span class="icon">📥</span>
-                                Exportar Dados (Excel)
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </main>
+        <!-- View Dashboard Hospitalar -->
+        <div id="viewDashHospitalar" class="view" style="display:none;">
+            <h2>Dashboard Hospitalar</h2>
+            <div id="dashHospitalarContent"></div>
         </div>
-    </div>
 
-    <!-- Modais -->
-    <!-- Modal de Admissão -->
-    <div id="modalAdmissao" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Nova Admissão</h2>
-                <button class="modal-close" onclick="closeModal('modalAdmissao')">&times;</button>
-            </div>
-            <form id="formAdmissao" class="modal-form">
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Nome do Paciente*</label>
-                        <input type="text" name="nome" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Idade*</label>
-                        <input type="number" name="idade" min="0" max="150" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Registro*</label>
-                        <input type="text" name="registro" required>
-                    </div>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Data de Entrada*</label>
-                        <input type="date" name="dataEntrada" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Médico Responsável*</label>
-                        <input type="text" name="medico" required>
-                    </div>
-                    <div class="form-group">
-                        <label>PPS (%)*</label>
-                        <select name="pps" required>
-                            <option value="">Selecione</option>
-                            <option value="10">10%</option>
-                            <option value="20">20%</option>
-                            <option value="30">30%</option>
-                            <option value="40">40%</option>
-                            <option value="50">50%</option>
-                            <option value="60">60%</option>
-                            <option value="70">70%</option>
-                            <option value="80">80%</option>
-                            <option value="90">90%</option>
-                            <option value="100">100%</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Diagnóstico*</label>
-                        <input type="text" name="diagnostico" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Convênio</label>
-                        <input type="text" name="convenio">
-                    </div>
-                    <div class="form-group">
-                        <label>Previsão de Alta</label>
-                        <select name="previsaoAlta">
-                            <option value="">Não definida</option>
-                            <option value="Hoje Ouro">Hoje Ouro</option>
-                            <option value="Hoje 2R">Hoje 2R</option>
-                            <option value="Hoje 3R">Hoje 3R</option>
-                            <option value="24h">24 horas</option>
-                            <option value="48h">48 horas</option>
-                            <option value="72h">72 horas</option>
-                            <option value=">72h">Mais de 72h</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="form-section">
-                    <h3>CONCESSÕES PREVISTAS NA ALTA</h3>
-                    <div class="checkbox-grid">
-                        <label class="checkbox-label">
-                            <input type="checkbox" name="concessoes" value="Órtese/Prótese">
-                            <span>Órtese/Prótese</span>
-                        </label>
-                        <label class="checkbox-label">
-                            <input type="checkbox" name="concessoes" value="Equipamento">
-                            <span>Equipamento</span>
-                        </label>
-                        <label class="checkbox-label">
-                            <input type="checkbox" name="concessoes" value="Dieta">
-                            <span>Dieta</span>
-                        </label>
-                        <label class="checkbox-label">
-                            <input type="checkbox" name="concessoes" value="Medicamento Alto Custo">
-                            <span>Medicamento Alto Custo</span>
-                        </label>
-                        <label class="checkbox-label">
-                            <input type="checkbox" name="concessoes" value="Transporte">
-                            <span>Transporte</span>
-                        </label>
-                        <label class="checkbox-label">
-                            <input type="checkbox" name="concessoes" value="Outros">
-                            <span>Outros</span>
-                        </label>
-                    </div>
-                </div>
-
-                <div class="form-section">
-                    <h3>LINHA DE CUIDADOS PROPOSTA NA ALTA</h3>
-                    <div class="checkbox-grid">
-                        <label class="checkbox-label">
-                            <input type="checkbox" name="linhaCuidado" value="Unidade Básica">
-                            <span>Unidade Básica</span>
-                        </label>
-                        <label class="checkbox-label">
-                            <input type="checkbox" name="linhaCuidado" value="Ambulatório de Egressos">
-                            <span>Ambulatório de Egressos</span>
-                        </label>
-                        <label class="checkbox-label">
-                            <input type="checkbox" name="linhaCuidado" value="CAPS">
-                            <span>CAPS</span>
-                        </label>
-                        <label class="checkbox-label">
-                            <input type="checkbox" name="linhaCuidado" value="Residência Terapêutica">
-                            <span>Residência Terapêutica</span>
-                        </label>
-                        <label class="checkbox-label">
-                            <input type="checkbox" name="linhaCuidado" value="Hospital Dia">
-                            <span>Hospital Dia</span>
-                        </label>
-                        <label class="checkbox-label">
-                            <input type="checkbox" name="linhaCuidado" value="Outros">
-                            <span>Outros</span>
-                        </label>
-                    </div>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group full-width">
-                        <label>Observações</label>
-                        <textarea name="observacoes" rows="3"></textarea>
-                    </div>
-                </div>
-
-                <div class="modal-footer">
-                    <button type="button" onclick="closeModal('modalAdmissao')" class="btn-secondary">Cancelar</button>
-                    <button type="submit" class="btn-primary">Confirmar Admissão</button>
-                </div>
-            </form>
+        <!-- View Dashboard Executivo -->
+        <div id="viewDashExecutivo" class="view" style="display:none;">
+            <h2>Rede Hospitalar Externa</h2>
+            <div id="dashExecutivoContent"></div>
         </div>
-    </div>
+    </main>
 
-    <!-- Modal de Atualização (estrutura similar) -->
-    <div id="modalAtualizacao" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Atualizar Informações do Leito</h2>
-                <button class="modal-close" onclick="closeModal('modalAtualizacao')">&times;</button>
-            </div>
-            <form id="formAtualizacao" class="modal-form">
-                <!-- Mesmo conteúdo do form de admissão -->
-            </form>
-        </div>
-    </div>
+    <!-- Footer -->
+    <footer id="mainFooter" style="display:none;">
+        <p>Sistema em versão BETA - não pode ser usado como única fonte de referência</p>
+        <p>Para decisões críticas, consulte sempre fontes adicionais e profissionais qualificados</p>
+        <p><strong>Desenvolvido por: Alessandro Rodrigues - Versão V3.0 - Setembro/2025</strong></p>
+    </footer>
 
-    <!-- Modal de Alta -->
-    <div id="modalAlta" class="modal">
-        <div class="modal-content modal-compact">
-            <div class="modal-header">
-                <h2>Confirmar Alta do Paciente</h2>
-                <button class="modal-close" onclick="closeModal('modalAlta')">&times;</button>
-            </div>
-            <div class="modal-body">
-                <p>Confirma a alta do paciente <strong id="altaPacienteNome"></strong>?</p>
-                <div class="form-group">
-                    <label>Data da Alta</label>
-                    <input type="datetime-local" id="dataAlta" required>
-                </div>
-                <div class="form-group">
-                    <label>Motivo da Alta</label>
-                    <select id="motivoAlta">
-                        <option value="Melhora Clínica">Melhora Clínica</option>
-                        <option value="Transferência">Transferência</option>
-                        <option value="Óbito">Óbito</option>
-                        <option value="Evasão">Evasão</option>
-                        <option value="Alta a Pedido">Alta a Pedido</option>
-                    </select>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button onclick="closeModal('modalAlta')" class="btn-secondary">Cancelar</button>
-                <button onclick="confirmarAlta()" class="btn-primary">Confirmar Alta</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal ADM -->
-    <div id="modalADM" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Painel Administrativo</h2>
-                <button class="modal-close" onclick="closeModal('modalADM')">&times;</button>
-            </div>
-            <div class="adm-login" id="admLogin">
-                <h3>Autenticação Administrativa</h3>
-                <input type="email" id="admEmail" placeholder="Email" value="cvcalessandro@gmail.com">
-                <input type="password" id="admPassword" placeholder="Senha">
-                <button onclick="loginADM()" class="btn-primary">Entrar</button>
-            </div>
-            <div class="adm-panel" id="admPanel" style="display: none;">
-                <h3>Gestão de Hospitais e Leitos</h3>
-                <div id="admContent"></div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal QR Codes -->
-    <div id="modalQRCodes" class="modal">
-        <div class="modal-content modal-large">
-            <div class="modal-header">
-                <h2>QR Codes dos Leitos</h2>
-                <button class="modal-close" onclick="closeModal('modalQRCodes')">&times;</button>
-            </div>
-            <div id="qrCodesGrid" class="qr-codes-grid"></div>
-        </div>
-    </div>
-
-    <!-- Scripts -->
-    <script src="app.js"></script>
+    <!-- Scripts Modulares (ordem importante!) -->
+    <script src="js/app.js"></script>
+    <script src="js/cards.js"></script>
+    <script src="js/dashboard.js"></script>
+    <script src="js/charts.js"></script>
+    <script src="js/qrcode.js"></script>
+    <script src="js/admin.js"></script>
+    
+    <!-- Inicialização -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            window.initApp();
+        });
+    </script>
 </body>
 </html>

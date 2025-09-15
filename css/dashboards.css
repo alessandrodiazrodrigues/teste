@@ -1,0 +1,313 @@
+/* =================== ESTILOS DOS DASHBOARDS =================== */
+
+/* === DASHBOARD EXECUTIVO === */
+.executive-kpis-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    grid-template-rows: repeat(2, 120px);
+    gap: 16px;
+    margin-bottom: 30px;
+    padding: 20px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.kpi-principal {
+    grid-column: span 2;
+    grid-row: span 2;
+    background: #1a1f2e;
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    color: white;
+    position: relative;
+}
+
+.gauge-container {
+    position: relative;
+    width: 200px;
+    height: 100px;
+}
+
+.gauge-value {
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 24px;
+    font-weight: 700;
+    color: #60a5fa;
+}
+
+.gauge-label {
+    position: absolute;
+    bottom: -5px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 10px;
+    text-transform: uppercase;
+    color: #e2e8f0;
+    font-weight: 600;
+}
+
+.hospitais-list {
+    flex: 1;
+    padding-left: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 8px;
+}
+
+.hospital-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+}
+
+.hospital-nome {
+    color: #e2e8f0;
+    font-weight: 600;
+}
+
+.hospital-pct {
+    color: #60a5fa;
+    font-weight: 700;
+}
+
+.kpi-box {
+    background: #1a1f2e;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: white;
+    padding: 15px;
+}
+
+.kpi-value {
+    font-size: 28px;
+    font-weight: 700;
+    color: #60a5fa;
+    margin-bottom: 4px;
+}
+
+.kpi-label {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #e2e8f0;
+}
+
+.executive-charts {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.chart-container {
+    background: #1a1f2e;
+    border-radius: 12px;
+    padding: 20px;
+    color: white;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.chart-container h3,
+.chart-container h4 {
+    margin: 0 0 16px 0;
+    font-size: 14px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #60a5fa;
+}
+
+.chart-container canvas {
+    max-height: 300px;
+}
+
+/* === DASHBOARD HOSPITALAR === */
+.hospitalar-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+    gap: 20px;
+}
+
+.hospital-section {
+    background: #1a1f2e;
+    border-radius: 12px;
+    padding: 20px;
+    color: white;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.hospital-title {
+    margin: 0 0 20px 0;
+    font-size: 18px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #60a5fa;
+    text-align: center;
+}
+
+.hospital-kpis {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 24px;
+    padding: 16px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+}
+
+.hospital-gauge {
+    flex-shrink: 0;
+    text-align: center;
+    position: relative;
+    width: 120px;
+    height: 60px;
+}
+
+.hospital-gauge .gauge-label {
+    position: absolute;
+    bottom: -15px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 14px;
+    font-weight: 700;
+    color: #60a5fa;
+}
+
+.kpi-mini {
+    flex: 1;
+    text-align: center;
+    min-height: 60px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 6px;
+    padding: 8px;
+}
+
+.kpi-mini .kpi-value {
+    font-size: 20px;
+    margin-bottom: 2px;
+}
+
+.kpi-mini .kpi-label {
+    font-size: 9px;
+}
+
+/* === SELETORES DE TIPO DE GRÁFICO === */
+.chart-type-selector {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+}
+
+.chart-type-btn {
+    padding: 6px 12px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+}
+
+.chart-type-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.chart-type-btn.active {
+    background: #60a5fa;
+    color: white;
+    border-color: #60a5fa;
+}
+
+/* === RESPONSIVIDADE === */
+@media (max-width: 1200px) {
+    .executive-kpis-grid {
+        grid-template-columns: repeat(4, 1fr);
+        grid-template-rows: auto;
+    }
+    
+    .kpi-principal {
+        grid-column: span 4;
+    }
+}
+
+@media (max-width: 768px) {
+    .executive-kpis-grid {
+        grid-template-columns: repeat(2, 1fr);
+        grid-template-rows: auto;
+    }
+    
+    .kpi-principal {
+        grid-column: span 2;
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .hospitais-list {
+        padding-left: 0;
+        margin-top: 20px;
+    }
+    
+    .hospitalar-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .hospital-kpis {
+        flex-wrap: wrap;
+    }
+    
+    .hospital-gauge {
+        flex-basis: 100%;
+        margin-bottom: 15px;
+    }
+    
+    .kpi-mini {
+        flex-basis: calc(50% - 6px);
+    }
+    
+    .chart-type-selector {
+        justify-content: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .executive-kpis-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .kpi-principal {
+        grid-column: span 1;
+    }
+    
+    .chart-type-btn {
+        font-size: 9px;
+        padding: 4px 8px;
+    }
+    
+    .chart-container h3,
+.chart-container h4 {
+        font-size: 12px;
+    }
+    
+    .hospital-title {
+        font-size: 16px;
+    }
+}

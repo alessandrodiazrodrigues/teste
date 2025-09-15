@@ -1,3740 +1,456 @@
-<!-- 
-═══════════════════════════════════════════════════════════════
-🎯 ARCHIPELAGO DASHBOARD V3.0 - PARTE 1/2 - HTML + CSS CORRIGIDO
-═══════════════════════════════════════════════════════════════
-✅ CORREÇÕES IMPLEMENTADAS:
-- Layout dos cards EXATO conforme index(22).html
-- Cores header/menu iguais aos cards (#1a1f2e)
-- Fundo geral branco, cards azul escuro 
-- Fontes brancas FORÇADAS dentro dos cards
-- Sistema de autenticação 170284 obrigatória
-- Timer 4 minutos (240.000ms) configurado
-- Área dos seletores hospitais azul escura
-- Responsividade mobile/desktop otimizada
-- Botão Neomater cores corretas (branco ativo)
-
-📁 ESTRUTURA PARTE 1:
-- SEÇÃO 1: HEAD + META TAGS + BIBLIOTECAS
-- SEÇÃO 2: CSS VARIÁVEIS GLOBAIS (55 cores Pantone)
-- SEÇÃO 3: CSS SISTEMA DE AUTENTICAÇÃO
-- SEÇÃO 4: CSS HEADER + MENU LATERAL
-- SEÇÃO 5: CSS CARDS LAYOUT 3x3 EXATO
-- SEÇÃO 6: CSS COMPONENTES + RESPONSIVIDADE
-- SEÇÃO 7: HTML ESTRUTURAL COMPLETO
-- SEÇÃO 8: MODAIS + SISTEMA DE AUTENTICAÇÃO
-
-🔧 PRÓXIMO: PARTE 2/2 - JavaScript Core + Dados
-═══════════════════════════════════════════════════════════════
--->
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <!-- =================== SEÇÃO 1: HEAD + META TAGS + BIBLIOTECAS =================== -->
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Archipelago Dashboard V3.0</title>
-  
-  <!-- Google Fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
-
-  <!-- Bibliotecas Externas Essenciais -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-
-  <style>
-    /* =================== SEÇÃO 2: CSS VARIÁVEIS GLOBAIS - 55 CORES PANTONE =================== */
-    :root {
-      /* === CORES PRINCIPAIS DO SISTEMA === */
-      --nav-header: #1a1f2e;           /* Header escuro igual aos cards - CORRIGIDO */
-      --nav-sidebar: #1a1f2e;          /* Menu lateral escuro igual aos cards - CORRIGIDO */
-      --background-main: #ffffff;       /* Fundo geral branco - CORRIGIDO */
-      --card-background: #1a1f2e;      /* Cards azul escuro - MANTIDO */
-      --card-text: #ffffff;            /* Texto branco nos cards - FORÇADO */
-      --card-border: #2a3441;          /* Bordas dos cards */
-      
-      /* === CORES DE STATUS === */
-      --status-vago: #10b981;          /* Verde para vagos */
-      --status-ocupado: #f59e0b;       /* Amarelo para ocupados */
-      --status-alta: #3b82f6;          /* Azul para alta */
-      --status-critico: #ef4444;       /* Vermelho para crítico */
-      
-      /* === CORES PANTONE OFICIAIS (55 CORES) === */
-      --pantone-1: #ff6b9d;    --pantone-2: #c44569;    --pantone-3: #f8b500;
-      --pantone-4: #f0932b;    --pantone-5: #eb4d4b;    --pantone-6: #6ab04c;
-      --pantone-7: #22a6b3;    --pantone-8: #4834d4;    --pantone-9: #be2edd;
-      --pantone-10: #130f40;   --pantone-11: #30336b;   --pantone-12: #535c68;
-      --pantone-13: #95afc0;   --pantone-14: #079992;   --pantone-15: #38ada9;
-      --pantone-16: #78e08f;   --pantone-17: #82ccdd;   --pantone-18: #60a3bc;
-      --pantone-19: #3c6382;   --pantone-20: #40407a;   --pantone-21: #706fd3;
-      --pantone-22: #f53b57;   --pantone-23: #3c40c6;   --pantone-24: #05c46b;
-      --pantone-25: #ffc048;   --pantone-26: #ffdd59;   --pantone-27: #ff5e57;
-      --pantone-28: #d63031;   --pantone-29: #74b9ff;   --pantone-30: #0984e3;
-      --pantone-31: #a29bfe;   --pantone-32: #6c5ce7;   --pantone-33: #fd79a8;
-      --pantone-34: #fdcb6e;   --pantone-35: #e17055;   --pantone-36: #00b894;
-      --pantone-37: #00cec9;   --pantone-38: #55a3ff;   --pantone-39: #5f27cd;
-      --pantone-40: #1dd1a1;   --pantone-41: #feca57;   --pantone-42: #ff9ff3;
-      --pantone-43: #54a0ff;   --pantone-44: #5f27cd;   --pantone-45: #00d2d3;
-      --pantone-46: #ff6348;   --pantone-47: #ff4757;   --pantone-48: #2ed573;
-      --pantone-49: #1e90ff;   --pantone-50: #3742fa;   --pantone-51: #2f3542;
-      --pantone-52: #57606f;   --pantone-53: #a4b0be;   --pantone-54: #747d8c;
-      --pantone-55: #ddd;
-      
-      /* === LINHAS DE CUIDADO (PANTONE OFICIAL) === */
-      --linha-assiste: #ED0A72;        --linha-cirurgia: #FF6B00;
-      --linha-emergencia: #DC143C;     --linha-maternidade: #FF1493;
-      --linha-pediatria: #32CD32;      --linha-oncologia: #9932CC;
-      --linha-cardiologia: #FF4500;    --linha-neurologia: #4169E1;
-      --linha-ortopedia: #8B4513;      --linha-psiquiatria: #DA70D6;
-      --linha-clinica: #20B2AA;        --linha-uti: #B22222;
-      
-      /* === TIPOGRAFIA === */
-      --font-family: 'Open Sans', sans-serif;
-      --font-size-base: 14px;
-      --font-size-small: 12px;
-      --font-size-large: 16px;
-      --font-size-title: 18px;
-      
-      /* === LAYOUT === */
-      --header-height: 60px;
-      --sidebar-width: 250px;
-      --sidebar-collapsed: 60px;
-      --card-padding: 15px;
-      --border-radius: 8px;
-      --box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-    }
-
-    /* =================== SEÇÃO 3: CSS SISTEMA DE AUTENTICAÇÃO =================== */
-    .auth-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(135deg, var(--nav-header) 0%, #2a3441 100%);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      z-index: 10000;
-    }
-
-    .auth-container {
-      background: white;
-      padding: 40px;
-      border-radius: var(--border-radius);
-      box-shadow: var(--box-shadow);
-      text-align: center;
-      max-width: 400px;
-      width: 90%;
-    }
-
-    .auth-container h2 {
-      color: var(--nav-header);
-      margin-bottom: 30px;
-      font-size: 24px;
-    }
-
-    .auth-input {
-      width: 100%;
-      padding: 15px;
-      border: 2px solid #e0e0e0;
-      border-radius: var(--border-radius);
-      font-size: 18px;
-      text-align: center;
-      margin: 20px 0;
-      font-family: var(--font-family);
-    }
-
-    .auth-input:focus {
-      border-color: var(--nav-header);
-      outline: none;
-    }
-
-    .auth-btn {
-      width: 100%;
-      padding: 15px;
-      background: var(--nav-header);
-      color: white;
-      border: none;
-      border-radius: var(--border-radius);
-      font-size: 16px;
-      cursor: pointer;
-      font-family: var(--font-family);
-      font-weight: 600;
-    }
-
-    .auth-btn:hover {
-      background: #2a3441;
-    }
-
-    .auth-error {
-      color: var(--status-critico);
-      margin-top: 15px;
-      font-size: 14px;
-    }
-
-    /* =================== SEÇÃO 4: CSS HEADER + MENU LATERAL =================== */
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
-    body {
-      font-family: var(--font-family);
-      font-size: var(--font-size-base);
-      background-color: var(--background-main); /* Fundo branco - CORRIGIDO */
-      color: #333;
-      line-height: 1.6;
-    }
-
-    /* === HEADER === */
-    header {
-      background: var(--nav-header); /* Cor escura igual aos cards - CORRIGIDO */
-      color: white;
-      height: var(--header-height);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 20px;
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      z-index: 1000;
-      box-shadow: var(--box-shadow);
-    }
-
-    .header-left {
-      display: flex;
-      align-items: center;
-      gap: 20px;
-    }
-
-    .hamburger-menu {
-      font-size: 24px;
-      cursor: pointer;
-      padding: 10px;
-      border-radius: var(--border-radius);
-      transition: background-color 0.3s;
-    }
-
-    .hamburger-menu:hover {
-      background-color: rgba(255,255,255,0.1);
-    }
-
-    .brand h1 {
-      font-size: var(--font-size-title);
-      font-weight: 600;
-    }
-
-    .header-right {
-      display: flex;
-      align-items: center;
-      gap: 15px;
-    }
-
-    #updateTimer {
-      font-size: var(--font-size-small);
-      color: rgba(255,255,255,0.8);
-    }
-
-    .header-btn {
-      background: rgba(255,255,255,0.1);
-      color: white;
-      border: 1px solid rgba(255,255,255,0.3);
-      padding: 8px 16px;
-      border-radius: var(--border-radius);
-      cursor: pointer;
-      font-size: var(--font-size-small);
-      transition: all 0.3s;
-    }
-
-    .header-btn:hover {
-      background: rgba(255,255,255,0.2);
-    }
-
-    /* === MENU LATERAL === */
-    .sidebar {
-      position: fixed;
-      top: var(--header-height);
-      left: -var(--sidebar-width);
-      width: var(--sidebar-width);
-      height: calc(100vh - var(--header-height));
-      background: var(--nav-sidebar); /* Cor escura igual aos cards - CORRIGIDO */
-      transition: left 0.3s ease;
-      z-index: 999;
-      overflow-y: auto;
-    }
-
-    .sidebar.open {
-      left: 0;
-    }
-
-    .sidebar-content {
-      padding: 20px 0;
-    }
-
-    .sidebar-item {
-      padding: 15px 25px;
-      color: rgba(255,255,255,0.8);
-      cursor: pointer;
-      transition: all 0.3s;
-      border-left: 3px solid transparent;
-    }
-
-    .sidebar-item:hover,
-    .sidebar-item.active {
-      background: rgba(255,255,255,0.1);
-      color: white;
-      border-left-color: var(--status-alta);
-    }
-
-    .sidebar-item i {
-      margin-right: 15px;
-      width: 20px;
-    }
-
-    /* === CONFIGURAÇÕES DROPDOWN === */
-    .settings-container {
-      position: relative;
-    }
-
-    .settings-btn {
-      background: rgba(255,255,255,0.1);
-      color: white;
-      border: 1px solid rgba(255,255,255,0.3);
-      padding: 8px 12px;
-      border-radius: var(--border-radius);
-      cursor: pointer;
-      font-size: 16px;
-    }
-
-    .settings-dropdown {
-      position: absolute;
-      top: 100%;
-      right: 0;
-      background: white;
-      box-shadow: var(--box-shadow);
-      border-radius: var(--border-radius);
-      min-width: 200px;
-      z-index: 1001;
-      display: none;
-    }
-
-    .settings-dropdown.show {
-      display: block;
-    }
-
-    .settings-dropdown-item {
-      padding: 12px 16px;
-      color: #333;
-      cursor: pointer;
-      transition: background-color 0.3s;
-    }
-
-    .settings-dropdown-item:hover {
-      background-color: #f5f5f5;
-    }
-
-    .settings-dropdown-item:first-child {
-      border-radius: var(--border-radius) var(--border-radius) 0 0;
-    }
-
-    .settings-dropdown-item:last-child {
-      border-radius: 0 0 var(--border-radius) var(--border-radius);
-    }
-
-    /* =================== SEÇÃO 5: CSS CARDS LAYOUT 3x3 EXATO =================== */
-    main {
-      margin-top: var(--header-height);
-      padding: 20px;
-      transition: margin-left 0.3s ease;
-    }
-
-    .hospital-selector {
-      background: var(--nav-header); /* Fundo escuro igual aos cards - CORRIGIDO */
-      padding: 20px;
-      border-radius: var(--border-radius);
-      margin-bottom: 20px;
-      display: flex;
-      gap: 15px;
-      flex-wrap: wrap;
-      justify-content: center;
-    }
-
-    .hospital-btn {
-      background: rgba(255,255,255,0.1);
-      color: rgba(255,255,255,0.8); /* Texto claro - CORRIGIDO */
-      border: 2px solid rgba(255,255,255,0.3);
-      padding: 12px 24px;
-      border-radius: var(--border-radius);
-      cursor: pointer;
-      font-size: var(--font-size-base);
-      font-weight: 600;
-      transition: all 0.3s;
-      font-family: var(--font-family);
-    }
-
-    .hospital-btn:hover {
-      background: rgba(255,255,255,0.2);
-      color: white;
-    }
-
-    .hospital-btn.active {
-      background: white; /* Fundo branco quando ativo - CORRIGIDO */
-      color: var(--nav-header); /* Texto escuro quando ativo - CORRIGIDO */
-      border-color: white;
-    }
-
-    /* === GRID DOS CARDS 3x3 === */
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-      gap: 20px;
-      max-width: 1200px;
-      margin: 0 auto;
-    }
-
-    .card {
-      background: var(--card-background); /* Fundo escuro dos cards - MANTIDO */
-      border: 1px solid var(--card-border);
-      border-radius: var(--border-radius);
-      padding: var(--card-padding);
-      box-shadow: var(--box-shadow);
-      transition: transform 0.3s, box-shadow 0.3s;
-      color: var(--card-text); /* Texto branco FORÇADO */
-      min-height: 200px;
-    }
-
-    .card:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-    }
-
-    /* === FORÇAR TEXTO BRANCO EM TODOS OS ELEMENTOS DOS CARDS === */
-    .card,
-    .card *,
-    .card h3,
-    .card h4,
-    .card p,
-    .card span,
-    .card div,
-    .card label,
-    .card input,
-    .card select,
-    .card textarea {
-      color: var(--card-text) !important; /* FORÇADO com !important */
-    }
-
-    .card h3 {
-      margin-bottom: 15px;
-      font-size: var(--font-size-title);
-      font-weight: 600;
-      color: var(--card-text) !important;
-    }
-
-    /* === LAYOUT INTERNO DOS CARDS 3x3 === */
-    .card-content {
-      display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      gap: 15px;
-      margin-top: 15px;
-    }
-
-    .card-field {
-      display: flex;
-      flex-direction: column;
-    }
-
-    .card-field label {
-      font-size: var(--font-size-small);
-      margin-bottom: 5px;
-      font-weight: 600;
-      color: var(--card-text) !important;
-    }
-
-    .card-field input,
-    .card-field select {
-      padding: 8px;
-      border: 1px solid rgba(255,255,255,0.3);
-      border-radius: 4px;
-      background: rgba(255,255,255,0.1);
-      color: var(--card-text) !important;
-      font-size: var(--font-size-small);
-    }
-
-    .card-field input:focus,
-    .card-field select:focus {
-      outline: none;
-      border-color: var(--status-alta);
-    }
-
-    /* === STATUS INDICATORS === */
-    .status-indicator {
-      padding: 4px 8px;
-      border-radius: 12px;
-      font-size: var(--font-size-small);
-      font-weight: 600;
-      text-align: center;
-    }
-
-    .status-vago {
-      background: var(--status-vago);
-      color: white;
-    }
-
-    .status-ocupado {
-      background: var(--status-ocupado);
-      color: white;
-    }
-
-    .status-alta {
-      background: var(--status-alta);
-      color: white;
-    }
-
-    /* =================== SEÇÃO 6: CSS COMPONENTES + RESPONSIVIDADE =================== */
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Archipelago Dashboard - Sistema de Gestão Hospitalar</title>
     
-    /* === DASHBOARDS === */
-    .dashboard-container {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 20px;
-      margin-bottom: 30px;
-    }
-
-    .kpi-card {
-      background: white;
-      padding: 20px;
-      border-radius: var(--border-radius);
-      box-shadow: var(--box-shadow);
-      text-align: center;
-    }
-
-    .kpi-value {
-      font-size: 32px;
-      font-weight: 700;
-      color: var(--nav-header);
-      margin: 10px 0;
-    }
-
-    .kpi-label {
-      font-size: var(--font-size-small);
-      color: #666;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-    }
-
-    /* === GRÁFICOS === */
-    .chart-container {
-      background: white;
-      padding: 20px;
-      border-radius: var(--border-radius);
-      box-shadow: var(--box-shadow);
-      margin: 20px 0;
-    }
-
-    .chart-controls {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 15px;
-      flex-wrap: wrap;
-    }
-
-    .chart-btn {
-      padding: 8px 16px;
-      border: 1px solid #ddd;
-      background: white;
-      border-radius: var(--border-radius);
-      cursor: pointer;
-      font-size: var(--font-size-small);
-      transition: all 0.3s;
-    }
-
-    .chart-btn:hover {
-      background: #f5f5f5;
-    }
-
-    .chart-btn.active {
-      background: var(--nav-header);
-      color: white;
-      border-color: var(--nav-header);
-    }
-
-    /* === MODAIS === */
-    .modal {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0,0,0,0.5);
-      z-index: 10000;
-    }
-
-    .modal.show {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
-
-    .modal-content {
-      background: white;
-      padding: 30px;
-      border-radius: var(--border-radius);
-      max-width: 500px;
-      width: 90%;
-      max-height: 90vh;
-      overflow-y: auto;
-    }
-
-    .modal-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 20px;
-      padding-bottom: 15px;
-      border-bottom: 1px solid #eee;
-    }
-
-    .modal-title {
-      font-size: var(--font-size-title);
-      font-weight: 600;
-      color: var(--nav-header);
-    }
-
-    .close-modal {
-      background: none;
-      border: none;
-      font-size: 24px;
-      cursor: pointer;
-      color: #999;
-    }
-
-    .close-modal:hover {
-      color: #333;
-    }
-
-    /* === FORMULÁRIOS === */
-    .form-group {
-      margin-bottom: 20px;
-    }
-
-    .form-group label {
-      display: block;
-      margin-bottom: 5px;
-      font-weight: 600;
-      color: #333;
-    }
-
-    .form-group input,
-    .form-group select,
-    .form-group textarea {
-      width: 100%;
-      padding: 10px;
-      border: 1px solid #ddd;
-      border-radius: var(--border-radius);
-      font-size: var(--font-size-base);
-      font-family: var(--font-family);
-    }
-
-    .form-group input:focus,
-    .form-group select:focus,
-    .form-group textarea:focus {
-      outline: none;
-      border-color: var(--nav-header);
-    }
-
-    .form-actions {
-      display: flex;
-      gap: 15px;
-      justify-content: flex-end;
-      margin-top: 30px;
-    }
-
-    .btn {
-      padding: 10px 20px;
-      border: none;
-      border-radius: var(--border-radius);
-      cursor: pointer;
-      font-size: var(--font-size-base);
-      font-family: var(--font-family);
-      font-weight: 600;
-      transition: all 0.3s;
-    }
-
-    .btn-primary {
-      background: var(--nav-header);
-      color: white;
-    }
-
-    .btn-primary:hover {
-      background: #2a3441;
-    }
-
-    .btn-secondary {
-      background: #6c757d;
-      color: white;
-    }
-
-    .btn-secondary:hover {
-      background: #5a6268;
-    }
-
-    .btn-danger {
-      background: var(--status-critico);
-      color: white;
-    }
-
-    .btn-danger:hover {
-      background: #dc2626;
-    }
-
-    /* === QR CODE === */
-    .qr-container {
-      text-align: center;
-      padding: 30px;
-    }
-
-    .qr-scanner {
-      max-width: 400px;
-      margin: 0 auto;
-    }
-
-    .qr-result {
-      margin-top: 20px;
-      padding: 15px;
-      background: #f0f9ff;
-      border: 1px solid #0ea5e9;
-      border-radius: var(--border-radius);
-      color: #0c4a6e;
-    }
-
-    /* === RESPONSIVIDADE === */
-    @media (max-width: 768px) {
-      .grid {
-        grid-template-columns: 1fr; /* 1 card por linha no mobile */
-        gap: 15px;
-      }
-
-      .hospital-selector {
-        padding: 15px;
-      }
-
-      .hospital-btn {
-        flex: 1;
-        min-width: 140px;
-      }
-
-      .card-content {
-        grid-template-columns: 1fr 1fr 1fr; /* Mantém 3 colunas mesmo no mobile */
-        gap: 10px;
-      }
-
-      .dashboard-container {
-        grid-template-columns: 1fr;
-      }
-
-      .chart-controls {
-        justify-content: center;
-      }
-
-      .form-actions {
-        flex-direction: column;
-      }
-
-      .btn {
-        width: 100%;
-      }
-
-      main {
-        padding: 15px;
-      }
-
-      .sidebar {
-        width: 100%;
-        left: -100%;
-      }
-    }
-
-    @media (max-width: 480px) {
-      .card-content {
-        grid-template-columns: 1fr 1fr; /* 2 colunas em telas muito pequenas */
-      }
-
-      .hospital-btn {
-        font-size: 12px;
-        padding: 10px 16px;
-      }
-    }
-
-    /* === UTILIDADES === */
-    .hidden {
-      display: none !important;
-    }
-
-    .text-center {
-      text-align: center;
-    }
-
-    .mt-20 {
-      margin-top: 20px;
-    }
-
-    .mb-20 {
-      margin-bottom: 20px;
-    }
-
-    .loading {
-      display: inline-block;
-      width: 20px;
-      height: 20px;
-      border: 3px solid rgba(255,255,255,.3);
-      border-radius: 50%;
-      border-top-color: #fff;
-      animation: spin 1s ease-in-out infinite;
-    }
-
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-
-    /* === ESTILOS ESPECÍFICOS PARA CAMPOS === */
-    .concessoes-section,
-    .linhas-cuidado-section {
-      grid-column: 1 / -1; /* Ocupa linha completa */
-      margin-top: 15px;
-    }
-
-    .concessoes-section h4,
-    .linhas-cuidado-section h4 {
-      margin-bottom: 10px;
-      font-size: var(--font-size-base);
-      color: var(--card-text) !important;
-    }
-
-    .checkbox-group {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 8px;
-    }
-
-    .checkbox-item {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .checkbox-item input[type="checkbox"] {
-      width: auto;
-      margin: 0;
-    }
-
-    .checkbox-item label {
-      color: var(--card-text) !important;
-      font-size: var(--font-size-small);
-      cursor: pointer;
-    }
-  </style>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- QRCode Generator -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    
+    <!-- QR Scanner -->
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="styles.css">
 </head>
-
 <body>
-  <!-- =================== SEÇÃO 7: HTML ESTRUTURAL COMPLETO =================== -->
-  
-  <!-- Sistema de Autenticação -->
-  <div id="authOverlay" class="auth-overlay">
-    <div class="auth-container">
-      <h2>🏥 Archipelago Dashboard</h2>
-      <p>Digite a senha de acesso:</p>
-      <input type="password" id="authPassword" class="auth-input" placeholder="Senha (6 dígitos)" maxlength="6">
-      <button onclick="authenticate()" class="auth-btn">Entrar</button>
-      <div id="authError" class="auth-error"></div>
-    </div>
-  </div>
-
-  <!-- Menu Lateral -->
-  <nav class="sidebar" id="sidebar">
-    <div class="sidebar-content">
-      <div class="sidebar-item active" id="menuLeitos">
-        <span>🏥 Leitos</span>
-      </div>
-      <div class="sidebar-item" id="menuDash1">
-        <span>📊 Dashboard Hospitalar</span>
-      </div>
-      <div class="sidebar-item" id="menuDash2">
-        <span>📈 Rede Hospitalar Externa</span>
-      </div>
-      <div class="sidebar-item" id="menuQR">
-        <span>📱 QR Code</span>
-      </div>
-      <div class="sidebar-item" id="menuAdmin">
-        <span>⚙️ Administração</span>
-      </div>
-    </div>
-  </nav>
-
-  <!-- Header Principal -->
-  <header>
-    <div class="header-left">
-      <div class="hamburger-menu" id="hamburgerMenu">☰</div>
-      <div class="brand">
-        <h1>Archipelago Dashboard</h1>
-      </div>
-    </div>
-    
-    <div class="header-right">
-      <span id="updateTimer">Próxima atualização em: 4:00</span>
-      <button class="header-btn" id="refreshBtn">🔄 Atualizar</button>
-      
-      <div class="settings-container">
-        <button class="settings-btn" id="settingsBtn">⚙️</button>
-        <div class="settings-dropdown" id="settingsDropdown">
-          <div class="settings-dropdown-item" id="btnReadQR">📱 Ler QR Code</div>
-          <div class="settings-dropdown-item" id="btnPrintQR">🖨️ Gerar QR Codes</div>
-          <div class="settings-dropdown-item" id="btnColors">🎨 Gestão de Cores</div>
-          <div class="settings-dropdown-item" id="btnAdmin">⚙️ ADM</div>
-        </div>
-      </div>
-    </div>
-  </header>
-
-  <!-- Conteúdo Principal -->
-  <main>
-    <!-- =================== SEÇÃO 8: VIEWS PRINCIPAIS =================== -->
-    
-    <!-- View Leitos -->
-    <section id="leitosView">
-      <div class="hospital-selector">
-        <button class="hospital-btn active" id="btnNeomater" data-hospital="H1">
-          Neomater
-        </button>
-        <button class="hospital-btn" id="btnCruzAzul" data-hospital="H2">
-          Cruz Azul
-        </button>
-        <button class="hospital-btn" id="btnSantaMarcelina" data-hospital="H3">
-          Santa Marcelina
-        </button>
-        <button class="hospital-btn" id="btnSantaClara" data-hospital="H4">
-          Santa Clara
-        </button>
-      </div>
-      
-      <div class="grid" id="cardsContainer">
-        <!-- Cards serão renderizados aqui pelo JavaScript -->
-      </div>
-    </section>
-
-    <!-- Dashboard Hospitalar -->
-    <section id="dash1" class="hidden">
-      <h2 style="margin-bottom:20px; color: #333333;">Dashboard Hospitalar</h2>
-      <div id="dashboardContainer">
-        <div class="card" style="text-align: center; padding: 40px;">
-          <h3 style="color: #666;">Dashboard em desenvolvimento</h3>
-          <p style="color: #999;">Em breve, análises detalhadas dos hospitais</p>
-        </div>
-      </div>
-    </section>
-
-    <!-- Dashboard Executivo -->
-    <section id="dash2" class="hidden">
-      <h2 style="margin-bottom:20px; color: #333333;">Rede Hospitalar Externa</h2>
-      <div id="executiveDashboard">
-        <div class="card" style="text-align: center; padding: 40px;">
-          <h3 style="color: #666;">Dashboard Executivo em desenvolvimento</h3>
-          <p style="color: #999;">Em breve, KPIs consolidados da rede</p>
-        </div>
-      </div>
-    </section>
-
-    <!-- QR Code View -->
-    <section id="qrView" class="hidden">
-      <div class="qr-container">
-        <h2>📱 Sistema QR Code</h2>
-        <div id="qr-reader"></div>
-        <div id="qr-result" class="qr-result hidden"></div>
-      </div>
-    </section>
-
-    <!-- Administração -->
-    <section id="adminView" class="hidden">
-      <h2 style="margin-bottom:20px; color: #333333;">⚙️ Administração</h2>
-      <div class="card">
-        <h3>Painel de Administração</h3>
-        <p>Funcionalidades administrativas em desenvolvimento</p>
-      </div>
-    </section>
-  </main>
-
-  <!-- =================== SEÇÃO 8: MODAIS =================== -->
-  
-  <!-- Modal de Edição de Leito -->
-  <div id="editModal" class="modal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3 class="modal-title">Editar Leito</h3>
-        <button class="close-modal" onclick="closeEditModal()">&times;</button>
-      </div>
-      
-      <form id="editForm">
-        <div class="card-content">
-          <!-- Row 1 -->
-          <div class="card-field">
-            <label>Nome do Paciente:</label>
-            <input type="text" id="editNome" placeholder="Nome completo">
-          </div>
-          <div class="card-field">
-            <label>Idade:</label>
-            <input type="number" id="editIdade" min="0" max="120" placeholder="Idade">
-          </div>
-          <div class="card-field">
-            <label>Sexo:</label>
-            <select id="editSexo">
-              <option value="">Selecione</option>
-              <option value="M">Masculino</option>
-              <option value="F">Feminino</option>
-            </select>
-          </div>
-
-          <!-- Row 2 -->
-          <div class="card-field">
-            <label>Data de Internação:</label>
-            <input type="date" id="editDataInternacao">
-          </div>
-          <div class="card-field">
-            <label>CID:</label>
-            <input type="text" id="editCid" placeholder="CID">
-          </div>
-          <div class="card-field">
-            <label>PPS (%):</label>
-            <select id="editPps">
-              <option value="">Selecione</option>
-              <option value="10">10%</option>
-              <option value="20">20%</option>
-              <option value="30">30%</option>
-              <option value="40">40%</option>
-              <option value="50">50%</option>
-              <option value="60">60%</option>
-              <option value="70">70%</option>
-              <option value="80">80%</option>
-              <option value="90">90%</option>
-              <option value="100">100%</option>
-            </select>
-          </div>
-
-          <!-- Row 3 -->
-          <div class="card-field">
-            <label>SPICT:</label>
-            <select id="editSpict">
-              <option value="">Selecione</option>
-              <option value="Sim">Sim</option>
-              <option value="Não">Não</option>
-            </select>
-          </div>
-          <div class="card-field">
-            <label>Previsão de Alta:</label>
-            <select id="editPrevisaoAlta">
-              <option value="">Selecione</option>
-              <option value="Hoje">Hoje</option>
-              <option value="Ouro">Ouro</option>
-              <option value="2R">2R</option>
-              <option value="3R">3R</option>
-            </select>
-          </div>
-          <div class="card-field">
-            <label>Status:</label>
-            <select id="editStatus">
-              <option value="vago">Vago</option>
-              <option value="ocupado">Ocupado</option>
-              <option value="alta">Alta Hoje</option>
-            </select>
-          </div>
-
-          <!-- Seções de Concessões e Linhas de Cuidado -->
-          <div class="concessoes-section">
-            <h4>CONCESSÕES PREVISTAS NA ALTA</h4>
-            <div class="checkbox-group" id="concessoesGroup">
-              <div class="checkbox-item">
-                <input type="checkbox" id="concOxigenio" value="oxigenio">
-                <label for="concOxigenio">Oxigênio domiciliar</label>
-              </div>
-              <div class="checkbox-item">
-                <input type="checkbox" id="concVentilacao" value="ventilacao">
-                <label for="concVentilacao">Ventilação mecânica</label>
-              </div>
-              <div class="checkbox-item">
-                <input type="checkbox" id="concNutricao" value="nutricao">
-                <label for="concNutricao">Nutrição enteral/parenteral</label>
-              </div>
-              <div class="checkbox-item">
-                <input type="checkbox" id="concMedicacao" value="medicacao">
-                <label for="concMedicacao">Medicação EV domiciliar</label>
-              </div>
+    <!-- Container Principal -->
+    <div id="app">
+        <!-- Tela de Login -->
+        <div id="loginScreen" class="login-screen">
+            <div class="login-container">
+                <div class="login-header">
+                    <img src="https://i.ibb.co/7G3Kzps/1.png" alt="Archipelago Logo" class="login-logo">
+                    <h1>Archipelago Dashboard</h1>
+                    <p>Sistema de Gestão Hospitalar</p>
+                </div>
+                <div class="login-form">
+                    <input type="password" id="passwordInput" placeholder="Digite a senha de acesso" maxlength="6">
+                    <button onclick="authenticate()" id="loginBtn">ENTRAR</button>
+                    <div id="loginError" class="error-message"></div>
+                </div>
             </div>
-          </div>
+        </div>
 
-          <div class="linhas-cuidado-section">
-            <h4>LINHA DE CUIDADOS PROPOSTA NA ALTA</h4>
-            <div class="checkbox-group" id="linhasCuidadoGroup">
-              <div class="checkbox-item">
-                <input type="checkbox" id="linhaAssiste" value="assiste">
-                <label for="linhaAssiste">Assiste</label>
-              </div>
-              <div class="checkbox-item">
-                <input type="checkbox" id="linhaCirurgia" value="cirurgia">
-                <label for="linhaCirurgia">Cirurgia</label>
-              </div>
-              <div class="checkbox-item">
-                <input type="checkbox" id="linhaEmergencia" value="emergencia">
-                <label for="linhaEmergencia">Emergência</label>
-              </div>
-              <div class="checkbox-item">
-                <input type="checkbox" id="linhaMaternidade" value="maternidade">
-                <label for="linhaMaternidade">Maternidade</label>
-              </div>
-              <div class="checkbox-item">
-                <input type="checkbox" id="linhaPediatria" value="pediatria">
-                <label for="linhaPediatria">Pediatria</label>
-              </div>
+        <!-- Container Principal Após Login -->
+        <div id="mainApp" class="main-app" style="display: none;">
+            <!-- Header -->
+            <header class="header">
+                <div class="header-left">
+                    <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+                    <img src="https://i.ibb.co/7G3Kzps/1.png" alt="Logo" class="header-logo">
+                    <h1>Archipelago Dashboard</h1>
+                </div>
+                <div class="header-right">
+                    <span id="currentDateTime"></span>
+                    <button onclick="logout()" class="logout-btn">Sair</button>
+                </div>
+            </header>
+
+            <!-- Sidebar -->
+            <aside id="sidebar" class="sidebar">
+                <nav class="nav-menu">
+                    <button onclick="switchView('cards')" class="nav-btn active" data-view="cards">
+                        <span class="icon">🏥</span>
+                        <span>Gestão de Leitos</span>
+                    </button>
+                    <button onclick="switchView('dashboard-exec')" class="nav-btn" data-view="dashboard-exec">
+                        <span class="icon">📊</span>
+                        <span>Dashboard Executivo</span>
+                    </button>
+                    <button onclick="switchView('dashboard-hosp')" class="nav-btn" data-view="dashboard-hosp">
+                        <span class="icon">📈</span>
+                        <span>Dashboard Hospitalar</span>
+                    </button>
+                    <button onclick="switchView('qrcode')" class="nav-btn" data-view="qrcode">
+                        <span class="icon">📱</span>
+                        <span>QR Code Scanner</span>
+                    </button>
+                    
+                    <div class="nav-separator"></div>
+                    
+                    <button onclick="switchView('config')" class="nav-btn" data-view="config">
+                        <span class="icon">⚙️</span>
+                        <span>Configurações</span>
+                    </button>
+                </nav>
+            </aside>
+
+            <!-- Main Content -->
+            <main id="mainContent" class="main-content">
+                <!-- View: Cards (Gestão de Leitos) -->
+                <div id="cardsView" class="view-container active">
+                    <div class="view-header">
+                        <h2>Gestão de Leitos Hospitalares</h2>
+                        <div class="header-stats">
+                            <div class="stat-badge ocupado">
+                                <span>Ocupados</span>
+                                <strong id="totalOcupados">0</strong>
+                            </div>
+                            <div class="stat-badge vago">
+                                <span>Vagos</span>
+                                <strong id="totalVagos">0</strong>
+                            </div>
+                            <div class="stat-badge total">
+                                <span>Total</span>
+                                <strong id="totalLeitos">49</strong>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="cardsContainer" class="cards-container"></div>
+                </div>
+
+                <!-- View: Dashboard Executivo -->
+                <div id="dashboardExecView" class="view-container" style="display: none;">
+                    <div class="view-header">
+                        <h2>Dashboard Executivo - Rede Hospitalar Externa</h2>
+                    </div>
+                    
+                    <!-- KPIs Row -->
+                    <div class="kpis-row">
+                        <div class="kpi-card">
+                            <div class="kpi-label">Taxa de Ocupação</div>
+                            <div class="kpi-value" id="kpiOcupacao">0%</div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-label">Média PPS</div>
+                            <div class="kpi-value" id="kpiPPS">0%</div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-label">Previsão Altas Hoje</div>
+                            <div class="kpi-value" id="kpiAltasHoje">0</div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-label">Tempo Médio</div>
+                            <div class="kpi-value" id="kpiTempoMedio">0d</div>
+                        </div>
+                    </div>
+
+                    <!-- Gauge e Gráficos -->
+                    <div class="dashboard-grid">
+                        <div class="chart-box">
+                            <h3>Taxa de Ocupação Geral</h3>
+                            <canvas id="gaugeChart"></canvas>
+                        </div>
+                        <div class="chart-box">
+                            <h3>Ocupação por Hospital</h3>
+                            <canvas id="ocupacaoHospitalChart"></canvas>
+                        </div>
+                        <div class="chart-box">
+                            <h3>Concessões por Hospital</h3>
+                            <canvas id="concessoesChart"></canvas>
+                        </div>
+                        <div class="chart-box">
+                            <h3>Linhas de Cuidado</h3>
+                            <canvas id="linhasCuidadoChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- View: Dashboard Hospitalar -->
+                <div id="dashboardHospView" class="view-container" style="display: none;">
+                    <div class="view-header">
+                        <h2>Dashboard Hospitalar - Análise Detalhada</h2>
+                    </div>
+                    <div id="hospitalDashboards"></div>
+                </div>
+
+                <!-- View: QR Code Scanner -->
+                <div id="qrcodeView" class="view-container" style="display: none;">
+                    <div class="view-header">
+                        <h2>Scanner de QR Code</h2>
+                    </div>
+                    <div class="qr-container">
+                        <div id="qr-reader"></div>
+                        <div id="qr-result" class="qr-result"></div>
+                    </div>
+                </div>
+
+                <!-- View: Configurações -->
+                <div id="configView" class="view-container" style="display: none;">
+                    <div class="view-header">
+                        <h2>Configurações do Sistema</h2>
+                    </div>
+                    <div class="config-grid">
+                        <div class="config-section">
+                            <h3>🎨 Personalização de Cores</h3>
+                            <div class="color-controls">
+                                <div class="color-group">
+                                    <label>Cor Principal (Header)</label>
+                                    <input type="color" id="corHeader" value="#3b82f6">
+                                </div>
+                                <div class="color-group">
+                                    <label>Cor Menu Lateral</label>
+                                    <input type="color" id="corSidebar" value="#60a5fa">
+                                </div>
+                                <div class="color-group">
+                                    <label>Cor de Destaque</label>
+                                    <input type="color" id="corDestaque" value="#10b981">
+                                </div>
+                                <button onclick="aplicarCores()" class="btn-primary">Aplicar Cores</button>
+                                <button onclick="restaurarCores()" class="btn-secondary">Restaurar Padrão</button>
+                            </div>
+                        </div>
+
+                        <div class="config-section">
+                            <h3>👨‍💼 Área Administrativa</h3>
+                            <button onclick="openADM()" class="btn-config">
+                                <span class="icon">🔐</span>
+                                Acessar Painel ADM
+                            </button>
+                        </div>
+
+                        <div class="config-section">
+                            <h3>📱 QR Codes</h3>
+                            <button onclick="gerarQRCodes()" class="btn-config">
+                                <span class="icon">📱</span>
+                                Gerar QR Codes dos Leitos
+                            </button>
+                        </div>
+
+                        <div class="config-section">
+                            <h3>📊 Relatórios</h3>
+                            <button onclick="exportarDados()" class="btn-config">
+                                <span class="icon">📥</span>
+                                Exportar Dados (Excel)
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Modais -->
+    <!-- Modal de Admissão -->
+    <div id="modalAdmissao" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Nova Admissão</h2>
+                <button class="modal-close" onclick="closeModal('modalAdmissao')">&times;</button>
             </div>
-          </div>
-        </div>
+            <form id="formAdmissao" class="modal-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Nome do Paciente*</label>
+                        <input type="text" name="nome" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Idade*</label>
+                        <input type="number" name="idade" min="0" max="150" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Registro*</label>
+                        <input type="text" name="registro" required>
+                    </div>
+                </div>
 
-        <div class="form-actions">
-          <button type="button" class="btn btn-secondary" onclick="closeEditModal()">Cancelar</button>
-          <button type="submit" class="btn btn-primary">Salvar</button>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Data de Entrada*</label>
+                        <input type="date" name="dataEntrada" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Médico Responsável*</label>
+                        <input type="text" name="medico" required>
+                    </div>
+                    <div class="form-group">
+                        <label>PPS (%)*</label>
+                        <select name="pps" required>
+                            <option value="">Selecione</option>
+                            <option value="10">10%</option>
+                            <option value="20">20%</option>
+                            <option value="30">30%</option>
+                            <option value="40">40%</option>
+                            <option value="50">50%</option>
+                            <option value="60">60%</option>
+                            <option value="70">70%</option>
+                            <option value="80">80%</option>
+                            <option value="90">90%</option>
+                            <option value="100">100%</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Diagnóstico*</label>
+                        <input type="text" name="diagnostico" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Convênio</label>
+                        <input type="text" name="convenio">
+                    </div>
+                    <div class="form-group">
+                        <label>Previsão de Alta</label>
+                        <select name="previsaoAlta">
+                            <option value="">Não definida</option>
+                            <option value="Hoje Ouro">Hoje Ouro</option>
+                            <option value="Hoje 2R">Hoje 2R</option>
+                            <option value="Hoje 3R">Hoje 3R</option>
+                            <option value="24h">24 horas</option>
+                            <option value="48h">48 horas</option>
+                            <option value="72h">72 horas</option>
+                            <option value=">72h">Mais de 72h</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3>CONCESSÕES PREVISTAS NA ALTA</h3>
+                    <div class="checkbox-grid">
+                        <label class="checkbox-label">
+                            <input type="checkbox" name="concessoes" value="Órtese/Prótese">
+                            <span>Órtese/Prótese</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" name="concessoes" value="Equipamento">
+                            <span>Equipamento</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" name="concessoes" value="Dieta">
+                            <span>Dieta</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" name="concessoes" value="Medicamento Alto Custo">
+                            <span>Medicamento Alto Custo</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" name="concessoes" value="Transporte">
+                            <span>Transporte</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" name="concessoes" value="Outros">
+                            <span>Outros</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3>LINHA DE CUIDADOS PROPOSTA NA ALTA</h3>
+                    <div class="checkbox-grid">
+                        <label class="checkbox-label">
+                            <input type="checkbox" name="linhaCuidado" value="Unidade Básica">
+                            <span>Unidade Básica</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" name="linhaCuidado" value="Ambulatório de Egressos">
+                            <span>Ambulatório de Egressos</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" name="linhaCuidado" value="CAPS">
+                            <span>CAPS</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" name="linhaCuidado" value="Residência Terapêutica">
+                            <span>Residência Terapêutica</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" name="linhaCuidado" value="Hospital Dia">
+                            <span>Hospital Dia</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" name="linhaCuidado" value="Outros">
+                            <span>Outros</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group full-width">
+                        <label>Observações</label>
+                        <textarea name="observacoes" rows="3"></textarea>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" onclick="closeModal('modalAdmissao')" class="btn-secondary">Cancelar</button>
+                    <button type="submit" class="btn-primary">Confirmar Admissão</button>
+                </div>
+            </form>
         </div>
-      </form>
     </div>
-  </div>
 
-  <!-- Modal de Gestão de Cores -->
-  <div id="colorsModal" class="modal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3 class="modal-title">🎨 Gestão de Cores</h3>
-        <button class="close-modal" onclick="closeColorsModal()">&times;</button>
-      </div>
-      
-      <div id="colorsContent">
-        <p>Sistema de gestão de cores em desenvolvimento</p>
-        <button class="btn btn-primary" onclick="restoreColors()">Restaurar Cores Originais</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Modal ADM -->
-  <div id="adminModal" class="modal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3 class="modal-title">⚙️ Administração</h3>
-        <button class="close-modal" onclick="closeAdminModal()">&times;</button>
-      </div>
-      
-      <div id="adminContent">
-        <div class="form-group">
-          <label>Email:</label>
-          <input type="email" id="adminEmail" placeholder="cvcalessandro@gmail.com">
-        </div>
-        <div class="form-group">
-          <label>Senha:</label>
-          <input type="password" id="adminPassword" placeholder="9446">
-        </div>
-        <button class="btn btn-primary" onclick="adminLogin()">Entrar</button>
-      </div>
-    </div>
-  </div>
-
-/*
-═══════════════════════════════════════════════════════════════
-🎯 ARCHIPELAGO DASHBOARD V3.0 - PARTE 2/2 - JAVASCRIPT COMPLETO
-═══════════════════════════════════════════════════════════════
-✅ CORREÇÕES IMPLEMENTADAS:
-- JavaScript UNIFICADO em um só bloco (elimina ReferenceError)
-- Funções logInfo, logSuccess, logError disponíveis globalmente
-- Correção do campo idade (sem valores vazios)
-- Sistema de autenticação 170284 funcional
-- Timer de 4 minutos (240.000ms) implementado
-- Dados dos 4 hospitais (49 leitos total)
-- Sistema QR com timeout 2 minutos
-- Área ADM com login cvcalessandro@gmail.com / 9446
-
-📁 ESTRUTURA JAVASCRIPT UNIFICADO:
-- SEÇÃO 1: Variáveis e configurações globais
-- SEÇÃO 2: Funções de log e utilidades
-- SEÇÃO 3: Sistema de autenticação
-- SEÇÃO 4: Dados dos hospitais e leitos
-- SEÇÃO 5: Renderização de cards
-- SEÇÃO 6: Navegação e menus
-- SEÇÃO 7: Sistema QR Code
-- SEÇÃO 8: Dashboards e gráficos
-- SEÇÃO 9: Área administrativa
-- SEÇÃO 10: Inicialização do sistema
-
-🔧 COMO USAR:
-1. Copie TODO este código JavaScript
-2. Cole no final do arquivo HTML da PARTE 1
-3. Adicione entre tags <script> antes de </body>
-4. Sistema estará 100% funcional sem erros
-
-⚠️ IMPORTANTE: Este é UM ÚNICO BLOCO JavaScript
-   Não separe em múltiplos <script> para evitar ReferenceError
-═══════════════════════════════════════════════════════════════
-*/
-
-// =================== SEÇÃO 1: VARIÁVEIS E CONFIGURAÇÕES GLOBAIS ===================
-let currentHospital = 'H1';
-let currentView = 'leitos';
-let updateInterval;
-let qrCodeScanner;
-let authTimeout;
-let isAuthenticated = false;
-
-// Configurações do sistema
-const CONFIG = {
-  AUTH_PASSWORD: '170284',
-  SESSION_TIMEOUT: 240000, // 4 minutos em ms
-  QR_TIMEOUT: 120000, // 2 minutos em ms
-  UPDATE_INTERVAL: 240000, // 4 minutos em ms
-  ADMIN_EMAIL: 'cvcalessandro@gmail.com',
-  ADMIN_PASSWORD: '9446'
-};
-
-// =================== SEÇÃO 2: FUNÇÕES DE LOG E UTILIDADES ===================
-function logInfo(message) {
-  console.log(`ℹ️ [INFO] ${message}`);
-}
-
-function logSuccess(message) {
-  console.log(`✅ [SUCCESS] ${message}`);
-}
-
-function logError(message) {
-  console.error(`❌ [ERROR] ${message}`);
-}
-
-function logWarning(message) {
-  console.warn(`⚠️ [WARNING] ${message}`);
-}
-
-function formatTime(seconds) {
-  const minutes = Math.floor(seconds / 60);
-  const remainingSeconds = seconds % 60;
-  return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
-}
-
-function generateId() {
-  return Math.random().toString(36).substr(2, 9);
-}
-
-function showNotification(message, type = 'info') {
-  // Implementação simples de notificação
-  console.log(`📢 [${type.toUpperCase()}] ${message}`);
-}
-
-// =================== SEÇÃO 3: SISTEMA DE AUTENTICAÇÃO ===================
-function authenticate() {
-  const password = document.getElementById('authPassword').value;
-  const errorDiv = document.getElementById('authError');
-  
-  if (password === CONFIG.AUTH_PASSWORD) {
-    isAuthenticated = true;
-    document.getElementById('authOverlay').style.display = 'none';
-    startSessionTimer();
-    initializeSystem();
-    logSuccess('Autenticação bem-sucedida');
-    showNotification('Bem-vindo ao Archipelago Dashboard!', 'success');
-  } else {
-    errorDiv.textContent = 'Senha incorreta. Tente novamente.';
-    errorDiv.style.display = 'block';
-    document.getElementById('authPassword').value = '';
-    logError('Tentativa de autenticação falhada');
-  }
-}
-
-function startSessionTimer() {
-  let timeLeft = CONFIG.SESSION_TIMEOUT / 1000;
-  
-  authTimeout = setInterval(() => {
-    timeLeft--;
-    document.getElementById('updateTimer').textContent = 
-      `Próxima atualização em: ${formatTime(timeLeft)}`;
-    
-    if (timeLeft <= 0) {
-      logout();
-    }
-  }, 1000);
-}
-
-function logout() {
-  isAuthenticated = false;
-  clearInterval(authTimeout);
-  clearInterval(updateInterval);
-  document.getElementById('authOverlay').style.display = 'flex';
-  document.getElementById('authPassword').value = '';
-  document.getElementById('authError').style.display = 'none';
-  logInfo('Sessão expirada - redirecionando para login');
-}
-
-function refreshSession() {
-  if (isAuthenticated) {
-    clearInterval(authTimeout);
-    startSessionTimer();
-    updateData();
-    logInfo('Sessão renovada e dados atualizados');
-    showNotification('Dados atualizados com sucesso!', 'success');
-  }
-}
-
-// =================== SEÇÃO 4: DADOS DOS HOSPITAIS E LEITOS ===================
-const hospitaisData = {
-  H1: {
-    nome: 'Neomater',
-    leitos: 13,
-    cores: {
-      primary: '#3b82f6',
-      secondary: '#1e40af'
-    }
-  },
-  H2: {
-    nome: 'Cruz Azul',
-    leitos: 16,
-    cores: {
-      primary: '#10b981',
-      secondary: '#047857'
-    }
-  },
-  H3: {
-    nome: 'Santa Marcelina',
-    leitos: 7,
-    cores: {
-      primary: '#f59e0b',
-      secondary: '#d97706'
-    }
-  },
-  H4: {
-    nome: 'Santa Clara',
-    leitos: 13,
-    cores: {
-      primary: '#ef4444',
-      secondary: '#dc2626'
-    }
-  }
-};
-
-// Geração de dados dos leitos
-function generateLeitosData() {
-  const leitos = {};
-  
-  Object.keys(hospitaisData).forEach(hospitalId => {
-    leitos[hospitalId] = [];
-    const qtdLeitos = hospitaisData[hospitalId].leitos;
-    
-    for (let i = 1; i <= qtdLeitos; i++) {
-      const status = Math.random() > 0.7 ? 'vago' : 'ocupado';
-      const isVago = status === 'vago';
-      
-      leitos[hospitalId].push({
-        id: `${hospitalId}-L${i.toString().padStart(2, '0')}`,
-        numero: i,
-        hospital: hospitalId,
-        status: status,
-        nome: isVago ? '' : `Paciente ${i}`,
-        idade: isVago ? null : Math.floor(Math.random() * 80) + 20,
-        sexo: isVago ? '' : (Math.random() > 0.5 ? 'M' : 'F'),
-        dataInternacao: isVago ? '' : new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        cid: isVago ? '' : `CID${Math.floor(Math.random() * 100) + 1}`,
-        pps: isVago ? '' : [10, 20, 30, 40, 50, 60, 70, 80, 90, 100][Math.floor(Math.random() * 10)],
-        spict: isVago ? '' : (Math.random() > 0.5 ? 'Sim' : 'Não'),
-        previsaoAlta: isVago ? '' : ['Hoje', 'Ouro', '2R', '3R'][Math.floor(Math.random() * 4)],
-        concessoes: isVago ? [] : ['oxigenio', 'ventilacao'].slice(0, Math.floor(Math.random() * 3)),
-        linhasCuidado: isVago ? [] : ['assiste', 'cirurgia', 'emergencia'].slice(0, Math.floor(Math.random() * 4))
-      });
-    }
-  });
-  
-  return leitos;
-}
-
-let leitosData = generateLeitosData();
-
-// =================== SEÇÃO 5: RENDERIZAÇÃO DE CARDS ===================
-function renderCards() {
-  const container = document.getElementById('cardsContainer');
-  const hospitalLeitos = leitosData[currentHospital] || [];
-  
-  container.innerHTML = '';
-  
-  hospitalLeitos.forEach(leito => {
-    const card = document.createElement('div');
-    card.className = 'card';
-    card.innerHTML = `
-      <h3>Leito ${leito.numero.toString().padStart(2, '0')} - ${getStatusText(leito.status)}</h3>
-      <div class="card-content">
-        <!-- Row 1 -->
-        <div class="card-field">
-          <label>Nome do Paciente:</label>
-          <input type="text" value="${leito.nome || ''}" 
-                 placeholder="${leito.status === 'vago' ? 'Leito vago' : 'Nome do paciente'}"
-                 ${leito.status === 'vago' ? 'disabled' : ''}>
-        </div>
-        <div class="card-field">
-          <label>Idade:</label>
-          <input type="number" value="${leito.idade || ''}" 
-                 placeholder="${leito.status === 'vago' ? '-' : 'Idade'}"
-                 ${leito.status === 'vago' ? 'disabled' : ''}>
-        </div>
-        <div class="card-field">
-          <label>Sexo:</label>
-          <select ${leito.status === 'vago' ? 'disabled' : ''}>
-            <option value="">${leito.status === 'vago' ? '-' : 'Selecione'}</option>
-            <option value="M" ${leito.sexo === 'M' ? 'selected' : ''}>Masculino</option>
-            <option value="F" ${leito.sexo === 'F' ? 'selected' : ''}>Feminino</option>
-          </select>
-        </div>
-
-        <!-- Row 2 -->
-        <div class="card-field">
-          <label>Data de Internação:</label>
-          <input type="date" value="${leito.dataInternacao || ''}"
-                 ${leito.status === 'vago' ? 'disabled' : ''}>
-        </div>
-        <div class="card-field">
-          <label>CID:</label>
-          <input type="text" value="${leito.cid || ''}" 
-                 placeholder="${leito.status === 'vago' ? '-' : 'CID'}"
-                 ${leito.status === 'vago' ? 'disabled' : ''}>
-        </div>
-        <div class="card-field">
-          <label>PPS (%):</label>
-          <select ${leito.status === 'vago' ? 'disabled' : ''}>
-            <option value="">${leito.status === 'vago' ? '-' : 'Selecione'}</option>
-            ${[10,20,30,40,50,60,70,80,90,100].map(val => 
-              `<option value="${val}" ${leito.pps == val ? 'selected' : ''}>${val}%</option>`
-            ).join('')}
-          </select>
-        </div>
-
-        <!-- Row 3 -->
-        <div class="card-field">
-          <label>SPICT:</label>
-          <select ${leito.status === 'vago' ? 'disabled' : ''}>
-            <option value="">${leito.status === 'vago' ? '-' : 'Selecione'}</option>
-            <option value="Sim" ${leito.spict === 'Sim' ? 'selected' : ''}>Sim</option>
-            <option value="Não" ${leito.spict === 'Não' ? 'selected' : ''}>Não</option>
-          </select>
-        </div>
-        <div class="card-field">
-          <label>Previsão de Alta:</label>
-          <select ${leito.status === 'vago' ? 'disabled' : ''}>
-            <option value="">${leito.status === 'vago' ? '-' : 'Selecione'}</option>
-            <option value="Hoje" ${leito.previsaoAlta === 'Hoje' ? 'selected' : ''}>Hoje</option>
-            <option value="Ouro" ${leito.previsaoAlta === 'Ouro' ? 'selected' : ''}>Ouro</option>
-            <option value="2R" ${leito.previsaoAlta === '2R' ? 'selected' : ''}>2R</option>
-            <option value="3R" ${leito.previsaoAlta === '3R' ? 'selected' : ''}>3R</option>
-          </select>
-        </div>
-        <div class="card-field">
-          <label>Status:</label>
-          <div class="status-indicator status-${leito.status}">
-            ${getStatusText(leito.status)}
-          </div>
-        </div>
-
-        <!-- Concessões e Linhas de Cuidado -->
-        ${leito.status !== 'vago' ? `
-        <div class="concessoes-section">
-          <h4>CONCESSÕES PREVISTAS NA ALTA</h4>
-          <div class="checkbox-group">
-            <div class="checkbox-item">
-              <input type="checkbox" ${leito.concessoes?.includes('oxigenio') ? 'checked' : ''}>
-              <label>Oxigênio domiciliar</label>
+    <!-- Modal de Atualização (estrutura similar) -->
+    <div id="modalAtualizacao" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Atualizar Informações do Leito</h2>
+                <button class="modal-close" onclick="closeModal('modalAtualizacao')">&times;</button>
             </div>
-            <div class="checkbox-item">
-              <input type="checkbox" ${leito.concessoes?.includes('ventilacao') ? 'checked' : ''}>
-              <label>Ventilação mecânica</label>
+            <form id="formAtualizacao" class="modal-form">
+                <!-- Mesmo conteúdo do form de admissão -->
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal de Alta -->
+    <div id="modalAlta" class="modal">
+        <div class="modal-content modal-compact">
+            <div class="modal-header">
+                <h2>Confirmar Alta do Paciente</h2>
+                <button class="modal-close" onclick="closeModal('modalAlta')">&times;</button>
             </div>
-            <div class="checkbox-item">
-              <input type="checkbox" ${leito.concessoes?.includes('nutricao') ? 'checked' : ''}>
-              <label>Nutrição enteral/parenteral</label>
+            <div class="modal-body">
+                <p>Confirma a alta do paciente <strong id="altaPacienteNome"></strong>?</p>
+                <div class="form-group">
+                    <label>Data da Alta</label>
+                    <input type="datetime-local" id="dataAlta" required>
+                </div>
+                <div class="form-group">
+                    <label>Motivo da Alta</label>
+                    <select id="motivoAlta">
+                        <option value="Melhora Clínica">Melhora Clínica</option>
+                        <option value="Transferência">Transferência</option>
+                        <option value="Óbito">Óbito</option>
+                        <option value="Evasão">Evasão</option>
+                        <option value="Alta a Pedido">Alta a Pedido</option>
+                    </select>
+                </div>
             </div>
-            <div class="checkbox-item">
-              <input type="checkbox" ${leito.concessoes?.includes('medicacao') ? 'checked' : ''}>
-              <label>Medicação EV domiciliar</label>
+            <div class="modal-footer">
+                <button onclick="closeModal('modalAlta')" class="btn-secondary">Cancelar</button>
+                <button onclick="confirmarAlta()" class="btn-primary">Confirmar Alta</button>
             </div>
-          </div>
         </div>
+    </div>
 
-        <div class="linhas-cuidado-section">
-          <h4>LINHA DE CUIDADOS PROPOSTA NA ALTA</h4>
-          <div class="checkbox-group">
-            <div class="checkbox-item">
-              <input type="checkbox" ${leito.linhasCuidado?.includes('assiste') ? 'checked' : ''}>
-              <label>Assiste</label>
+    <!-- Modal ADM -->
+    <div id="modalADM" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Painel Administrativo</h2>
+                <button class="modal-close" onclick="closeModal('modalADM')">&times;</button>
             </div>
-            <div class="checkbox-item">
-              <input type="checkbox" ${leito.linhasCuidado?.includes('cirurgia') ? 'checked' : ''}>
-              <label>Cirurgia</label>
+            <div class="adm-login" id="admLogin">
+                <h3>Autenticação Administrativa</h3>
+                <input type="email" id="admEmail" placeholder="Email" value="cvcalessandro@gmail.com">
+                <input type="password" id="admPassword" placeholder="Senha">
+                <button onclick="loginADM()" class="btn-primary">Entrar</button>
             </div>
-            <div class="checkbox-item">
-              <input type="checkbox" ${leito.linhasCuidado?.includes('emergencia') ? 'checked' : ''}>
-              <label>Emergência</label>
+            <div class="adm-panel" id="admPanel" style="display: none;">
+                <h3>Gestão de Hospitais e Leitos</h3>
+                <div id="admContent"></div>
             </div>
-            <div class="checkbox-item">
-              <input type="checkbox" ${leito.linhasCuidado?.includes('maternidade') ? 'checked' : ''}>
-              <label>Maternidade</label>
+        </div>
+    </div>
+
+    <!-- Modal QR Codes -->
+    <div id="modalQRCodes" class="modal">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h2>QR Codes dos Leitos</h2>
+                <button class="modal-close" onclick="closeModal('modalQRCodes')">&times;</button>
             </div>
-            <div class="checkbox-item">
-              <input type="checkbox" ${leito.linhasCuidado?.includes('pediatria') ? 'checked' : ''}>
-              <label>Pediatria</label>
-            </div>
-          </div>
+            <div id="qrCodesGrid" class="qr-codes-grid"></div>
         </div>
-        ` : ''}
-      </div>
-    `;
-    
-    // Adicionar evento de clique para edição
-    card.addEventListener('click', () => {
-      if (leito.status !== 'vago') {
-        openEditModal(leito);
-      }
-    });
-    
-    container.appendChild(card);
-  });
-  
-  logInfo(`Cards renderizados: ${hospitalLeitos.length} leitos para ${hospitaisData[currentHospital].nome}`);
-}
-
-function getStatusText(status) {
-  const statusTexts = {
-    'vago': 'Vago',
-    'ocupado': 'Ocupado',
-    'alta': 'Alta Hoje'
-  };
-  return statusTexts[status] || status;
-}
-
-// =================== SEÇÃO 6: NAVEGAÇÃO E MENUS ===================
-function initNavigation() {
-  // Menu hambúrguer
-  document.getElementById('hamburgerMenu').addEventListener('click', () => {
-    const sidebar = document.getElementById('sidebar');
-    sidebar.classList.toggle('open');
-  });
-
-  // Navegação entre hospitais
-  document.querySelectorAll('.hospital-btn').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      const hospitalId = e.target.dataset.hospital;
-      selectHospital(hospitalId);
-    });
-  });
-
-  // Menu lateral
-  document.getElementById('menuLeitos').addEventListener('click', () => showView('leitos'));
-  document.getElementById('menuDash1').addEventListener('click', () => showView('dash1'));
-  document.getElementById('menuDash2').addEventListener('click', () => showView('dash2'));
-  document.getElementById('menuQR').addEventListener('click', () => showView('qr'));
-  document.getElementById('menuAdmin').addEventListener('click', () => showView('admin'));
-
-  // Header buttons
-  document.getElementById('refreshBtn').addEventListener('click', refreshSession);
-  
-  // Settings dropdown
-  const settingsBtn = document.getElementById('settingsBtn');
-  const settingsDropdown = document.getElementById('settingsDropdown');
-  
-  settingsBtn.addEventListener('click', (e) => {
-    e.stopPropagation();
-    settingsDropdown.classList.toggle('show');
-  });
-  
-  document.addEventListener('click', () => {
-    settingsDropdown.classList.remove('show');
-  });
-  
-  // Settings dropdown items
-  document.getElementById('btnReadQR').addEventListener('click', () => showView('qr'));
-  document.getElementById('btnPrintQR').addEventListener('click', generateQRCodes);
-  document.getElementById('btnColors').addEventListener('click', openColorsModal);
-  document.getElementById('btnAdmin').addEventListener('click', openAdminModal);
-}
-
-function selectHospital(hospitalId) {
-  currentHospital = hospitalId;
-  
-  // Update button states
-  document.querySelectorAll('.hospital-btn').forEach(btn => {
-    btn.classList.remove('active');
-  });
-  document.querySelector(`[data-hospital="${hospitalId}"]`).classList.add('active');
-  
-  // Re-render cards
-  renderCards();
-  
-  logInfo(`Hospital selecionado: ${hospitaisData[hospitalId].nome}`);
-}
-
-function showView(viewName) {
-  // Hide all views
-  document.querySelectorAll('main > section').forEach(section => {
-    section.classList.add('hidden');
-  });
-  
-  // Update sidebar active state
-  document.querySelectorAll('.sidebar-item').forEach(item => {
-    item.classList.remove('active');
-  });
-  
-  // Show selected view
-  currentView = viewName;
-  
-  switch(viewName) {
-    case 'leitos':
-      document.getElementById('leitosView').classList.remove('hidden');
-      document.getElementById('menuLeitos').classList.add('active');
-      renderCards();
-      break;
-    case 'dash1':
-      document.getElementById('dash1').classList.remove('hidden');
-      document.getElementById('menuDash1').classList.add('active');
-      renderDashboardHospitalar();
-      break;
-    case 'dash2':
-      document.getElementById('dash2').classList.remove('hidden');
-      document.getElementById('menuDash2').classList.add('active');
-      renderDashboardExecutivo();
-      break;
-    case 'qr':
-      document.getElementById('qrView').classList.remove('hidden');
-      document.getElementById('menuQR').classList.add('active');
-      initQRSystem();
-      break;
-    case 'admin':
-      document.getElementById('adminView').classList.remove('hidden');
-      document.getElementById('menuAdmin').classList.add('active');
-      break;
-  }
-  
-  // Close sidebar on mobile
-  document.getElementById('sidebar').classList.remove('open');
-  
-  logInfo(`View alterada para: ${viewName}`);
-}
-
-// =================== SEÇÃO 7: SISTEMA QR CODE ===================
-function initQRSystem() {
-  logInfo("Inicializando sistema QR Code");
-  
-  const qrReaderDiv = document.getElementById('qr-reader');
-  const qrResultDiv = document.getElementById('qr-result');
-  
-  // Limpar resultado anterior
-  qrResultDiv.classList.add('hidden');
-  qrReaderDiv.innerHTML = '<p>Inicializando câmera...</p>';
-  
-  try {
-    if (qrCodeScanner) {
-      qrCodeScanner.stop();
-    }
-    
-    qrCodeScanner = new Html5QrcodeScanner(
-      'qr-reader',
-      {
-        fps: 10,
-        qrbox: { width: 250, height: 250 },
-        aspectRatio: 1.0
-      },
-      false
-    );
-    
-    qrCodeScanner.render(onScanSuccess, onScanFailure);
-    
-    // Timeout para retornar à câmera
-    setTimeout(() => {
-      if (qrCodeScanner && currentView === 'qr') {
-        logInfo("QR Code timeout - reiniciando scanner");
-        qrCodeScanner.clear();
-        initQRSystem();
-      }
-    }, CONFIG.QR_TIMEOUT);
-    
-  } catch (error) {
-    logError(`Erro ao inicializar QR Code: ${error.message}`);
-    qrReaderDiv.innerHTML = `
-      <div style="text-align: center; padding: 20px;">
-        <h3>⚠️ Erro no Scanner</h3>
-        <p>Não foi possível acessar a câmera.</p>
-        <button class="btn btn-primary" onclick="initQRSystem()">Tentar Novamente</button>
-      </div>
-    `;
-  }
-}
-
-function onScanSuccess(decodedText, decodedResult) {
-  logSuccess(`QR Code lido: ${decodedText}`);
-  
-  const qrResultDiv = document.getElementById('qr-result');
-  qrResultDiv.innerHTML = `
-    <h4>✅ QR Code Detectado</h4>
-    <p><strong>Conteúdo:</strong> ${decodedText}</p>
-    <p><strong>Formato:</strong> ${decodedResult.result.format.formatName}</p>
-    <button class="btn btn-primary" onclick="processQRCode('${decodedText}')">Processar</button>
-    <button class="btn btn-secondary" onclick="initQRSystem()">Escanear Novamente</button>
-  `;
-  qrResultDiv.classList.remove('hidden');
-  
-  // Parar o scanner
-  if (qrCodeScanner) {
-    qrCodeScanner.clear();
-  }
-}
-
-function onScanFailure(error) {
-  // Não logar erros de scan (muito verboso)
-  // logWarning(`QR Scan error: ${error}`);
-}
-
-function processQRCode(qrContent) {
-  try {
-    // Tentar processar como JSON (dados de leito)
-    const data = JSON.parse(qrContent);
-    
-    if (data.type === 'leito') {
-      // Processar dados de leito
-      updateLeitoFromQR(data);
-      showNotification('Dados do leito atualizados via QR Code!', 'success');
-    } else {
-      showNotification('Tipo de QR Code não reconhecido', 'warning');
-    }
-  } catch (e) {
-    // QR Code não é JSON válido
-    showNotification(`QR Code processado: ${qrContent}`, 'info');
-  }
-  
-  logInfo(`QR Code processado: ${qrContent}`);
-}
-
-function updateLeitoFromQR(qrData) {
-  const { hospital, leito, dados } = qrData;
-  
-  if (leitosData[hospital] && leitosData[hospital][leito]) {
-    Object.assign(leitosData[hospital][leito], dados);
-    
-    if (currentHospital === hospital && currentView === 'leitos') {
-      renderCards();
-    }
-    
-    logSuccess(`Leito ${hospital}-${leito} atualizado via QR Code`);
-  }
-}
-
-function generateQRCodes() {
-  logInfo("Gerando QR Codes dos leitos");
-  
-  const qrContainer = document.createElement('div');
-  qrContainer.innerHTML = '<h3>📱 QR Codes dos Leitos</h3>';
-  
-  Object.keys(hospitaisData).forEach(hospitalId => {
-    const hospitalDiv = document.createElement('div');
-    hospitalDiv.innerHTML = `<h4>${hospitaisData[hospitalId].nome}</h4>`;
-    
-    const leitosHospital = leitosData[hospitalId] || [];
-    leitosHospital.forEach(leito => {
-      const qrData = {
-        type: 'leito',
-        hospital: hospitalId,
-        leito: leito.numero,
-        id: leito.id
-      };
-      
-      const qrDiv = document.createElement('div');
-      qrDiv.style.display = 'inline-block';
-      qrDiv.style.margin = '10px';
-      qrDiv.style.textAlign = 'center';
-      
-      const qrCodeDiv = document.createElement('div');
-      qrCodeDiv.id = `qr-${leito.id}`;
-      qrDiv.appendChild(qrCodeDiv);
-      
-      const label = document.createElement('p');
-      label.textContent = `${hospitaisData[hospitalId].nome} - Leito ${leito.numero}`;
-      qrDiv.appendChild(label);
-      
-      hospitalDiv.appendChild(qrDiv);
-      
-      // Gerar QR Code
-      try {
-        new QRCode(qrCodeDiv, {
-          text: JSON.stringify(qrData),
-          width: 128,
-          height: 128
-        });
-      } catch (error) {
-        logError(`Erro ao gerar QR Code para ${leito.id}: ${error.message}`);
-      }
-    });
-    
-    qrContainer.appendChild(hospitalDiv);
-  });
-  
-  // Mostrar em modal
-  showQRModal(qrContainer.innerHTML);
-}
-
-function showQRModal(content) {
-  const modal = document.createElement('div');
-  modal.className = 'modal show';
-  modal.innerHTML = `
-    <div class="modal-content" style="max-width: 80%; max-height: 80%; overflow-y: auto;">
-      <div class="modal-header">
-        <h3 class="modal-title">📱 QR Codes Gerados</h3>
-        <button class="close-modal" onclick="this.closest('.modal').remove()">&times;</button>
-      </div>
-      <div style="text-align: center;">
-        ${content}
-        <div style="margin-top: 20px;">
-          <button class="btn btn-primary" onclick="window.print()">🖨️ Imprimir</button>
-          <button class="btn btn-secondary" onclick="this.closest('.modal').remove()">Fechar</button>
-        </div>
-      </div>
     </div>
-  `;
-  
-  document.body.appendChild(modal);
-}
 
-// =================== SEÇÃO 8: DASHBOARDS E GRÁFICOS ===================
-function renderDashboardHospitalar() {
-  logInfo("Renderizando Dashboard Hospitalar");
-  
-  const container = document.getElementById('dashboardContainer');
-  container.innerHTML = '';
-  
-  // KPIs por hospital
-  Object.keys(hospitaisData).forEach(hospitalId => {
-    const hospital = hospitaisData[hospitalId];
-    const leitos = leitosData[hospitalId] || [];
-    
-    const stats = calculateHospitalStats(leitos);
-    
-    const hospitalCard = document.createElement('div');
-    hospitalCard.className = 'card';
-    hospitalCard.innerHTML = `
-      <h3>${hospital.nome}</h3>
-      <div class="dashboard-container">
-        <div class="kpi-card">
-          <div class="kpi-value">${stats.total}</div>
-          <div class="kpi-label">Total Leitos</div>
-        </div>
-        <div class="kpi-card">
-          <div class="kpi-value">${stats.ocupados}</div>
-          <div class="kpi-label">Ocupados</div>
-        </div>
-        <div class="kpi-card">
-          <div class="kpi-value">${stats.vagos}</div>
-          <div class="kpi-label">Vagos</div>
-        </div>
-        <div class="kpi-card">
-          <div class="kpi-value">${Math.round(stats.ocupacao)}%</div>
-          <div class="kpi-label">Taxa Ocupação</div>
-        </div>
-      </div>
-      
-      <div class="chart-container">
-        <div class="chart-controls">
-          <button class="chart-btn active" onclick="renderChart('${hospitalId}', 'pie')">🔵 Bolinha</button>
-          <button class="chart-btn" onclick="renderChart('${hospitalId}', 'doughnut')">⚪ Bolinha2</button>
-          <button class="chart-btn" onclick="renderChart('${hospitalId}', 'bar')">📊 Barras</button>
-          <button class="chart-btn" onclick="renderChart('${hospitalId}', 'line')">📈 Linha</button>
-          <button class="chart-btn" onclick="renderChart('${hospitalId}', 'area')">📊 Área</button>
-        </div>
-        <canvas id="chart-${hospitalId}" width="400" height="200"></canvas>
-      </div>
-    `;
-    
-    container.appendChild(hospitalCard);
-    
-    // Renderizar gráfico inicial
-    setTimeout(() => renderChart(hospitalId, 'pie'), 100);
-  });
-}
-
-function renderDashboardExecutivo() {
-  logInfo("Renderizando Dashboard Executivo - Rede Hospitalar Externa");
-  
-  const container = document.getElementById('executiveDashboard');
-  
-  // Calcular estatísticas consolidadas
-  const consolidatedStats = calculateConsolidatedStats();
-  
-  container.innerHTML = `
-    <div class="dashboard-container">
-      <!-- KPI Principal - Gauge -->
-      <div class="kpi-card" style="grid-column: 1 / -1;">
-        <h3>Taxa de Ocupação Geral</h3>
-        <canvas id="gaugeChart" width="300" height="150"></canvas>
-      </div>
-      
-      <!-- KPIs Secundários -->
-      <div class="kpi-card">
-        <div class="kpi-value">${consolidatedStats.totalHospitais}</div>
-        <div class="kpi-label">Hospitais</div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-value">${consolidatedStats.totalLeitos}</div>
-        <div class="kpi-label">Total Leitos</div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-value">${consolidatedStats.totalOcupados}</div>
-        <div class="kpi-label">Ocupados</div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-value">${consolidatedStats.totalVagos}</div>
-        <div class="kpi-label">Vagos</div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-value">${consolidatedStats.altasHoje}</div>
-        <div class="kpi-label">Altas Hoje</div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-value">${consolidatedStats.tempoMedio}h</div>
-        <div class="kpi-label">Tempo Médio</div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-value">${consolidatedStats.ppsMedia}%</div>
-        <div class="kpi-label">PPS Médio</div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-value">${consolidatedStats.spictPositivos}</div>
-        <div class="kpi-label">SPICT Positivos</div>
-      </div>
-    </div>
-    
-    <!-- Gráficos Consolidados -->
-    <div class="chart-container">
-      <h4>Distribuição por Hospital</h4>
-      <canvas id="hospitalChart" width="800" height="400"></canvas>
-    </div>
-    
-    <div class="chart-container">
-      <h4>Tendência de Ocupação</h4>
-      <canvas id="trendChart" width="800" height="400"></canvas>
-    </div>
-  `;
-  
-  // Renderizar gráficos
-  setTimeout(() => {
-    renderGaugeChart(consolidatedStats.ocupacaoGeral);
-    renderHospitalChart();
-    renderTrendChart();
-  }, 100);
-}
-
-function calculateHospitalStats(leitos) {
-  const total = leitos.length;
-  const ocupados = leitos.filter(l => l.status === 'ocupado').length;
-  const vagos = leitos.filter(l => l.status === 'vago').length;
-  const ocupacao = total > 0 ? (ocupados / total) * 100 : 0;
-  
-  return { total, ocupados, vagos, ocupacao };
-}
-
-function calculateConsolidatedStats() {
-  const stats = {
-    totalHospitais: Object.keys(hospitaisData).length,
-    totalLeitos: 0,
-    totalOcupados: 0,
-    totalVagos: 0,
-    altasHoje: 0,
-    tempoMedio: 0,
-    ppsMedia: 0,
-    spictPositivos: 0
-  };
-  
-  let totalPacientes = 0;
-  let somaPPS = 0;
-  
-  Object.keys(leitosData).forEach(hospitalId => {
-    const leitos = leitosData[hospitalId] || [];
-    stats.totalLeitos += leitos.length;
-    
-    leitos.forEach(leito => {
-      if (leito.status === 'ocupado') {
-        stats.totalOcupados++;
-        totalPacientes++;
-        
-        if (leito.previsaoAlta === 'Hoje') {
-          stats.altasHoje++;
-        }
-        
-        if (leito.pps) {
-          somaPPS += parseInt(leito.pps);
-        }
-        
-        if (leito.spict === 'Sim') {
-          stats.spictPositivos++;
-        }
-      } else if (leito.status === 'vago') {
-        stats.totalVagos++;
-      }
-    });
-  });
-  
-  stats.ocupacaoGeral = stats.totalLeitos > 0 ? (stats.totalOcupados / stats.totalLeitos) * 100 : 0;
-  stats.ppsMedia = totalPacientes > 0 ? Math.round(somaPPS / totalPacientes) : 0;
-  stats.tempoMedio = Math.round(Math.random() * 10 + 5); // Simulado
-  
-  return stats;
-}
-
-function renderChart(hospitalId, type) {
-  const canvas = document.getElementById(`chart-${hospitalId}`);
-  const ctx = canvas.getContext('2d');
-  
-  // Destruir gráfico anterior se existir
-  if (canvas.chart) {
-    canvas.chart.destroy();
-  }
-  
-  // Atualizar botões ativos
-  const chartContainer = canvas.closest('.chart-container');
-  chartContainer.querySelectorAll('.chart-btn').forEach(btn => btn.classList.remove('active'));
-  event.target.classList.add('active');
-  
-  const leitos = leitosData[hospitalId] || [];
-  const stats = calculateHospitalStats(leitos);
-  
-  let chartConfig;
-  
-  switch(type) {
-    case 'pie':
-      chartConfig = {
-        type: 'pie',
-        data: {
-          labels: ['Ocupados', 'Vagos'],
-          datasets: [{
-            data: [stats.ocupados, stats.vagos],
-            backgroundColor: ['#f59e0b', '#10b981']
-          }]
-        },
-        options: {
-          responsive: true,
-          plugins: {
-            legend: {
-              position: 'bottom'
-            }
-          }
-        }
-      };
-      break;
-      
-    case 'doughnut':
-      chartConfig = {
-        type: 'doughnut',
-        data: {
-          labels: ['Ocupados', 'Vagos'],
-          datasets: [{
-            data: [stats.ocupados, stats.vagos],
-            backgroundColor: ['#f59e0b', '#10b981']
-          }]
-        },
-        options: {
-          responsive: true,
-          plugins: {
-            legend: {
-              position: 'bottom'
-            }
-          }
-        }
-      };
-      break;
-      
-    case 'bar':
-      const ppsData = [10,20,30,40,50,60,70,80,90,100].map(pps => {
-        return leitos.filter(l => l.pps == pps).length;
-      });
-      
-      chartConfig = {
-        type: 'bar',
-        data: {
-          labels: ['10%', '20%', '30%', '40%', '50%', '60%', '70%', '80%', '90%', '100%'],
-          datasets: [{
-            label: 'Pacientes por PPS',
-            data: ppsData,
-            backgroundColor: '#3b82f6'
-          }]
-        },
-        options: {
-          responsive: true,
-          scales: {
-            y: {
-              beginAtZero: true
-            }
-          }
-        }
-      };
-      break;
-      
-    case 'line':
-      chartConfig = {
-        type: 'line',
-        data: {
-          labels: ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'],
-          datasets: [{
-            label: 'Taxa de Ocupação (%)',
-            data: Array.from({length: 7}, () => Math.random() * 30 + 70),
-            borderColor: '#ef4444',
-            tension: 0.1
-          }]
-        },
-        options: {
-          responsive: true,
-          scales: {
-            y: {
-              beginAtZero: true,
-              max: 100
-            }
-          }
-        }
-      };
-      break;
-      
-    case 'area':
-      chartConfig = {
-        type: 'line',
-        data: {
-          labels: ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'],
-          datasets: [{
-            label: 'Ocupação',
-            data: Array.from({length: 7}, () => Math.random() * 30 + 70),
-            borderColor: '#10b981',
-            backgroundColor: 'rgba(16, 185, 129, 0.1)',
-            fill: true
-          }]
-        },
-        options: {
-          responsive: true,
-          scales: {
-            y: {
-              beginAtZero: true,
-              max: 100
-            }
-          }
-        }
-      };
-      break;
-  }
-  
-  canvas.chart = new Chart(ctx, chartConfig);
-  logInfo(`Gráfico ${type} renderizado para ${hospitaisData[hospitalId].nome}`);
-}
-
-function renderGaugeChart(percentage) {
-  const canvas = document.getElementById('gaugeChart');
-  const ctx = canvas.getContext('2d');
-  
-  if (canvas.chart) {
-    canvas.chart.destroy();
-  }
-  
-  canvas.chart = new Chart(ctx, {
-    type: 'doughnut',
-    data: {
-      datasets: [{
-        data: [percentage, 100 - percentage],
-        backgroundColor: ['#3b82f6', '#e5e7eb'],
-        borderWidth: 0
-      }]
-    },
-    options: {
-      responsive: true,
-      rotation: -90,
-      circumference: 180,
-      plugins: {
-        legend: {
-          display: false
-        },
-        tooltip: {
-          enabled: false
-        }
-      }
-    }
-  });
-  
-  // Adicionar texto no centro
-  ctx.save();
-  ctx.font = '24px Arial';
-  ctx.textAlign = 'center';
-  ctx.fillStyle = '#333';
-  ctx.fillText(`${Math.round(percentage)}%`, canvas.width / 2, canvas.height / 2 + 20);
-  ctx.restore();
-}
-
-function renderHospitalChart() {
-  const canvas = document.getElementById('hospitalChart');
-  const ctx = canvas.getContext('2d');
-  
-  if (canvas.chart) {
-    canvas.chart.destroy();
-  }
-  
-  const hospitalsData = Object.keys(hospitaisData).map(hospitalId => {
-    const leitos = leitosData[hospitalId] || [];
-    const stats = calculateHospitalStats(leitos);
-    return {
-      name: hospitaisData[hospitalId].nome,
-      ocupados: stats.ocupados,
-      vagos: stats.vagos
-    };
-  });
-  
-  canvas.chart = new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels: hospitalsData.map(h => h.name),
-      datasets: [{
-        label: 'Ocupados',
-        data: hospitalsData.map(h => h.ocupados),
-        backgroundColor: '#f59e0b'
-      }, {
-        label: 'Vagos',
-        data: hospitalsData.map(h => h.vagos),
-        backgroundColor: '#10b981'
-      }]
-    },
-    options: {
-      responsive: true,
-      scales: {
-        x: {
-          stacked: true
-        },
-        y: {
-          stacked: true,
-          beginAtZero: true
-        }
-      }
-    }
-  });
-}
-
-function renderTrendChart() {
-  const canvas = document.getElementById('trendChart');
-  const ctx = canvas.getContext('2d');
-  
-  if (canvas.chart) {
-    canvas.chart.destroy();
-  }
-  
-  const days = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
-  const datasets = Object.keys(hospitaisData).map((hospitalId, index) => {
-    const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444'];
-    return {
-      label: hospitaisData[hospitalId].nome,
-      data: Array.from({length: 7}, () => Math.random() * 30 + 60),
-      borderColor: colors[index],
-      backgroundColor: colors[index] + '20',
-      fill: false
-    };
-  });
-  
-  canvas.chart = new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels: days,
-      datasets: datasets
-    },
-    options: {
-      responsive: true,
-      scales: {
-        y: {
-          beginAtZero: true,
-          max: 100
-        }
-      }
-    }
-  });
-}
-
-// =================== SEÇÃO 9: ÁREA ADMINISTRATIVA ===================
-function openColorsModal() {
-  document.getElementById('colorsModal').classList.add('show');
-}
-
-function closeColorsModal() {
-  document.getElementById('colorsModal').classList.remove('show');
-}
-
-function openAdminModal() {
-  document.getElementById('adminModal').classList.add('show');
-}
-
-function closeAdminModal() {
-  document.getElementById('adminModal').classList.remove('show');
-}
-
-function restoreColors() {
-  // Aplicar cores originais
-  document.documentElement.style.setProperty('--nav-header', '#1a1f2e');
-  document.documentElement.style.setProperty('--nav-sidebar', '#1a1f2e');
-  document.documentElement.style.setProperty('--card-background', '#1a1f2e');
-  
-  showNotification('Cores originais restauradas!', 'success');
-  logSuccess('Cores do sistema restauradas para padrão original');
-}
-
-function adminLogin() {
-  const email = document.getElementById('adminEmail').value;
-  const password = document.getElementById('adminPassword').value;
-  
-  if (email === CONFIG.ADMIN_EMAIL && password === CONFIG.ADMIN_PASSWORD) {
-    closeAdminModal();
-    showAdminPanel();
-    logSuccess('Login administrativo bem-sucedido');
-  } else {
-    showNotification('Credenciais inválidas', 'error');
-    logError('Tentativa de login administrativo falhada');
-  }
-}
-
-function showAdminPanel() {
-  const adminContent = `
-    <div class="admin-panel">
-      <h2>⚙️ Painel Administrativo</h2>
-      
-      <div class="admin-section">
-        <h3>Gestão de Hospitais</h3>
-        <button class="btn btn-primary" onclick="addHospital()">➕ Adicionar Hospital</button>
-        <button class="btn btn-secondary" onclick="editHospitals()">✏️ Editar Hospitais</button>
-      </div>
-      
-      <div class="admin-section">
-        <h3>Gestão de Leitos</h3>
-        <button class="btn btn-primary" onclick="bulkEditLeitos()">📋 Edição em Lote</button>
-        <button class="btn btn-secondary" onclick="exportData()">📤 Exportar Dados</button>
-      </div>
-      
-      <div class="admin-section">
-        <h3>Sistema</h3>
-        <button class="btn btn-primary" onclick="systemSettings()">⚙️ Configurações</button>
-        <button class="btn btn-danger" onclick="resetSystem()">🔄 Resetar Sistema</button>
-      </div>
-    </div>
-  `;
-  
-  document.getElementById('adminView').innerHTML = adminContent;
-  showView('admin');
-}
-
-function addHospital() {
-  const nome = prompt('Nome do novo hospital:');
-  if (nome) {
-    const newId = `H${Object.keys(hospitaisData).length + 1}`;
-    const leitos = parseInt(prompt('Número de leitos:') || '10');
-    
-    hospitaisData[newId] = {
-      nome: nome,
-      leitos: leitos,
-      cores: {
-        primary: '#6366f1',
-        secondary: '#4f46e5'
-      }
-    };
-    
-    leitosData[newId] = [];
-    for (let i = 1; i <= leitos; i++) {
-      leitosData[newId].push({
-        id: `${newId}-L${i.toString().padStart(2, '0')}`,
-        numero: i,
-        hospital: newId,
-        status: 'vago',
-        nome: '',
-        idade: null,
-        sexo: '',
-        dataInternacao: '',
-        cid: '',
-        pps: '',
-        spict: '',
-        previsaoAlta: '',
-        concessoes: [],
-        linhasCuidado: []
-      });
-    }
-    
-    // Adicionar botão do hospital
-    const selector = document.querySelector('.hospital-selector');
-    const btn = document.createElement('button');
-    btn.className = 'hospital-btn';
-    btn.dataset.hospital = newId;
-    btn.textContent = nome;
-    btn.addEventListener('click', (e) => {
-      selectHospital(e.target.dataset.hospital);
-    });
-    selector.appendChild(btn);
-    
-    showNotification(`Hospital ${nome} adicionado com sucesso!`, 'success');
-    logSuccess(`Novo hospital adicionado: ${nome} (${newId})`);
-  }
-}
-
-function bulkEditLeitos() {
-  showNotification('Funcionalidade de edição em lote em desenvolvimento', 'info');
-}
-
-function exportData() {
-  const data = {
-    hospitais: hospitaisData,
-    leitos: leitosData,
-    timestamp: new Date().toISOString()
-  };
-  
-  const blob = new Blob([JSON.stringify(data, null, 2)], {
-    type: 'application/json'
-  });
-  
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `archipelago-data-${new Date().toISOString().split('T')[0]}.json`;
-  a.click();
-  
-  URL.revokeObjectURL(url);
-  
-  showNotification('Dados exportados com sucesso!', 'success');
-  logSuccess('Dados do sistema exportados');
-}
-
-function systemSettings() {
-  showNotification('Configurações do sistema em desenvolvimento', 'info');
-}
-
-function resetSystem() {
-  if (confirm('⚠️ Isso irá resetar todos os dados. Confirma?')) {
-    leitosData = generateLeitosData();
-    renderCards();
-    showNotification('Sistema resetado com sucesso!', 'success');
-    logWarning('Sistema resetado - todos os dados foram regenerados');
-  }
-}
-
-// =================== SEÇÃO 10: MODAIS E FORMULÁRIOS ===================
-function openEditModal(leito) {
-  const modal = document.getElementById('editModal');
-  
-  // Preencher campos
-  document.getElementById('editNome').value = leito.nome || '';
-  document.getElementById('editIdade').value = leito.idade || '';
-  document.getElementById('editSexo').value = leito.sexo || '';
-  document.getElementById('editDataInternacao').value = leito.dataInternacao || '';
-  document.getElementById('editCid').value = leito.cid || '';
-  document.getElementById('editPps').value = leito.pps || '';
-  document.getElementById('editSpict').value = leito.spict || '';
-  document.getElementById('editPrevisaoAlta').value = leito.previsaoAlta || '';
-  document.getElementById('editStatus').value = leito.status || 'vago';
-  
-  // Marcar checkboxes de concessões
-  document.querySelectorAll('#concessoesGroup input[type="checkbox"]').forEach(cb => {
-    cb.checked = leito.concessoes?.includes(cb.value) || false;
-  });
-  
-  // Marcar checkboxes de linhas de cuidado
-  document.querySelectorAll('#linhasCuidadoGroup input[type="checkbox"]').forEach(cb => {
-    cb.checked = leito.linhasCuidado?.includes(cb.value) || false;
-  });
-  
-  modal.classList.add('show');
-  modal.dataset.leitoId = leito.id;
-  
-  logInfo(`Modal de edição aberto para leito ${leito.id}`);
-}
-
-function closeEditModal() {
-  document.getElementById('editModal').classList.remove('show');
-}
-
-function updateData() {
-  // Atualizar dados simulados
-  Object.keys(leitosData).forEach(hospitalId => {
-    leitosData[hospitalId].forEach(leito => {
-      // Simular mudanças aleatórias
-      if (Math.random() < 0.1) { // 10% chance de mudança
-        if (leito.status === 'vago' && Math.random() < 0.3) {
-          // Vago pode virar ocupado
-          leito.status = 'ocupado';
-          leito.nome = `Paciente ${leito.numero}`;
-          leito.idade = Math.floor(Math.random() * 80) + 20;
-          leito.sexo = Math.random() > 0.5 ? 'M' : 'F';
-          leito.dataInternacao = new Date().toISOString().split('T')[0];
-        } else if (leito.status === 'ocupado' && Math.random() < 0.2) {
-          // Ocupado pode virar vago
-          leito.status = 'vago';
-          leito.nome = '';
-          leito.idade = null;
-          leito.sexo = '';
-          leito.dataInternacao = '';
-          leito.cid = '';
-          leito.pps = '';
-          leito.spict = '';
-          leito.previsaoAlta = '';
-          leito.concessoes = [];
-          leito.linhasCuidado = [];
-        }
-      }
-    });
-  });
-  
-  // Re-renderizar se estiver na view de leitos
-  if (currentView === 'leitos') {
-    renderCards();
-  }
-  
-  logInfo('Dados atualizados automaticamente');
-}
-
-// =================== SEÇÃO 11: INICIALIZAÇÃO DO SISTEMA ===================
-function initializeSystem() {
-  logInfo("🚀 Inicializando Archipelago Dashboard V3.0");
-  
-  // Inicializar navegação
-  initNavigation();
-  
-  // Renderizar view inicial
-  showView('leitos');
-  
-  // Configurar form de edição
-  document.getElementById('editForm').addEventListener('submit', (e) => {
-    e.preventDefault();
-    saveEditForm();
-  });
-  
-  // Configurar entrada de senha
-  document.getElementById('authPassword').addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') {
-      authenticate();
-    }
-  });
-  
-  // Iniciar timer de atualização
-  updateInterval = setInterval(updateData, CONFIG.UPDATE_INTERVAL);
-  
-  logSuccess("✅ Sistema inicializado com sucesso!");
-  logInfo(`📊 ${Object.keys(hospitaisData).length} hospitais configurados`);
-  logInfo(`🏥 ${Object.values(leitosData).flat().length} leitos disponíveis`);
-  logInfo(`⏱️ Timer de atualização: ${CONFIG.UPDATE_INTERVAL / 1000}s`);
-  logInfo(`🔒 Sessão expira em: ${CONFIG.SESSION_TIMEOUT / 1000}s`);
-}
-
-function saveEditForm() {
-  const leitoId = document.getElementById('editModal').dataset.leitoId;
-  const [hospitalId, leitoNum] = leitoId.split('-L');
-  const leitoIndex = parseInt(leitoNum) - 1;
-  
-  if (leitosData[hospitalId] && leitosData[hospitalId][leitoIndex]) {
-    const leito = leitosData[hospitalId][leitoIndex];
-    
-    // Atualizar dados básicos
-    leito.nome = document.getElementById('editNome').value;
-    leito.idade = document.getElementById('editIdade').value ? parseInt(document.getElementById('editIdade').value) : null;
-    leito.sexo = document.getElementById('editSexo').value;
-    leito.dataInternacao = document.getElementById('editDataInternacao').value;
-    leito.cid = document.getElementById('editCid').value;
-    leito.pps = document.getElementById('editPps').value;
-    leito.spict = document.getElementById('editSpict').value;
-    leito.previsaoAlta = document.getElementById('editPrevisaoAlta').value;
-    leito.status = document.getElementById('editStatus').value;
-    
-    // Atualizar concessões
-    leito.concessoes = Array.from(document.querySelectorAll('#concessoesGroup input[type="checkbox"]:checked'))
-      .map(cb => cb.value);
-    
-    // Atualizar linhas de cuidado
-    leito.linhasCuidado = Array.from(document.querySelectorAll('#linhasCuidadoGroup input[type="checkbox"]:checked'))
-      .map(cb => cb.value);
-    
-    closeEditModal();
-    renderCards();
-    
-    showNotification('Leito atualizado com sucesso!', 'success');
-    logSuccess(`Leito ${leitoId} atualizado`);
-  }
-}
-
-// =================== INICIALIZAÇÃO AUTOMÁTICA ===================
-document.addEventListener('DOMContentLoaded', () => {
-  logInfo("🎯 DOM carregado - aguardando autenticação");
-  
-  // Focar no campo de senha
-  setTimeout(() => {
-    document.getElementById('authPassword').focus();
-  }, 100);
-});
-
-// Logs de inicialização
-logSuccess("🎉 ARCHIPELAGO DASHBOARD V3.0 - JAVASCRIPT CARREGADO");
-logInfo("📋 Funcionalidades disponíveis:");
-logInfo("   ✅ Sistema de autenticação (170284)");
-logInfo("   ✅ 4 hospitais com 49 leitos total");
-logInfo("   ✅ Dashboard Hospitalar + Executivo");
-logInfo("   ✅ Sistema QR Code completo");
-logInfo("   ✅ Área administrativa");
-logInfo("   ✅ Timer de 4 minutos");
-logInfo("   ✅ Responsividade mobile");
-logInfo("   ✅ Gestão de cores");
-logInfo("🚀 Sistema pronto para autenticação!");
-
-
-// =================== SEÇÃO 11: EVENTOS E HANDLERS ===================
-function handleFormSubmission() {
-  const editForm = document.getElementById('editForm');
-  if (editForm) {
-    editForm.addEventListener('submit', (e) => {
-      e.preventDefault();
-      saveEditForm();
-    });
-  }
-  
-  // Handler para entrada de senha
-  const authPassword = document.getElementById('authPassword');
-  if (authPassword) {
-    authPassword.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') {
-        authenticate();
-      }
-    });
-    
-    // Focar automaticamente no campo de senha
-    setTimeout(() => {
-      authPassword.focus();
-    }, 100);
-  }
-}
-
-function setupModalEvents() {
-  // Fechar modais clicando fora
-  document.addEventListener('click', (e) => {
-    if (e.target.classList.contains('modal')) {
-      e.target.classList.remove('show');
-    }
-  });
-  
-  // Prevenir fechamento ao clicar dentro do modal
-  document.querySelectorAll('.modal-content').forEach(content => {
-    content.addEventListener('click', (e) => {
-      e.stopPropagation();
-    });
-  });
-}
-
-function setupKeyboardShortcuts() {
-  document.addEventListener('keydown', (e) => {
-    // ESC para fechar modais
-    if (e.key === 'Escape') {
-      document.querySelectorAll('.modal.show').forEach(modal => {
-        modal.classList.remove('show');
-      });
-    }
-    
-    // Atalhos rápidos
-    if (e.ctrlKey || e.metaKey) {
-      switch(e.key) {
-        case '1':
-          e.preventDefault();
-          showView('leitos');
-          break;
-        case '2':
-          e.preventDefault();
-          showView('dash1');
-          break;
-        case '3':
-          e.preventDefault();
-          showView('dash2');
-          break;
-        case 'q':
-          e.preventDefault();
-          showView('qr');
-          break;
-        case 'r':
-          e.preventDefault();
-          refreshSession();
-          break;
-      }
-    }
-  });
-}
-
-// =================== SEÇÃO 12: VALIDAÇÕES E FEEDBACK ===================
-function validateLeitoData(data) {
-  const errors = [];
-  
-  if (data.status === 'ocupado') {
-    if (!data.nome || data.nome.trim().length === 0) {
-      errors.push('Nome do paciente é obrigatório para leitos ocupados');
-    }
-    
-    if (!data.idade || data.idade < 0 || data.idade > 120) {
-      errors.push('Idade deve estar entre 0 e 120 anos');
-    }
-    
-    if (!data.dataInternacao) {
-      errors.push('Data de internação é obrigatória');
-    }
-    
-    if (data.pps && (data.pps < 10 || data.pps > 100 || data.pps % 10 !== 0)) {
-      errors.push('PPS deve ser um valor entre 10% e 100%, múltiplo de 10');
-    }
-  }
-  
-  return errors;
-}
-
-function showFieldError(fieldId, message) {
-  const field = document.getElementById(fieldId);
-  if (field) {
-    field.style.borderColor = '#ef4444';
-    field.title = message;
-    
-    // Remover erro após 3 segundos
-    setTimeout(() => {
-      field.style.borderColor = '';
-      field.title = '';
-    }, 3000);
-  }
-}
-
-function showSuccessMessage(message) {
-  const successDiv = document.createElement('div');
-  successDiv.className = 'success-message';
-  successDiv.innerHTML = `
-    <div style="
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      background: #10b981;
-      color: white;
-      padding: 15px 20px;
-      border-radius: 8px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-      z-index: 10001;
-      animation: slideIn 0.3s ease;
-    ">
-      ✅ ${message}
-    </div>
-  `;
-  
-  document.body.appendChild(successDiv);
-  
-  setTimeout(() => {
-    successDiv.remove();
-  }, 3000);
-}
-
-function showErrorMessage(message) {
-  const errorDiv = document.createElement('div');
-  errorDiv.className = 'error-message';
-  errorDiv.innerHTML = `
-    <div style="
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      background: #ef4444;
-      color: white;
-      padding: 15px 20px;
-      border-radius: 8px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-      z-index: 10001;
-      animation: slideIn 0.3s ease;
-    ">
-      ❌ ${message}
-    </div>
-  `;
-  
-  document.body.appendChild(errorDiv);
-  
-  setTimeout(() => {
-    errorDiv.remove();
-  }, 5000);
-}
-
-// =================== SEÇÃO 13: GESTÃO DE ESTADO E PERSISTÊNCIA ===================
-function saveToLocalStorage() {
-  try {
-    const state = {
-      leitosData: leitosData,
-      currentHospital: currentHospital,
-      currentView: currentView,
-      timestamp: new Date().toISOString()
-    };
-    
-    localStorage.setItem('archipelago-state', JSON.stringify(state));
-    logInfo('Estado salvo no localStorage');
-  } catch (error) {
-    logError(`Erro ao salvar estado: ${error.message}`);
-  }
-}
-
-function loadFromLocalStorage() {
-  try {
-    const saved = localStorage.getItem('archipelago-state');
-    if (saved) {
-      const state = JSON.parse(saved);
-      const timestamp = new Date(state.timestamp);
-      const now = new Date();
-      const hoursDiff = (now - timestamp) / (1000 * 60 * 60);
-      
-      // Só carregar se for menos de 24 horas
-      if (hoursDiff < 24) {
-        leitosData = state.leitosData || leitosData;
-        currentHospital = state.currentHospital || currentHospital;
-        logSuccess('Estado carregado do localStorage');
-        return true;
-      } else {
-        localStorage.removeItem('archipelago-state');
-        logInfo('Estado expirado removido do localStorage');
-      }
-    }
-  } catch (error) {
-    logError(`Erro ao carregar estado: ${error.message}`);
-    localStorage.removeItem('archipelago-state');
-  }
-  return false;
-}
-
-function exportToCSV() {
-  let csv = 'Hospital,Leito,Status,Nome,Idade,Sexo,Data Internacao,CID,PPS,SPICT,Previsao Alta\n';
-  
-  Object.keys(leitosData).forEach(hospitalId => {
-    const hospitalNome = hospitaisData[hospitalId].nome;
-    leitosData[hospitalId].forEach(leito => {
-      csv += `"${hospitalNome}","${leito.numero}","${leito.status}","${leito.nome || ''}","${leito.idade || ''}","${leito.sexo || ''}","${leito.dataInternacao || ''}","${leito.cid || ''}","${leito.pps || ''}","${leito.spict || ''}","${leito.previsaoAlta || ''}"\n`;
-    });
-  });
-  
-  const blob = new Blob([csv], { type: 'text/csv' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `archipelago-leitos-${new Date().toISOString().split('T')[0]}.csv`;
-  a.click();
-  URL.revokeObjectURL(url);
-  
-  showSuccessMessage('Dados exportados para CSV!');
-  logSuccess('Dados exportados para CSV');
-}
-
-// =================== SEÇÃO 14: PERFORMANCE E OTIMIZAÇÃO ===================
-function debounce(func, wait) {
-  let timeout;
-  return function executedFunction(...args) {
-    const later = () => {
-      clearTimeout(timeout);
-      func(...args);
-    };
-    clearTimeout(timeout);
-    timeout = setTimeout(later, wait);
-  };
-}
-
-function throttle(func, limit) {
-  let lastFunc;
-  let lastRan;
-  return function() {
-    const context = this;
-    const args = arguments;
-    if (!lastRan) {
-      func.apply(context, args);
-      lastRan = Date.now();
-    } else {
-      clearTimeout(lastFunc);
-      lastFunc = setTimeout(function() {
-        if ((Date.now() - lastRan) >= limit) {
-          func.apply(context, args);
-          lastRan = Date.now();
-        }
-      }, limit - (Date.now() - lastRan));
-    }
-  };
-}
-
-// Otimizar renderização de cards
-const debouncedRenderCards = debounce(renderCards, 300);
-
-// Otimizar atualização de dados
-const throttledUpdateData = throttle(updateData, 5000);
-
-function optimizeChartRendering() {
-  // Destruir gráficos antigos antes de criar novos
-  Chart.helpers.each(Chart.instances, function(instance) {
-    if (instance.canvas && !document.contains(instance.canvas)) {
-      instance.destroy();
-    }
-  });
-}
-
-// =================== SEÇÃO 15: ACESSIBILIDADE ===================
-function setupAccessibility() {
-  // ARIA labels
-  document.querySelectorAll('.hospital-btn').forEach((btn, index) => {
-    btn.setAttribute('aria-label', `Selecionar hospital ${btn.textContent}`);
-    btn.setAttribute('role', 'tab');
-    btn.setAttribute('tabindex', index === 0 ? '0' : '-1');
-  });
-  
-  // Navegação por teclado nos cards
-  document.querySelectorAll('.card').forEach(card => {
-    card.setAttribute('tabindex', '0');
-    card.setAttribute('role', 'button');
-    card.setAttribute('aria-label', 'Clique para editar leito');
-    
-    card.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        card.click();
-      }
-    });
-  });
-  
-  // Focus trap em modais
-  const modals = document.querySelectorAll('.modal');
-  modals.forEach(modal => {
-    const focusableElements = modal.querySelectorAll(
-      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-    );
-    
-    if (focusableElements.length > 0) {
-      const firstElement = focusableElements[0];
-      const lastElement = focusableElements[focusableElements.length - 1];
-      
-      modal.addEventListener('keydown', (e) => {
-        if (e.key === 'Tab') {
-          if (e.shiftKey) {
-            if (document.activeElement === firstElement) {
-              e.preventDefault();
-              lastElement.focus();
-            }
-          } else {
-            if (document.activeElement === lastElement) {
-              e.preventDefault();
-              firstElement.focus();
-            }
-          }
-        }
-      });
-    }
-  });
-}
-
-function announceToScreenReader(message) {
-  const announcement = document.createElement('div');
-  announcement.setAttribute('aria-live', 'polite');
-  announcement.setAttribute('aria-atomic', 'true');
-  announcement.style.position = 'absolute';
-  announcement.style.left = '-10000px';
-  announcement.style.width = '1px';
-  announcement.style.height = '1px';
-  announcement.style.overflow = 'hidden';
-  
-  document.body.appendChild(announcement);
-  announcement.textContent = message;
-  
-  setTimeout(() => {
-    document.body.removeChild(announcement);
-  }, 1000);
-}
-
-// =================== SEÇÃO 16: RESPONSIVIDADE AVANÇADA ===================
-function handleResponsiveLayout() {
-  const updateLayout = () => {
-    const width = window.innerWidth;
-    const cardsContainer = document.getElementById('cardsContainer');
-    const hospitalSelector = document.querySelector('.hospital-selector');
-    
-    if (width <= 768) {
-      // Mobile layout
-      cardsContainer.style.gridTemplateColumns = '1fr';
-      hospitalSelector.style.flexDirection = 'column';
-      hospitalSelector.style.gap = '10px';
-      
-      // Ajustar KPIs do dashboard executivo
-      const dashboardContainers = document.querySelectorAll('.dashboard-container');
-      dashboardContainers.forEach(container => {
-        if (width <= 480) {
-          container.style.gridTemplateColumns = '1fr 1fr';
-        } else {
-          container.style.gridTemplateColumns = 'repeat(auto-fit, minmax(150px, 1fr))';
-        }
-      });
-      
-    } else if (width <= 1024) {
-      // Tablet layout
-      cardsContainer.style.gridTemplateColumns = 'repeat(2, 1fr)';
-      hospitalSelector.style.flexDirection = 'row';
-      hospitalSelector.style.gap = '15px';
-      
-    } else {
-      // Desktop layout
-      cardsContainer.style.gridTemplateColumns = 'repeat(3, 1fr)';
-      hospitalSelector.style.flexDirection = 'row';
-      hospitalSelector.style.gap = '15px';
-    }
-    
-    logInfo(`Layout ajustado para ${width}px`);
-  };
-  
-  // Throttle para performance
-  const throttledUpdateLayout = throttle(updateLayout, 250);
-  
-  window.addEventListener('resize', throttledUpdateLayout);
-  updateLayout(); // Executar uma vez no carregamento
-}
-
-// =================== SEÇÃO 17: TRATAMENTO DE ERROS GLOBAL ===================
-function setupGlobalErrorHandling() {
-  window.addEventListener('error', (e) => {
-    logError(`Erro global: ${e.message} em ${e.filename}:${e.lineno}`);
-    showErrorMessage('Ocorreu um erro inesperado. Recarregue a página se necessário.');
-  });
-  
-  window.addEventListener('unhandledrejection', (e) => {
-    logError(`Promise rejeitada: ${e.reason}`);
-    e.preventDefault();
-  });
-  
-  // Interceptar erros do Chart.js
-  const originalConsoleError = console.error;
-  console.error = function(...args) {
-    const message = args.join(' ');
-    if (message.includes('Chart') || message.includes('canvas')) {
-      logError(`Erro de gráfico: ${message}`);
-      optimizeChartRendering();
-    }
-    originalConsoleError.apply(console, args);
-  };
-}
-
-// =================== SEÇÃO 18: MONITORAMENTO E ANALYTICS ===================
-function trackUserAction(action, details = {}) {
-  const event = {
-    action: action,
-    timestamp: new Date().toISOString(),
-    hospital: currentHospital,
-    view: currentView,
-    details: details
-  };
-  
-  logInfo(`Ação rastreada: ${action}`, details);
-  
-  // Salvar no localStorage para análise posterior
-  try {
-    let analytics = JSON.parse(localStorage.getItem('archipelago-analytics') || '[]');
-    analytics.push(event);
-    
-    // Manter apenas os últimos 100 eventos
-    if (analytics.length > 100) {
-      analytics = analytics.slice(-100);
-    }
-    
-    localStorage.setItem('archipelago-analytics', JSON.stringify(analytics));
-  } catch (error) {
-    logError(`Erro ao salvar analytics: ${error.message}`);
-  }
-}
-
-function getUsageStats() {
-  try {
-    const analytics = JSON.parse(localStorage.getItem('archipelago-analytics') || '[]');
-    const stats = {
-      totalActions: analytics.length,
-      hospitalUsage: {},
-      viewUsage: {},
-      commonActions: {}
-    };
-    
-    analytics.forEach(event => {
-      stats.hospitalUsage[event.hospital] = (stats.hospitalUsage[event.hospital] || 0) + 1;
-      stats.viewUsage[event.view] = (stats.viewUsage[event.view] || 0) + 1;
-      stats.commonActions[event.action] = (stats.commonActions[event.action] || 0) + 1;
-    });
-    
-    return stats;
-  } catch (error) {
-    logError(`Erro ao obter estatísticas: ${error.message}`);
-    return null;
-  }
-}
-
-// =================== SEÇÃO 19: INTEGRAÇÕES FUTURAS ===================
-function prepareAPIIntegration() {
-  // Estrutura base para integração com API real
-  const API_BASE_URL = 'https://api.archipelago.com/v1';
-  
-  const apiClient = {
-    async get(endpoint) {
-      try {
-        const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-          headers: {
-            'Authorization': `Bearer ${getAuthToken()}`,
-            'Content-Type': 'application/json'
-          }
-        });
-        return await response.json();
-      } catch (error) {
-        logError(`Erro API GET ${endpoint}: ${error.message}`);
-        throw error;
-      }
-    },
-    
-    async post(endpoint, data) {
-      try {
-        const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${getAuthToken()}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(data)
-        });
-        return await response.json();
-      } catch (error) {
-        logError(`Erro API POST ${endpoint}: ${error.message}`);
-        throw error;
-      }
-    }
-  };
-  
-  function getAuthToken() {
-    // Retorna token de autenticação (implementar quando necessário)
-    return localStorage.getItem('archipelago-token') || '';
-  }
-  
-  return apiClient;
-}
-
-async function syncWithServer() {
-  // Função para sincronizar dados com servidor (quando API estiver disponível)
-  logInfo('Sincronização com servidor preparada para implementação futura');
-}
-
-// =================== SEÇÃO 20: INICIALIZAÇÃO FINAL ===================
-function finalizeInitialization() {
-  // Configurar todos os sistemas
-  handleFormSubmission();
-  setupModalEvents();
-  setupKeyboardShortcuts();
-  setupAccessibility();
-  handleResponsiveLayout();
-  setupGlobalErrorHandling();
-  
-  // Carregar estado salvo se disponível
-  const stateLoaded = loadFromLocalStorage();
-  if (stateLoaded) {
-    selectHospital(currentHospital);
-    showView(currentView);
-  }
-  
-  // Configurar auto-save
-  setInterval(saveToLocalStorage, 30000); // Salvar a cada 30 segundos
-  
-  // Rastrear inicialização
-  trackUserAction('system_initialized', {
-    hospitalsCount: Object.keys(hospitaisData).length,
-    totalBeds: Object.values(leitosData).flat().length,
-    timestamp: new Date().toISOString()
-  });
-  
-  logSuccess('🎉 Sistema totalmente inicializado e operacional!');
-  announceToScreenReader('Sistema Archipelago Dashboard carregado e pronto para uso');
-}
-
-// =================== SEÇÃO 21: SISTEMA DE BACKUP E RESTORE ===================
-function createSystemBackup() {
-  const backup = {
-    version: '3.0',
-    timestamp: new Date().toISOString(),
-    data: {
-      hospitais: hospitaisData,
-      leitos: leitosData,
-      config: CONFIG,
-      analytics: JSON.parse(localStorage.getItem('archipelago-analytics') || '[]')
-    }
-  };
-  
-  const blob = new Blob([JSON.stringify(backup, null, 2)], {
-    type: 'application/json'
-  });
-  
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `archipelago-backup-${new Date().toISOString().split('T')[0]}.json`;
-  a.click();
-  URL.revokeObjectURL(url);
-  
-  showSuccessMessage('Backup criado com sucesso!');
-  logSuccess('Backup do sistema criado');
-  trackUserAction('backup_created');
-}
-
-function restoreSystemBackup(file) {
-  const reader = new FileReader();
-  reader.onload = function(e) {
-    try {
-      const backup = JSON.parse(e.target.result);
-      
-      if (backup.version !== '3.0') {
-        showErrorMessage('Versão de backup incompatível');
-        return;
-      }
-      
-      if (confirm('⚠️ Isso irá substituir todos os dados atuais. Confirma?')) {
-        hospitaisData = backup.data.hospitais || hospitaisData;
-        leitosData = backup.data.leitos || leitosData;
-        
-        // Atualizar localStorage
-        localStorage.setItem('archipelago-analytics', 
-          JSON.stringify(backup.data.analytics || []));
-        
-        // Re-inicializar interface
-        initializeSystem();
-        
-        showSuccessMessage('Backup restaurado com sucesso!');
-        logSuccess('Sistema restaurado do backup');
-        trackUserAction('backup_restored');
-      }
-    } catch (error) {
-      showErrorMessage('Erro ao restaurar backup: arquivo inválido');
-      logError(`Erro ao restaurar backup: ${error.message}`);
-    }
-  };
-  reader.readAsText(file);
-}
-
-// =================== SEÇÃO 22: RELATÓRIOS AVANÇADOS ===================
-function generateDailyReport() {
-  const hoje = new Date();
-  const stats = calculateConsolidatedStats();
-  
-  const report = {
-    data: hoje.toLocaleDateString('pt-BR'),
-    hora: hoje.toLocaleTimeString('pt-BR'),
-    resumo: {
-      totalHospitais: stats.totalHospitais,
-      totalLeitos: stats.totalLeitos,
-      ocupacao: `${Math.round(stats.ocupacaoGeral)}%`,
-      altasHoje: stats.altasHoje,
-      ppsMedia: `${stats.ppsMedia}%`
-    },
-    hospitais: {}
-  };
-  
-  Object.keys(hospitaisData).forEach(hospitalId => {
-    const hospital = hospitaisData[hospitalId];
-    const leitos = leitosData[hospitalId] || [];
-    const hospitalStats = calculateHospitalStats(leitos);
-    
-    report.hospitais[hospital.nome] = {
-      totalLeitos: hospitalStats.total,
-      ocupados: hospitalStats.ocupados,
-      vagos: hospitalStats.vagos,
-      ocupacao: `${Math.round(hospitalStats.ocupacao)}%`,
-      pacientes: leitos.filter(l => l.status === 'ocupado').map(l => ({
-        leito: l.numero,
-        nome: l.nome,
-        idade: l.idade,
-        diasInternacao: l.dataInternacao ? 
-          Math.floor((hoje - new Date(l.dataInternacao)) / (1000 * 60 * 60 * 24)) : 0,
-        pps: l.pps,
-        previsaoAlta: l.previsaoAlta
-      }))
-    };
-  });
-  
-  return report;
-}
-
-function exportDailyReport() {
-  const report = generateDailyReport();
-  
-  let html = `
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <title>Relatório Diário - Archipelago Dashboard</title>
-      <style>
-        body { font-family: Arial, sans-serif; margin: 20px; }
-        .header { text-align: center; border-bottom: 2px solid #1a1f2e; padding-bottom: 20px; }
-        .summary { background: #f8f9fa; padding: 20px; margin: 20px 0; border-radius: 8px; }
-        .hospital { margin: 20px 0; border: 1px solid #ddd; border-radius: 8px; padding: 15px; }
-        .hospital h3 { color: #1a1f2e; margin-top: 0; }
-        .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin: 15px 0; }
-        .stat { text-align: center; background: white; padding: 10px; border-radius: 4px; }
-        .stat-value { font-size: 24px; font-weight: bold; color: #1a1f2e; }
-        .stat-label { font-size: 12px; color: #666; }
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-        th { background: #1a1f2e; color: white; }
-        .print-date { text-align: right; font-size: 12px; color: #666; margin-top: 20px; }
-      </style>
-    </head>
-    <body>
-      <div class="header">
-        <h1>🏥 Relatório Diário - Archipelago Dashboard</h1>
-        <p>${report.data} às ${report.hora}</p>
-      </div>
-      
-      <div class="summary">
-        <h2>📊 Resumo Geral</h2>
-        <div class="stats">
-          <div class="stat">
-            <div class="stat-value">${report.resumo.totalHospitais}</div>
-            <div class="stat-label">Hospitais</div>
-          </div>
-          <div class="stat">
-            <div class="stat-value">${report.resumo.totalLeitos}</div>
-            <div class="stat-label">Total Leitos</div>
-          </div>
-          <div class="stat">
-            <div class="stat-value">${report.resumo.ocupacao}</div>
-            <div class="stat-label">Taxa Ocupação</div>
-          </div>
-          <div class="stat">
-            <div class="stat-value">${report.resumo.altasHoje}</div>
-            <div class="stat-label">Altas Hoje</div>
-          </div>
-        </div>
-      </div>
-  `;
-  
-  Object.keys(report.hospitais).forEach(hospitalNome => {
-    const hospital = report.hospitais[hospitalNome];
-    html += `
-      <div class="hospital">
-        <h3>🏥 ${hospitalNome}</h3>
-        <div class="stats">
-          <div class="stat">
-            <div class="stat-value">${hospital.totalLeitos}</div>
-            <div class="stat-label">Total Leitos</div>
-          </div>
-          <div class="stat">
-            <div class="stat-value">${hospital.ocupados}</div>
-            <div class="stat-label">Ocupados</div>
-          </div>
-          <div class="stat">
-            <div class="stat-value">${hospital.vagos}</div>
-            <div class="stat-label">Vagos</div>
-          </div>
-          <div class="stat">
-            <div class="stat-value">${hospital.ocupacao}</div>
-            <div class="stat-label">Ocupação</div>
-          </div>
-        </div>
-        
-        <table>
-          <thead>
-            <tr>
-              <th>Leito</th>
-              <th>Paciente</th>
-              <th>Idade</th>
-              <th>Dias</th>
-              <th>PPS</th>
-              <th>Previsão Alta</th>
-            </tr>
-          </thead>
-          <tbody>
-    `;
-    
-    hospital.pacientes.forEach(paciente => {
-      html += `
-        <tr>
-          <td>${paciente.leito}</td>
-          <td>${paciente.nome}</td>
-          <td>${paciente.idade}</td>
-          <td>${paciente.diasInternacao}</td>
-          <td>${paciente.pps}%</td>
-          <td>${paciente.previsaoAlta}</td>
-        </tr>
-      `;
-    });
-    
-    html += `
-          </tbody>
-        </table>
-      </div>
-    `;
-  });
-  
-  html += `
-      <div class="print-date">
-        Relatório gerado em ${new Date().toLocaleString('pt-BR')} pelo Archipelago Dashboard V3.0
-      </div>
-    </body>
-    </html>
-  `;
-  
-  const blob = new Blob([html], { type: 'text/html' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `relatorio-diario-${new Date().toISOString().split('T')[0]}.html`;
-  a.click();
-  URL.revokeObjectURL(url);
-  
-  showSuccessMessage('Relatório diário exportado!');
-  logSuccess('Relatório diário gerado');
-  trackUserAction('daily_report_generated');
-}
-
-// =================== SEÇÃO 23: CONFIGURAÇÕES AVANÇADAS ===================
-function openAdvancedSettings() {
-  const settingsModal = document.createElement('div');
-  settingsModal.className = 'modal show';
-  settingsModal.innerHTML = `
-    <div class="modal-content" style="max-width: 600px;">
-      <div class="modal-header">
-        <h3 class="modal-title">⚙️ Configurações Avançadas</h3>
-        <button class="close-modal" onclick="this.closest('.modal').remove()">&times;</button>
-      </div>
-      
-      <div style="padding: 20px;">
-        <div class="form-group">
-          <label>Tempo de Sessão (minutos):</label>
-          <input type="number" id="sessionTimeout" value="${CONFIG.SESSION_TIMEOUT / 60000}" min="1" max="60">
-        </div>
-        
-        <div class="form-group">
-          <label>Intervalo de Atualização (minutos):</label>
-          <input type="number" id="updateInterval" value="${CONFIG.UPDATE_INTERVAL / 60000}" min="1" max="30">
-        </div>
-        
-        <div class="form-group">
-          <label>Timeout QR Code (segundos):</label>
-          <input type="number" id="qrTimeout" value="${CONFIG.QR_TIMEOUT / 1000}" min="30" max="300">
-        </div>
-        
-        <div class="form-group">
-          <label>
-            <input type="checkbox" id="autoSave" ${localStorage.getItem('archipelago-autosave') === 'true' ? 'checked' : ''}>
-            Auto-salvar dados localmente
-          </label>
-        </div>
-        
-        <div class="form-group">
-          <label>
-            <input type="checkbox" id="enableAnalytics" ${localStorage.getItem('archipelago-analytics-enabled') !== 'false' ? 'checked' : ''}>
-            Habilitar coleta de analytics
-          </label>
-        </div>
-        
-        <div class="form-actions">
-          <button class="btn btn-primary" onclick="saveAdvancedSettings()">Salvar</button>
-          <button class="btn btn-secondary" onclick="this.closest('.modal').remove()">Cancelar</button>
-          <button class="btn btn-danger" onclick="resetAdvancedSettings()">Restaurar Padrão</button>
-        </div>
-      </div>
-    </div>
-  `;
-  
-  document.body.appendChild(settingsModal);
-}
-
-function saveAdvancedSettings() {
-  const sessionTimeout = parseInt(document.getElementById('sessionTimeout').value) * 60000;
-  const updateIntervalValue = parseInt(document.getElementById('updateInterval').value) * 60000;
-  const qrTimeout = parseInt(document.getElementById('qrTimeout').value) * 1000;
-  const autoSave = document.getElementById('autoSave').checked;
-  const enableAnalytics = document.getElementById('enableAnalytics').checked;
-  
-  // Atualizar configurações
-  CONFIG.SESSION_TIMEOUT = sessionTimeout;
-  CONFIG.UPDATE_INTERVAL = updateIntervalValue;
-  CONFIG.QR_TIMEOUT = qrTimeout;
-  
-  // Salvar preferências
-  localStorage.setItem('archipelago-session-timeout', sessionTimeout.toString());
-  localStorage.setItem('archipelago-update-interval', updateIntervalValue.toString());
-  localStorage.setItem('archipelago-qr-timeout', qrTimeout.toString());
-  localStorage.setItem('archipelago-autosave', autoSave.toString());
-  localStorage.setItem('archipelago-analytics-enabled', enableAnalytics.toString());
-  
-  // Reiniciar timers
-  if (authTimeout) {
-    clearInterval(authTimeout);
-    startSessionTimer();
-  }
-  
-  if (updateInterval) {
-    clearInterval(updateInterval);
-    updateInterval = setInterval(updateData, CONFIG.UPDATE_INTERVAL);
-  }
-  
-  document.querySelector('.modal.show').remove();
-  showSuccessMessage('Configurações salvas com sucesso!');
-  logSuccess('Configurações avançadas atualizadas');
-  trackUserAction('settings_updated');
-}
-
-function resetAdvancedSettings() {
-  if (confirm('Restaurar todas as configurações para o padrão?')) {
-    localStorage.removeItem('archipelago-session-timeout');
-    localStorage.removeItem('archipelago-update-interval');
-    localStorage.removeItem('archipelago-qr-timeout');
-    localStorage.removeItem('archipelago-autosave');
-    localStorage.removeItem('archipelago-analytics-enabled');
-    
-    // Restaurar valores padrão
-    CONFIG.SESSION_TIMEOUT = 240000;
-    CONFIG.UPDATE_INTERVAL = 240000;
-    CONFIG.QR_TIMEOUT = 120000;
-    
-    document.querySelector('.modal.show').remove();
-    showSuccessMessage('Configurações restauradas para o padrão!');
-    logSuccess('Configurações resetadas para padrão');
-  }
-}
-
-// =================== SEÇÃO 24: SISTEMA DE NOTIFICAÇÕES ===================
-function createNotificationSystem() {
-  const notificationContainer = document.createElement('div');
-  notificationContainer.id = 'notification-container';
-  notificationContainer.style.cssText = `
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    z-index: 10002;
-    max-width: 400px;
-  `;
-  document.body.appendChild(notificationContainer);
-}
-
-function showAdvancedNotification(title, message, type = 'info', duration = 5000) {
-  const container = document.getElementById('notification-container');
-  if (!container) {
-    createNotificationSystem();
-    return showAdvancedNotification(title, message, type, duration);
-  }
-  
-  const colors = {
-    info: { bg: '#3b82f6', icon: 'ℹ️' },
-    success: { bg: '#10b981', icon: '✅' },
-    warning: { bg: '#f59e0b', icon: '⚠️' },
-    error: { bg: '#ef4444', icon: '❌' }
-  };
-  
-  const notification = document.createElement('div');
-  notification.style.cssText = `
-    background: ${colors[type].bg};
-    color: white;
-    padding: 15px;
-    border-radius: 8px;
-    margin-bottom: 10px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-    animation: slideInRight 0.3s ease;
-    cursor: pointer;
-    position: relative;
-    overflow: hidden;
-  `;
-  
-  notification.innerHTML = `
-    <div style="display: flex; align-items: flex-start; gap: 10px;">
-      <span style="font-size: 20px;">${colors[type].icon}</span>
-      <div style="flex: 1;">
-        <div style="font-weight: bold; margin-bottom: 5px;">${title}</div>
-        <div style="font-size: 14px; opacity: 0.9;">${message}</div>
-      </div>
-      <button style="background: none; border: none; color: white; font-size: 18px; cursor: pointer; padding: 0; margin-left: 10px;" onclick="this.closest('[style*=\"background:\"]').remove()">×</button>
-    </div>
-    <div style="position: absolute; bottom: 0; left: 0; height: 3px; background: rgba(255,255,255,0.3); animation: progressBar ${duration}ms linear;"></div>
-  `;
-  
-  container.appendChild(notification);
-  
-  // Auto-remover após duração especificada
-  setTimeout(() => {
-    if (notification.parentNode) {
-      notification.style.animation = 'slideOutRight 0.3s ease';
-      setTimeout(() => {
-        if (notification.parentNode) {
-          notification.remove();
-        }
-      }, 300);
-    }
-  }, duration);
-  
-  // Remover ao clicar
-  notification.addEventListener('click', () => {
-    notification.remove();
-  });
-}
-
-// =================== SEÇÃO 25: FINALIZAÇÃO E INICIALIZAÇÃO AUTOMÁTICA ===================
-function loadUserPreferences() {
-  // Carregar configurações salvas
-  const savedSessionTimeout = localStorage.getItem('archipelago-session-timeout');
-  const savedUpdateInterval = localStorage.getItem('archipelago-update-interval');
-  const savedQRTimeout = localStorage.getItem('archipelago-qr-timeout');
-  
-  if (savedSessionTimeout) CONFIG.SESSION_TIMEOUT = parseInt(savedSessionTimeout);
-  if (savedUpdateInterval) CONFIG.UPDATE_INTERVAL = parseInt(savedUpdateInterval);
-  if (savedQRTimeout) CONFIG.QR_TIMEOUT = parseInt(savedQRTimeout);
-}
-
-function addSystemInfo() {
-  // Adicionar informações do sistema no console
-  const systemInfo = {
-    version: '3.0',
-    build: new Date().toISOString(),
-    features: [
-      'Sistema de autenticação 170284',
-      '4 hospitais com 49 leitos total',
-      'Timer de 4 minutos configurável',
-      'Dashboard executivo com 8 KPIs',
-      'Sistema QR Code com timeout 2min',
-      'Área administrativa completa',
-      'Responsividade mobile/desktop',
-      'Sistema de backup/restore',
-      'Analytics e relatórios',
-      'Gestão avançada de cores',
-      'Accessibility (ARIA)',
-      'Keyboard shortcuts',
-      'Error handling global'
-    ],
-    shortcuts: {
-      'Ctrl+1': 'Ir para Leitos',
-      'Ctrl+2': 'Dashboard Hospitalar',
-      'Ctrl+3': 'Dashboard Executivo',
-      'Ctrl+Q': 'QR Code',
-      'Ctrl+R': 'Atualizar dados',
-      'ESC': 'Fechar modais'
-    }
-  };
-  
-  console.group('🏥 ARCHIPELAGO DASHBOARD V3.0 - SISTEMA COMPLETO');
-  console.log('📋 Informações do Sistema:', systemInfo);
-  console.log('🎯 Status: Sistema 100% funcional e operacional');
-  console.log('🚀 Deploy: Pronto para produção');
-  console.groupEnd();
-}
-
-// Adicionar CSS para animações das notificações
-function addNotificationCSS() {
-  const style = document.createElement('style');
-  style.textContent = `
-    @keyframes slideInRight {
-      from { transform: translateX(100%); opacity: 0; }
-      to { transform: translateX(0); opacity: 1; }
-    }
-    
-    @keyframes slideOutRight {
-      from { transform: translateX(0); opacity: 1; }
-      to { transform: translateX(100%); opacity: 0; }
-    }
-    
-    @keyframes progressBar {
-      from { width: 100%; }
-      to { width: 0%; }
-    }
-    
-    @keyframes slideIn {
-      from { transform: translateY(-20px); opacity: 0; }
-      to { transform: translateY(0); opacity: 1; }
-    }
-  `;
-  document.head.appendChild(style);
-}
-
-// =================== INICIALIZAÇÃO AUTOMÁTICA FINAL ===================
-document.addEventListener('DOMContentLoaded', () => {
-  logInfo("🎯 DOM carregado - inicializando sistema completo");
-  
-  // Adicionar CSS para animações
-  addNotificationCSS();
-  
-  // Carregar preferências do usuário
-  loadUserPreferences();
-  
-  // Criar sistema de notificações
-  createNotificationSystem();
-  
-  // Adicionar informações do sistema
-  addSystemInfo();
-  
-  // Finalizar inicialização quando autenticado
-  window.initializeSystem = function() {
-    finalizeInitialization();
-    
-    // Notificação de boas-vindas
-    setTimeout(() => {
-      showAdvancedNotification(
-        'Sistema Carregado!',
-        'Archipelago Dashboard V3.0 está pronto para uso',
-        'success',
-        4000
-      );
-    }, 1000);
-  };
-  
-  // Focar no campo de senha
-  setTimeout(() => {
-    const authPassword = document.getElementById('authPassword');
-    if (authPassword) {
-      authPassword.focus();
-    }
-  }, 100);
-  
-  // Adicionar funcionalidades extras ao menu administrativo
-  window.createSystemBackup = createSystemBackup;
-  window.exportDailyReport = exportDailyReport;
-  window.openAdvancedSettings = openAdvancedSettings;
-  window.saveAdvancedSettings = saveAdvancedSettings;
-  window.resetAdvancedSettings = resetAdvancedSettings;
-  
-  logSuccess("🎉 ARCHIPELAGO DASHBOARD V3.0 - TOTALMENTE CARREGADO E FUNCIONAL!");
-});
-
-// Logs finais de confirmação
-logSuccess("📦 PARTE 4/4 - SISTEMA COMPLETO CARREGADO");
-logInfo("🔧 Funcionalidades extras disponíveis:");
-logInfo("   ✅ Sistema de backup/restore");
-logInfo("   ✅ Relatórios avançados em HTML");
-logInfo("   ✅ Configurações avançadas");
-logInfo("   ✅ Notificações visuais");
-logInfo("   ✅ Analytics e monitoramento");
-logInfo("   ✅ Tratamento global de erros");
-logInfo("   ✅ Acessibilidade (ARIA)");
-logInfo("   ✅ Atalhos de teclado");
-logInfo("   ✅ Responsividade otimizada");
-logInfo("   ✅ Persistência de dados");
-logInfo("");
-logSuccess("🚀 STATUS: SISTEMA 100% COMPLETO E PRONTO PARA PRODUÇÃO!");
-logInfo("📋 PRÓXIMO PASSO: Cole todo o JavaScript entre tags <script> no HTML");
-logInfo("🎯 RESULTADO: Arquivo index.html funcional sem erros");
-logInfo("✨ DEPLOY: Pronto para GitHub/Vercel/Produção");
-
-console.log("");
-console.log("═══════════════════════════════════════════════════════════════");
-console.log("🎉 ARCHIPELAGO DASHBOARD V3.0 - JAVASCRIPT COMPLETO!");
-console.log("═══════════════════════════════════════════════════════════════");
-console.log("✅ PARTE 1: HTML + CSS (completo)");
-console.log("✅ PARTE 2: JavaScript Core (completo)");
-console.log("✅ PARTE 3: Modais e Eventos (completo)");
-console.log("✅ PARTE 4: Inicialização Final (completo)");
-console.log("");
-console.log("🔧 COMO USAR:");
-console.log("1. Cole a PARTE 1 (HTML+CSS)");
-console.log("2. Adicione <script> antes de </body>");
-console.log("3. Cole as PARTES 2, 3 e 4 dentro do <script>");
-console.log("4. Feche com </script></body></html>");
-console.log("5. Salve como index.html");
-console.log("6. Teste no navegador");
-console.log("");
-console.log("🎯 RESULTADO: Sistema 100% funcional sem erros!");
-console.log("═══════════════════════════════════════════════════════════════");
-
-
+    <!-- Scripts -->
+    <script src="app.js"></script>
 </body>
 </html>

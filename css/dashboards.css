@@ -133,7 +133,7 @@
     max-height: 300px;
 }
 
-/* === DASHBOARD HOSPITALAR === */
+/* === DASHBOARD HOSPITALAR - LAYOUT VERTICAL CORRIGIDO === */
 .hospitalar-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
@@ -206,6 +206,24 @@
     font-size: 9px;
 }
 
+/* *** CORREÇÃO CRÍTICA: LAYOUT VERTICAL DOS GRÁFICOS HOSPITALARES *** */
+.hospital-graficos {
+    display: grid;
+    grid-template-columns: 1fr; /* FORÇAR 1 COLUNA */
+    gap: 20px;
+    margin-top: 20px;
+}
+
+/* Remover qualquer layout horizontal que possa existir */
+.hospital-section .chart-container {
+    width: 100%;
+    margin-bottom: 20px;
+}
+
+.hospital-section .chart-container:last-child {
+    margin-bottom: 0;
+}
+
 /* === SELETORES DE TIPO DE GRÁFICO === */
 .chart-type-selector {
     display: flex;
@@ -247,6 +265,11 @@
     .kpi-principal {
         grid-column: span 4;
     }
+    
+    /* GARANTIR LAYOUT VERTICAL EM TABLETS */
+    .hospital-graficos {
+        grid-template-columns: 1fr !important;
+    }
 }
 
 @media (max-width: 768px) {
@@ -286,6 +309,12 @@
     .chart-type-selector {
         justify-content: center;
     }
+    
+    /* GARANTIR LAYOUT VERTICAL EM MOBILE */
+    .hospital-graficos {
+        grid-template-columns: 1fr !important;
+        gap: 15px;
+    }
 }
 
 @media (max-width: 480px) {
@@ -303,11 +332,89 @@
     }
     
     .chart-container h3,
-.chart-container h4 {
+    .chart-container h4 {
         font-size: 12px;
     }
     
     .hospital-title {
         font-size: 16px;
     }
+    
+    /* MOBILE: GRÁFICOS UM EMBAIXO DO OUTRO */
+    .hospital-graficos {
+        grid-template-columns: 1fr !important;
+        gap: 10px;
+    }
+    
+    .chart-container {
+        margin-bottom: 15px;
+    }
+}
+
+/* === GARANTIR QUE NUNCA HAJA LAYOUT HORIZONTAL NOS GRÁFICOS === */
+.hospital-section .hospital-graficos {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    grid-template-rows: auto auto auto !important;
+    gap: 20px !important;
+}
+
+/* === ESTILOS ESPECÍFICOS PARA OS 7 TIPOS DE GRÁFICO === */
+.chart-container[data-chart-type="scatter"] .chart-type-btn[data-type="scatter"] {
+    background: #10b981;
+    border-color: #10b981;
+}
+
+.chart-container[data-chart-type="bar"] .chart-type-btn[data-type="bar"] {
+    background: #3b82f6;
+    border-color: #3b82f6;
+}
+
+.chart-container[data-chart-type="line"] .chart-type-btn[data-type="line"] {
+    background: #8b5cf6;
+    border-color: #8b5cf6;
+}
+
+.chart-container[data-chart-type="area"] .chart-type-btn[data-type="area"] {
+    background: #f59e0b;
+    border-color: #f59e0b;
+}
+
+.chart-container[data-chart-type="radar"] .chart-type-btn[data-type="radar"] {
+    background: #ef4444;
+    border-color: #ef4444;
+}
+
+.chart-container[data-chart-type="polar"] .chart-type-btn[data-type="polar"] {
+    background: #14b8a6;
+    border-color: #14b8a6;
+}
+
+/* === ANIMAÇÕES SUAVES PARA TRANSIÇÃO DE GRÁFICOS === */
+.chart-container canvas {
+    transition: opacity 0.3s ease;
+}
+
+.chart-container.loading canvas {
+    opacity: 0.5;
+}
+
+/* === LOADING STATE === */
+.chart-loading {
+    position: relative;
+}
+
+.chart-loading::after {
+    content: 'Carregando gráfico...';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(26, 31, 46, 0.9);
+    color: #60a5fa;
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    z-index: 10;
 }

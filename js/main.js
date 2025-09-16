@@ -436,6 +436,7 @@ setTimeout(() => {
     }
 }, 3000);
 
+
 console.log('🚀 Main.js carregado - Sistema Archipelago Dashboard V3.0');
 console.log('📋 Correções implementadas:');
 console.log('   ✅ Menu lateral sem emojis + fecha automaticamente');
@@ -447,3 +448,370 @@ console.log('   ✅ Divisões Ouro/2R/3R nas colunas Hoje e 24h');
 console.log('   ✅ Botão Restaurar Cores funcionando');
 console.log('   ✅ Campo Complexidade integrado');
 console.log('   ✅ 55+ cores Pantone configuradas');
+
+
+// =================== CORREÇÕES AUTOMÁTICAS - ADICIONAR AO FINAL DO MAIN.JS ===================
+
+// =================== AUTO-CORREÇÃO DE CONTAINERS ===================
+function verificarContainersDashboard() {
+    const containers = [
+        { id: 'dashExecutivoContent', section: 'dash2' },
+        { id: 'dashHospitalarContent', section: 'dash1' }
+    ];
+    
+    containers.forEach(({ id, section }) => {
+        let container = document.getElementById(id);
+        if (!container) {
+            const section_element = document.getElementById(section);
+            if (section_element) {
+                container = document.createElement('div');
+                container.id = id;
+                section_element.appendChild(container);
+                logInfo(`✅ Container ${id} criado automaticamente`);
+            }
+        }
+    });
+}
+
+// =================== DIAGNÓSTICO AUTOMÁTICO ===================
+window.diagnosticoSistema = function() {
+    const diagnostico = {
+        hospitalData: !!window.hospitalData,
+        hospitalDataCount: window.hospitalData ? Object.keys(window.hospitalData).length : 0,
+        chartJS: typeof Chart !== 'undefined',
+        containers: {
+            dashExecutivoContent: !!document.getElementById('dashExecutivoContent'),
+            dashHospitalarContent: !!document.getElementById('dashHospitalarContent')
+        },
+        functions: {
+            renderDashboardExecutivo: typeof window.renderDashboardExecutivo === 'function',
+            renderDashboardHospitalar: typeof window.renderDashboardHospitalar === 'function',
+            loadHospitalData: typeof window.loadHospitalData === 'function'
+        },
+        api: !!window.API_URL
+    };
+    
+    console.log('🔍 DIAGNÓSTICO DO SISTEMA:', diagnostico);
+    
+    // Lista de problemas encontrados
+    const problemas = [];
+    const solucoes = [];
+    
+    if (!diagnostico.hospitalData) {
+        problemas.push('❌ Dados dos hospitais não carregados');
+        solucoes.push('window.loadHospitalData()');
+    }
+    
+    if (!diagnostico.chartJS) {
+        problemas.push('❌ Chart.js não disponível');
+        solucoes.push('Será carregado automaticamente');
+    }
+    
+    if (!diagnostico.containers.dashExecutivoContent || !diagnostico.containers.dashHospitalarContent) {
+        problemas.push('❌ Containers dos dashboards faltando');
+        solucoes.push('verificarContainersDashboard()');
+    }
+    
+    if (problemas.length === 0) {
+        console.log('✅ Sistema funcionando corretamente!');
+    } else {
+        console.log('⚠️ PROBLEMAS ENCONTRADOS:', problemas);
+        console.log('🔧 SOLUÇÕES:', solucoes);
+    }
+    
+    return { diagnostico, problemas, solucoes };
+};
+
+// =================== CARREGAR CHART.JS DINAMICAMENTE ===================
+function garantirChartJS() {
+    return new Promise((resolve, reject) => {
+        if (typeof Chart !== 'undefined') {
+            resolve(Chart);
+            return;
+        }
+        
+        logInfo('📊 Carregando Chart.js dinamicamente...');
+        const script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js';
+        script.onload = () => {
+            if (typeof Chart !== 'undefined') {
+                logSuccess('✅ Chart.js carregado com sucesso');
+                resolve(Chart);
+            } else {
+                reject(new Error('Falha ao carregar Chart.js'));
+            }
+        };
+        script.onerror = () => reject(new Error('Erro no carregamento do Chart.js'));
+        document.head.appendChild(script);
+    });
+}
+
+// =================== FORÇAR RENDERIZAÇÃO DOS DASHBOARDS ===================
+window.forcarRenderizacao = function() {
+    logInfo('🔄 Forçando renderização dos dashboards...');
+    
+    // 1. Verificar containers
+    verificarContainersDashboard();
+    
+    // 2. Renderizar dashboards
+    setTimeout(() => {
+        try {
+            if (window.renderDashboardExecutivo) {
+                window.renderDashboardExecutivo();
+                logSuccess('✅ Dashboard Executivo forçado');
+            }
+        } catch (error) {
+            logError('❌ Erro no Dashboard Executivo:', error);
+        }
+        
+        try {
+            if (window.renderDashboardHospitalar) {
+                window.renderDashboardHospitalar();
+                logSuccess('✅ Dashboard Hospitalar forçado');
+            }
+        } catch (error) {
+            logError('❌ Erro no Dashboard Hospitalar:', error);
+        }
+    }, 500);
+};
+
+// =================== TESTE RÁPIDO ===================
+window.testeRapido = function() {
+    console.log('🧪 EXECUTANDO TESTE RÁPIDO...');
+    
+    const resultado = window.diagnosticoSistema();
+    
+    // Aplicar correções automáticas
+    if (resultado.problemas.length > 0) {
+        console.log('🔧 Aplicando correções automáticas...');
+        
+        // Carregar dados se necessário
+        if (!window.hospitalData && window.loadHospitalData) {
+            window.loadHospitalData().then(() => {
+                logSuccess('✅ Dados carregados automaticamente');
+                setTimeout(() => window.forcarRenderizacao(), 1000);
+            });
+        }
+        
+        // Garantir Chart.js
+        garantirChartJS().then(() => {
+            logSuccess('✅ Chart.js disponível');
+        });
+        
+        // Verificar containers
+        verificarContainersDashboard();
+        
+        // Forçar renderização
+        setTimeout(() => window.forcarRenderizacao(), 2000);
+    } else {
+        window.forcarRenderizacao();
+    }
+    
+    return resultado;
+};
+
+// =================== HOOK NO SISTEMA DE NAVEGAÇÃO ===================
+const setActiveTabOriginal = window.setActiveTab;
+window.setActiveTab = function(tab) {
+    // Verificar containers antes de navegar
+    verificarContainersDashboard();
+    
+    // Chamar função original
+    if (setActiveTabOriginal) {
+        setActiveTabOriginal(tab);
+    }
+    
+    // Renderizar dashboards após mudança
+    setTimeout(() => {
+        if (tab === 'dash1' && window.renderDashboardHospitalar) {
+            window.renderDashboardHospitalar();
+        } else if (tab === 'dash2' && window.renderDashboardExecutivo) {
+            window.renderDashboardExecutivo();
+        }
+    }, 300);
+};
+
+// =================== ADICIONAR BOTÃO DE DIAGNÓSTICO ===================
+function adicionarBotaoDiagnostico() {
+    const menuFooter = document.querySelector('.menu-footer');
+    if (menuFooter && !document.getElementById('btn-diagnostico')) {
+        const botao = document.createElement('button');
+        botao.id = 'btn-diagnostico';
+        botao.className = 'menu-config';
+        botao.innerHTML = '<span>🔧</span> Diagnóstico & Correção';
+        botao.style.cssText = `
+            display: flex;
+            align-items: center;
+            width: 100%;
+            padding: 12px 16px;
+            margin: 5px 0;
+            background: rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            text-decoration: none;
+            transition: all 0.3s;
+        `;
+        
+        botao.onclick = () => {
+            const resultado = window.diagnosticoSistema();
+            
+            let mensagem = '🔍 DIAGNÓSTICO DO SISTEMA\n\n';
+            
+            if (resultado.problemas.length === 0) {
+                mensagem += '✅ SISTEMA OK!\n';
+                mensagem += `📊 Hospitais: ${resultado.diagnostico.hospitalDataCount}\n`;
+                mensagem += `📈 Chart.js: ${resultado.diagnostico.chartJS ? 'OK' : 'Carregando...'}\n`;
+                mensagem += `📦 Containers: OK\n\n`;
+                mensagem += '🔄 Forçando renderização dos gráficos...';
+            } else {
+                mensagem += '⚠️ PROBLEMAS ENCONTRADOS:\n';
+                resultado.problemas.forEach(p => mensagem += `${p}\n`);
+                mensagem += '\n🔧 APLICANDO CORREÇÕES AUTOMÁTICAS...\n';
+                resultado.solucoes.forEach(s => mensagem += `• ${s}\n`);
+            }
+            
+            alert(mensagem);
+            
+            // Executar correções
+            setTimeout(() => window.testeRapido(), 500);
+        };
+        
+        botao.onmouseover = () => {
+            botao.style.background = 'rgba(255, 255, 255, 0.2)';
+            botao.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+        };
+        
+        botao.onmouseout = () => {
+            botao.style.background = 'rgba(255, 255, 255, 0.1)';
+            botao.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+        };
+        
+        menuFooter.appendChild(botao);
+        logSuccess('✅ Botão de diagnóstico adicionado ao menu');
+    }
+}
+
+// =================== COMANDOS DE CONSOLE ===================
+window.debug = window.debug || {};
+Object.assign(window.debug, {
+    diagnostico: window.diagnosticoSistema,
+    forcar: window.forcarRenderizacao,
+    teste: window.testeRapido,
+    dados: () => window.hospitalData,
+    graficos: () => window.chartInstances,
+    recarregar: async () => {
+        if (window.loadHospitalData) {
+            await window.loadHospitalData();
+            setTimeout(() => window.forcarRenderizacao(), 1000);
+            return window.hospitalData;
+        }
+    },
+    limpar: () => {
+        if (window.chartInstances) {
+            Object.values(window.chartInstances).forEach(chart => {
+                try { chart.destroy(); } catch (e) {}
+            });
+            window.chartInstances = {};
+        }
+    }
+});
+
+// =================== INICIALIZAÇÃO AUTOMÁTICA ===================
+setTimeout(() => {
+    logInfo('🚀 Iniciando correções automáticas...');
+    
+    // 1. Adicionar botão de diagnóstico
+    adicionarBotaoDiagnostico();
+    
+    // 2. Garantir Chart.js
+    garantirChartJS().catch(() => {
+        logError('Erro ao carregar Chart.js - alguns gráficos podem não funcionar');
+    });
+    
+    // 3. Verificar containers
+    verificarContainersDashboard();
+    
+    // 4. Se não há dados, tentar carregar
+    if (!window.hospitalData && window.loadHospitalData) {
+        logInfo('📊 Carregando dados dos hospitais...');
+        window.loadHospitalData().then(() => {
+            logSuccess('✅ Dados carregados automaticamente');
+            setTimeout(() => {
+                // Renderizar dashboards baseado na view atual
+                if (window.currentView === 'dash1') {
+                    window.renderDashboardHospitalar();
+                } else if (window.currentView === 'dash2') {
+                    window.renderDashboardExecutivo();
+                }
+            }, 1000);
+        }).catch(error => {
+            logError('Erro ao carregar dados:', error);
+        });
+    }
+    
+    // 5. Executar teste após tudo
+    setTimeout(() => {
+        const resultado = window.diagnosticoSistema();
+        if (resultado.problemas.length > 0) {
+            console.log('🔧 Executando correções finais...');
+            window.testeRapido();
+        } else {
+            logSuccess('✅ Sistema inicializado corretamente');
+        }
+    }, 3000);
+    
+}, 4000);
+
+// =================== OBSERVER PARA MUDANÇAS DE TAB ===================
+const observarMudancasTab = () => {
+    const observer = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+            if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+                const target = mutation.target;
+                
+                if (target.id === 'dash1' && !target.classList.contains('hidden')) {
+                    setTimeout(() => {
+                        verificarContainersDashboard();
+                        if (window.renderDashboardHospitalar) {
+                            window.renderDashboardHospitalar();
+                        }
+                    }, 200);
+                } else if (target.id === 'dash2' && !target.classList.contains('hidden')) {
+                    setTimeout(() => {
+                        verificarContainersDashboard();
+                        if (window.renderDashboardExecutivo) {
+                            window.renderDashboardExecutivo();
+                        }
+                    }, 200);
+                }
+            }
+        });
+    });
+    
+    const dash1 = document.getElementById('dash1');
+    const dash2 = document.getElementById('dash2');
+    
+    if (dash1) observer.observe(dash1, { attributes: true });
+    if (dash2) observer.observe(dash2, { attributes: true });
+};
+
+setTimeout(observarMudancasTab, 2000);
+
+console.log(`
+🔧 SISTEMA DE CORREÇÕES ATIVO
+
+Comandos disponíveis:
+• window.debug.teste() - Teste rápido + correções
+• window.debug.diagnostico() - Diagnóstico completo  
+• window.debug.forcar() - Forçar renderização
+• window.debug.recarregar() - Recarregar dados da API
+• window.debug.dados() - Ver dados carregados
+• window.debug.limpar() - Limpar gráficos
+
+🔧 Botão "Diagnóstico & Correção" adicionado ao menu lateral.
+🤖 Correções automáticas ativas - gráficos serão carregados automaticamente.
+`);

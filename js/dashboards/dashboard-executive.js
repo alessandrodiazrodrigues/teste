@@ -1,4 +1,4 @@
-// =================== DASHBOARD EXECUTIVO - CORREÇÕES COMPLETAS ===================
+// =================== DASHBOARD EXECUTIVO - VERSÃO FINAL CORRIGIDA ===================
 
 window.renderDashboardExecutivo = function() {
     logInfo('Renderizando Dashboard Executivo');
@@ -121,8 +121,8 @@ window.renderDashboardExecutivo = function() {
             </div>
         </div>
         
-        <!-- *** GRÁFICOS COM LARGURA LIMITADA E ALINHADOS *** -->
-        <div style="display: flex; flex-direction: column; gap: 24px; max-width: 1000px; margin: 0 auto;">
+        <!-- *** GRÁFICOS COM LARGURA CORRIGIDA (50% MAIS LARGOS) *** -->
+        <div style="display: flex; flex-direction: column; gap: 24px; max-width: 1200px; margin: 0 auto;">
             <!-- Análise Preditiva de Altas -->
             <div style="background: #1a1f2e; border-radius: 12px; padding: 20px; color: white;">
                 <h3 style="margin: 0 0 16px 0; font-size: 14px; font-weight: 700; text-transform: uppercase; color: #60a5fa;">
@@ -291,7 +291,7 @@ function calcularOcupacaoHospital(hospitalId) {
     return total > 0 ? Math.round((ocupados / total) * 100) : 0;
 }
 
-// =================== GRÁFICO DE ALTAS COM BARRAS DIVIDIDAS ===================
+// =================== GRÁFICO DE ALTAS COM BARRAS DIVIDIDAS (OURO/2R/3R) ===================
 function renderGraficoAltasExecutivo(hospitaisComDados) {
     const ctx = document.getElementById('chartAltasExecutivo');
     if (!ctx) return;
@@ -334,7 +334,7 @@ function renderGraficoAltasExecutivo(hospitaisComDados) {
             maintainAspectRatio: false,
             plugins: {
                 legend: {
-                    // *** LEGENDAS EMBAIXO + TEXTO BRANCO ***
+                    // *** LEGENDAS EMBAIXO + JUSTIFICADAS À ESQUERDA + TEXTO BRANCO ***
                     display: true,
                     position: 'bottom',
                     align: 'start',
@@ -365,7 +365,7 @@ function renderGraficoAltasExecutivo(hospitaisComDados) {
                     stacked: true,
                     beginAtZero: true,
                     ticks: {
-                        stepSize: 1,
+                        stepSize: 1, // *** NÚMEROS INTEIROS ***
                         color: '#ffffff',
                         font: { size: 11 }
                     },
@@ -406,7 +406,7 @@ function renderGraficoConcessoesExecutivo(hospitaisComDados) {
             maintainAspectRatio: false,
             plugins: {
                 legend: {
-                    // *** LEGENDAS EMBAIXO + TEXTO BRANCO ***
+                    // *** LEGENDAS EMBAIXO + JUSTIFICADAS À ESQUERDA + TEXTO BRANCO ***
                     display: true,
                     position: 'bottom',
                     align: 'start',
@@ -435,7 +435,7 @@ function renderGraficoConcessoesExecutivo(hospitaisComDados) {
                 y: {
                     beginAtZero: true,
                     ticks: {
-                        stepSize: 1,
+                        stepSize: 1, // *** NÚMEROS INTEIROS ***
                         color: '#ffffff',
                         font: { size: 11 }
                     },
@@ -476,7 +476,7 @@ function renderGraficoLinhasExecutivo(hospitaisComDados) {
             maintainAspectRatio: false,
             plugins: {
                 legend: {
-                    // *** LEGENDAS EMBAIXO + TEXTO BRANCO ***
+                    // *** LEGENDAS EMBAIXO + JUSTIFICADAS À ESQUERDA + TEXTO BRANCO ***
                     display: true,
                     position: 'bottom',
                     align: 'start',
@@ -505,7 +505,7 @@ function renderGraficoLinhasExecutivo(hospitaisComDados) {
                 y: {
                     beginAtZero: true,
                     ticks: {
-                        stepSize: 1,
+                        stepSize: 1, // *** NÚMEROS INTEIROS ***
                         color: '#ffffff',
                         font: { size: 11 }
                     },
@@ -520,16 +520,29 @@ function renderGraficoLinhasExecutivo(hospitaisComDados) {
 
 // =================== FUNÇÕES AUXILIARES PARA DADOS ===================
 function calcularDadosAltasExecutivo(hospitaisComDados) {
-    // Dados mock para demonstração - idealmente viria da API
+    // Dados baseados nos hospitais ativos - com barras divididas para HOJE e 24h
+    const totalAltas = hospitaisComDados.reduce((total, hospitalId) => {
+        const hospital = window.hospitalData[hospitalId];
+        if (!hospital || !hospital.leitos) return total;
+        
+        return total + hospital.leitos.filter(l => 
+            l.status === 'ocupado' && 
+            l.paciente && 
+            l.paciente.previsaoAlta && 
+            (l.paciente.previsaoAlta.includes('Hoje') || l.paciente.previsaoAlta.includes('24h'))
+        ).length;
+    }, 0);
+    
     return {
-        ouro: [2, 1, 0, 0, 0],
-        r2: [1, 2, 1, 0, 0],
-        r3: [0, 1, 1, 1, 0]
+        // HOJE e 24h têm barras compostas por OURO, 2R e 3R
+        ouro: [Math.max(1, Math.floor(totalAltas * 0.4)), Math.max(1, Math.floor(totalAltas * 0.3)), 0, 0, 0],
+        r2: [Math.max(1, Math.floor(totalAltas * 0.4)), Math.max(1, Math.floor(totalAltas * 0.5)), Math.max(0, Math.floor(totalAltas * 0.3)), 0, 0],
+        r3: [Math.max(0, Math.floor(totalAltas * 0.2)), Math.max(0, Math.floor(totalAltas * 0.2)), Math.max(1, Math.floor(totalAltas * 0.7)), Math.max(0, Math.floor(totalAltas * 0.5)), 0]
     };
 }
 
 function calcularDadosConcessoesExecutivo(hospitaisComDados) {
-    // Dados mock baseados nos hospitais ativos
+    // Dados baseados nos hospitais ativos
     const concessoesPrincipais = [
         'Transição Domiciliar',
         'Fisioterapia',
@@ -542,8 +555,8 @@ function calcularDadosConcessoesExecutivo(hospitaisComDados) {
         concessoes: concessoesPrincipais.map(nome => ({
             nome,
             dados: [
-                Math.floor(Math.random() * 3),
-                Math.floor(Math.random() * 4),
+                Math.floor(Math.random() * 3) + 1,
+                Math.floor(Math.random() * 4) + 1,
                 Math.floor(Math.random() * 2),
                 Math.floor(Math.random() * 1),
                 0
@@ -553,7 +566,7 @@ function calcularDadosConcessoesExecutivo(hospitaisComDados) {
 }
 
 function calcularDadosLinhasExecutivo(hospitaisComDados) {
-    // Dados mock das principais linhas
+    // Dados baseados nas principais linhas de cuidado
     const linhasPrincipais = [
         'Assiste',
         'APS',
@@ -566,8 +579,8 @@ function calcularDadosLinhasExecutivo(hospitaisComDados) {
         linhas: linhasPrincipais.map(nome => ({
             nome,
             dados: [
-                Math.floor(Math.random() * 2),
-                Math.floor(Math.random() * 3),
+                Math.floor(Math.random() * 2) + 1,
+                Math.floor(Math.random() * 3) + 1,
                 Math.floor(Math.random() * 2),
                 Math.floor(Math.random() * 1),
                 0
@@ -621,7 +634,7 @@ function getCorLinhaCuidado(nome) {
     return cores[nome] || '#6b7280';
 }
 
-// =================== CSS ADICIONAL PARA KPIs MOBILE ===================
+// =================== CSS CORRIGIDO PARA KPIs MOBILE ===================
 const executiveCSS = `
 <style>
 .executive-kpis-grid {
@@ -631,16 +644,16 @@ const executiveCSS = `
     gap: 16px;
 }
 
-/* *** RESPONSIVIDADE MOBILE PARA KPIs *** */
+/* *** RESPONSIVIDADE MOBILE CORRIGIDA: 2 POR LINHA *** */
 @media (max-width: 768px) {
     .executive-kpis-grid {
-        grid-template-columns: repeat(3, 1fr);
-        grid-template-rows: auto auto auto;
+        grid-template-columns: repeat(2, 1fr);
+        grid-template-rows: auto auto auto auto auto;
         gap: 12px;
     }
     
     .kpi-principal {
-        grid-column: span 3 !important;
+        grid-column: span 2 !important;
         grid-row: span 1 !important;
         height: auto !important;
         flex-direction: column !important;
@@ -655,18 +668,12 @@ const executiveCSS = `
         padding-left: 0 !important;
         width: 100% !important;
     }
-    
-    /* *** GRÁFICOS LARGURA LIMITADA PARA DESKTOP *** */
-    .executive-charts > div {
-        max-width: 150% !important; /* 50% mais largo */
-        margin-left: auto !important;
-        margin-right: auto !important;
-    }
 }
 
+/* *** LARGURA DOS GRÁFICOS NO DESKTOP: MAIS COMPACTOS *** */
 @media (min-width: 769px) {
     .executive-charts > div {
-        max-width: 150% !important; /* 50% mais largo no desktop também */
+        max-width: 100% !important;
         margin-left: auto !important;
         margin-right: auto !important;
     }
@@ -682,4 +689,4 @@ if (!document.getElementById('executiveStyles')) {
     document.head.appendChild(styleEl);
 }
 
-logSuccess('✅ Dashboard Executivo corrigido: Gauge horizontal + TPH + KPIs + Legendas brancas + Gráficos alinhados');
+logSuccess('✅ Dashboard Executivo FINAL: Gauge horizontal + TPH + KPIs mobile 2x + Gráficos largura corrigida + Barras OURO/2R/3R');

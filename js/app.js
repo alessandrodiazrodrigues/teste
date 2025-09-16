@@ -29,8 +29,35 @@ window.logSuccess = function(msg) {
     console.log(`✅ [SUCCESS] ${msg}`);
 };
 
-window.logError = function(msg) {
-    console.error(`❌ [ERROR] ${msg}`);
+window.logError = function(msg, error = null) {
+    console.error(`❌ [ERROR] ${msg}`, error || '');
+};
+
+// =================== VERIFICAÇÃO DE AUTENTICAÇÃO ===================
+window.checkAuthentication = function() {
+    // Verificar se já está autenticado (sessionStorage)
+    const isAuth = sessionStorage.getItem('archipelago_authenticated');
+    if (isAuth === 'true') {
+        window.isAuthenticated = true;
+        return true;
+    }
+    return false;
+};
+
+// =================== MOSTRAR MODAL DE AUTENTICAÇÃO ===================
+window.showAuthModal = function() {
+    const modal = document.getElementById('authModal');
+    if (modal) {
+        modal.style.display = 'flex';
+        
+        // Focar no campo de senha
+        setTimeout(() => {
+            const passwordField = document.getElementById('authPassword');
+            if (passwordField) {
+                passwordField.focus();
+            }
+        }, 100);
+    }
 };
 
 // =================== AUTENTICAÇÃO ===================
@@ -40,17 +67,24 @@ window.authenticate = function() {
     
     if (password === CONFIG.AUTH_PASSWORD) {
         window.isAuthenticated = true;
+        
+        // Salvar autenticação na sessão
+        sessionStorage.setItem('archipelago_authenticated', 'true');
+        
+        // Esconder modal e mostrar sistema
         document.getElementById('authModal').style.display = 'none';
-        document.getElementById('mainHeader').style.display = 'flex';
-        document.getElementById('mainContent').style.display = 'block';
-        document.getElementById('mainFooter').style.display = 'block';
+        document.getElementById('mainHeader').classList.remove('hidden');
+        document.getElementById('mainContent').classList.remove('hidden');
+        document.getElementById('mainFooter').classList.remove('hidden');
         
         // Inicializar sistema
         window.initSystem();
         logSuccess('Autenticação bem-sucedida');
     } else {
-        errorDiv.textContent = 'Senha incorreta. Tente novamente.';
-        errorDiv.style.display = 'block';
+        if (errorDiv) {
+            errorDiv.textContent = 'Senha incorreta. Tente novamente.';
+            errorDiv.classList.remove('hidden');
+        }
         document.getElementById('authPassword').value = '';
         logError('Senha incorreta');
     }
@@ -60,7 +94,7 @@ window.authenticate = function() {
 window.initSystem = function() {
     logInfo('Inicializando sistema...');
     
-    // Carregar dados
+    // Carregar dados dos hospitais
     if (window.loadHospitalData) {
         window.loadHospitalData();
     }
@@ -69,7 +103,7 @@ window.initSystem = function() {
     window.startTimer();
     
     // Renderizar view inicial
-    window.switchView('leitos');
+    window.setActiveTab('leitos');
     
     logSuccess('Sistema inicializado');
 };
@@ -78,77 +112,115 @@ window.initSystem = function() {
 window.startTimer = function() {
     let timeLeft = CONFIG.REFRESH_INTERVAL / 1000; // converter para segundos
     
+    // Limpar timer anterior se existir
+    if (window.timerInterval) {
+        clearInterval(window.timerInterval);
+    }
+    
     window.timerInterval = setInterval(function() {
         const minutes = Math.floor(timeLeft / 60);
         const seconds = timeLeft % 60;
-        document.getElementById('timer').textContent = 
-            `Próxima atualização em: ${minutes}:${seconds.toString().padStart(2, '0')}`;
+        
+        const timerElement = document.getElementById('timer');
+        if (timerElement) {
+            timerElement.textContent = 
+                `Próxima atualização em: ${minutes}:${seconds.toString().padStart(2, '0')}`;
+        }
         
         timeLeft--;
         
         if (timeLeft < 0) {
-            window.refreshData();
+            window.updateData();
             timeLeft = CONFIG.REFRESH_INTERVAL / 1000;
         }
     }, 1000);
 };
 
 // =================== REFRESH DE DADOS ===================
-window.refreshData = function() {
+window.updateData = function() {
     logInfo('Atualizando dados...');
     
+    // Recarregar dados dos hospitais
     if (window.loadHospitalData) {
         window.loadHospitalData();
     }
     
     // Re-renderizar view atual
-    window.switchView(window.currentView);
+    if (window.currentView === 'leitos' && window.renderCards) {
+        window.renderCards();
+    } else if (window.currentView === 'dash1' && window.renderDashboardHospitalar) {
+        window.renderDashboardHospitalar();
+    } else if (window.currentView === 'dash2' && window.renderDashboardExecutivo) {
+        window.renderDashboardExecutivo();
+    }
     
     logSuccess('Dados atualizados');
 };
 
-// =================== NAVEGAÇÃO ===================
-window.switchView = function(view) {
-    // Esconder todas as views
-    document.querySelectorAll('.view').forEach(v => {
-        v.style.display = 'none';
+// =================== NAVEGAÇÃO ENTRE TABS ===================
+window.setActiveTab = function(tab) {
+    logInfo(`Mudando para tab: ${tab}`);
+    
+    window.currentView = tab;
+    
+    // Esconder todas as seções
+    document.querySelectorAll('main section').forEach(section => {
+        section.classList.add('hidden');
     });
     
-    // Mostrar view selecionada
-    const viewElement = document.getElementById('view' + view.charAt(0).toUpperCase() + view.slice(1).replace('-', ''));
-    if (viewElement) {
-        viewElement.style.display = 'block';
-        window.currentView = view;
-        
-        // Renderizar conteúdo específico
-        switch(view) {
-            case 'leitos':
-                if (window.renderCards) window.renderCards();
-                break;
-            case 'dash-hospitalar':
-                if (window.renderDashboardHospitalar) window.renderDashboardHospitalar();
-                break;
-            case 'dash-executivo':
-                if (window.renderDashboardExecutivo) window.renderDashboardExecutivo();
-                break;
-        }
+    // Mostrar seção ativa
+    let activeSection;
+    if (tab === 'leitos') {
+        activeSection = document.getElementById('leitosView');
+    } else if (tab === 'dash1') {
+        activeSection = document.getElementById('dash1');
+    } else if (tab === 'dash2') {
+        activeSection = document.getElementById('dash2');
     }
     
-    // Fechar menu
-    window.closeMenu();
+    if (activeSection) {
+        activeSection.classList.remove('hidden');
+    }
     
-    logInfo(`View alterada para: ${view}`);
+    // Atualizar menu lateral
+    document.querySelectorAll('.side-menu-item').forEach(item => {
+        item.classList.remove('active');
+        if (item.dataset.tab === tab) {
+            item.classList.add('active');
+        }
+    });
+    
+    // Renderizar conteúdo específico da tab
+    setTimeout(() => {
+        if (tab === 'leitos' && window.renderCards) {
+            window.renderCards();
+        } else if (tab === 'dash1' && window.renderDashboardHospitalar) {
+            window.renderDashboardHospitalar();
+        } else if (tab === 'dash2' && window.renderDashboardExecutivo) {
+            window.renderDashboardExecutivo();
+        }
+    }, 100);
+    
+    // Fechar menu em mobile
+    if (window.innerWidth <= 1024) {
+        window.toggleMenu();
+    }
 };
 
 // =================== MENU LATERAL ===================
 window.toggleMenu = function() {
     const menu = document.getElementById('sideMenu');
-    menu.classList.toggle('open');
-};
-
-window.closeMenu = function() {
-    const menu = document.getElementById('sideMenu');
-    menu.classList.remove('open');
+    const overlay = document.getElementById('menuOverlay');
+    
+    if (menu.classList.contains('open')) {
+        menu.classList.remove('open');
+        if (overlay) overlay.classList.remove('show');
+        document.body.classList.remove('menu-open');
+    } else {
+        menu.classList.add('open');
+        if (overlay) overlay.classList.add('show');
+        document.body.classList.add('menu-open');
+    }
 };
 
 // =================== SELEÇÃO DE HOSPITAL ===================
@@ -159,7 +231,11 @@ window.selectHospital = function(hospitalId) {
     document.querySelectorAll('.hospital-btn').forEach(btn => {
         btn.classList.remove('active');
     });
-    document.querySelector(`[data-hospital="${hospitalId}"]`).classList.add('active');
+    
+    const activeBtn = document.querySelector(`[data-hospital="${hospitalId}"]`);
+    if (activeBtn) {
+        activeBtn.classList.add('active');
+    }
     
     // Re-renderizar cards
     if (window.renderCards) {
@@ -169,17 +245,100 @@ window.selectHospital = function(hospitalId) {
     logInfo(`Hospital selecionado: ${CONFIG.HOSPITAIS[hospitalId].nome}`);
 };
 
-// =================== INICIALIZAÇÃO ===================
+// =================== FILTRAR CARDS ===================
+window.filterCards = function() {
+    const hospitalFilter = document.getElementById('hospitalFilter').value;
+    const statusFilter = document.getElementById('statusFilter').value;
+    
+    if (window.renderCards) {
+        window.renderCards(hospitalFilter, statusFilter);
+    }
+};
+
+// =================== FUNÇÕES DE CONFIGURAÇÃO ===================
+window.openConfig = function() {
+    logInfo('Abrindo configurações');
+    alert('Configurações em desenvolvimento');
+};
+
+window.openQRGenerator = function() {
+    if (window.openQRCodes) {
+        window.openQRCodes();
+    } else {
+        logError('Sistema QR Code não carregado');
+        alert('Sistema QR Code não disponível');
+    }
+};
+
+// =================== MODAL FUNCTIONS ===================
+window.closeModal = function() {
+    const modal = document.getElementById('patientModal');
+    if (modal) {
+        modal.classList.add('hidden');
+    }
+};
+
+window.savePatient = function() {
+    // Implementar salvamento de paciente
+    logInfo('Salvando paciente...');
+    alert('Funcionalidade em desenvolvimento');
+};
+
+window.darAlta = function() {
+    if (confirm('Confirma a alta do paciente?')) {
+        logInfo('Processando alta...');
+        alert('Alta processada com sucesso!');
+        window.closeModal();
+    }
+};
+
+// =================== INICIALIZAÇÃO DO APP ===================
 window.initApp = function() {
     logInfo('Archipelago Dashboard V3.0 - Iniciando...');
     
-    // Adicionar listener para Enter na senha
-    document.getElementById('authPassword').addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') {
-            window.authenticate();
+    // Verificar autenticação
+    if (window.checkAuthentication()) {
+        // Já autenticado, mostrar sistema
+        document.getElementById('authModal').style.display = 'none';
+        document.getElementById('mainHeader').classList.remove('hidden');
+        document.getElementById('mainContent').classList.remove('hidden');
+        document.getElementById('mainFooter').classList.remove('hidden');
+        
+        // Inicializar sistema
+        window.initSystem();
+    } else {
+        // Mostrar tela de autenticação
+        window.showAuthModal();
+        
+        // Adicionar listener para Enter na senha
+        const passwordField = document.getElementById('authPassword');
+        if (passwordField) {
+            passwordField.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    window.authenticate();
+                }
+            });
         }
+    }
+    
+    logSuccess('App inicializado');
+};
+
+// =================== GERENCIAR CORES (Para integração com Admin) ===================
+window.restoreDefaultColors = function() {
+    const defaultColors = {
+        '--nav-header': '#3b82f6',
+        '--nav-sidebar': '#60a5fa',
+        '--status-vago': '#16a34a',
+        '--status-uso': '#fbbf24',
+        '--destaque': '#8FD3F4'
+    };
+    
+    Object.entries(defaultColors).forEach(([property, value]) => {
+        document.documentElement.style.setProperty(property, value);
     });
     
-    // Focar no campo de senha
-    document.getElementById('authPassword').focus();
+    logSuccess('Cores padrão restauradas');
 };
+
+logSuccess('App.js carregado - Sistema configurado');

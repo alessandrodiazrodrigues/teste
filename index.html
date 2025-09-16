@@ -42,7 +42,7 @@
         </div>
     </header>
 
-    <!-- Menu Lateral - EMOJIS REMOVIDOS -->
+    <!-- Menu Lateral - SEM EMOJIS + NOME CORRIGIDO -->
     <aside id="sideMenu" class="side-menu">
         <div class="menu-header">
             <h2>Menu</h2>
@@ -57,7 +57,7 @@
                 Dashboard Hospitalar
             </a>
             <a href="#" class="side-menu-item" data-tab="dash2" onclick="setActiveTab('dash2')">
-                Rede Hospitalar Externa
+                Dashboard Executivo
             </a>
         </nav>
         
@@ -84,26 +84,17 @@
         <section id="leitosView" class="section-leitos">
             <div class="leitos-header">
                 <h2>Gestão de Leitos Hospitalares</h2>
+                
+                <!-- *** PRIMEIRA BARRA: SÓ BOTÕES DOS HOSPITAIS *** -->
                 <div class="hospital-selector" id="hospitalSelector">
                     <button class="hospital-btn active" data-hospital="H1" onclick="selectHospital('H1')">Neomater</button>
                     <button class="hospital-btn" data-hospital="H2" onclick="selectHospital('H2')">Cruz Azul</button>
-                    <button class="hospital-btn" data-hospital="H3" onclick="selectHospital('H3')">Santa Marcelina</button>
-                    <button class="hospital-btn" data-hospital="H4" onclick="selectHospital('H4')">Santa Clara</button>
+                    <button class="hospital-btn" data-hospital="H3" onclick="selectHospital('H3')" style="display: none;">Santa Marcelina</button>
+                    <button class="hospital-btn" data-hospital="H4" onclick="selectHospital('H4')" style="display: none;">Santa Clara</button>
                 </div>
-                <div class="filter-controls">
-                    <select id="hospitalFilter" onchange="filterCards()">
-                        <option value="">Todos os Hospitais</option>
-                        <option value="H1">Neomater</option>
-                        <option value="H2">Cruz Azul</option>
-                        <option value="H3">Santa Marcelina</option>
-                        <option value="H4">Santa Clara</option>
-                    </select>
-                    <select id="statusFilter" onchange="filterCards()">
-                        <option value="">Todos os Status</option>
-                        <option value="vago">Vagos</option>
-                        <option value="ocupado">Ocupados</option>
-                    </select>
-                </div>
+                
+                <!-- *** FILTROS REMOVIDOS COMPLETAMENTE *** -->
+                <!-- Filtros desnecessários foram removidos conforme solicitado -->
             </div>
             <div id="cardsContainer" class="cards-grid"></div>
         </section>
@@ -141,7 +132,7 @@
             <div class="modal-footer">
                 <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
                 <button class="btn-save" onclick="savePatient()">Salvar</button>
-                <button class="btn-alta" onclick="darAlta()" style="display:none;">Dar Alta</button>
+                <button class="btn-alta" onclick="darAlta()" style="display:none;">Alta</button>
             </div>
         </div>
     </div>

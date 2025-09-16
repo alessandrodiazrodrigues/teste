@@ -1,406 +1,258 @@
-// =================== MAIN.JS - SISTEMA PRINCIPAL ===================
+// =================== MAIN.JS - CONTROLADOR PRINCIPAL ===================
 
-// Variáveis globais
-let timerInterval = null;
-let timeRemaining = 240; // 4 minutos em segundos
-let currentTab = 'leitos';
-
-// Inicialização do sistema
+// =================== INICIALIZAÇÃO GLOBAL ===================
 document.addEventListener('DOMContentLoaded', function() {
-    logInfo('Iniciando Archipelago Dashboard v3.0');
-    
-    // Verificar autenticação
-    if (!checkAuthentication()) {
-        showAuthModal();
-        return;
-    }
-    
-    // Inicializar sistema
-    initializeSystem();
+    // Aguardar um pouco para garantir que todos os módulos foram carregados
+    setTimeout(() => {
+        if (typeof window.initApp === 'function') {
+            window.initApp();
+        } else {
+            console.error('initApp não encontrada - verificar carregamento dos módulos');
+        }
+    }, 100);
 });
 
-// Função de inicialização principal
-function initializeSystem() {
-    logInfo('Sistema inicializando...');
-    
-    // Preparar dados para dashboards
-    prepareDataForDashboards();
-    
-    // Carregar dados iniciais
-    loadInitialData();
-    
-    // Iniciar timer de atualização
-    startUpdateTimer();
-    
-    // Configurar event listeners
-    setupEventListeners();
-    
-    // Renderizar cards iniciais
-    if (window.renderCards) {
-        window.renderCards();
-    }
-    
-    logSuccess('Sistema inicializado com sucesso');
-}
-
-// Preparar dados para dashboards
-function prepareDataForDashboards() {
-    // Garantir que os dados estejam no formato correto
-    if (!window.hospitalData) {
-        window.hospitalData = {
-            H1: { 
-                nome: 'Neomater', 
-                leitos: Array(13).fill(null).map((_, i) => ({
-                    id: `H1-L${i+1}`,
-                    numero: i + 1,
-                    tipo: i < 10 ? 'ENF/APTO' : 'UTI',
-                    status: 'vago',
-                    paciente: null
-                }))
-            },
-            H2: { 
-                nome: 'Cruz Azul', 
-                leitos: Array(16).fill(null).map((_, i) => ({
-                    id: `H2-L${i+1}`,
-                    numero: i + 1,
-                    tipo: i < 12 ? 'ENF/APTO' : 'UTI',
-                    status: 'vago',
-                    paciente: null
-                }))
-            },
-            H3: { 
-                nome: 'Santa Marcelina', 
-                leitos: Array(7).fill(null).map((_, i) => ({
-                    id: `H3-L${i+1}`,
-                    numero: i + 1,
-                    tipo: i < 5 ? 'ENF/APTO' : 'UTI',
-                    status: 'vago',
-                    paciente: null
-                }))
-            },
-            H4: { 
-                nome: 'Santa Clara', 
-                leitos: Array(13).fill(null).map((_, i) => ({
-                    id: `H4-L${i+1}`,
-                    numero: i + 1,
-                    tipo: i < 10 ? 'ENF/APTO' : 'UTI',
-                    status: 'vago',
-                    paciente: null
-                }))
-            }
-        };
-    }
-    
-    // Garantir que as listas estejam disponíveis globalmente
-    if (!window.CONCESSOES_LIST) {
-        window.CONCESSOES_LIST = [
-            "Transição Domiciliar",
-            "Aplicação domiciliar de medicamentos",
-            "Fisioterapia",
-            "Fonoaudiologia",
-            "Aspiração",
-            "Banho",
-            "Curativos",
-            "Oxigenoterapia",
-            "Recarga de O2",
-            "Orientação Nutricional - com dispositivo",
-            "Orientação Nutricional - sem dispositivo",
-            "Clister",
-            "PICC"
-        ];
-    }
-    
-    if (!window.LINHAS_CUIDADO_LIST) {
-        window.LINHAS_CUIDADO_LIST = [
-            "Assiste",
-            "APS",
-            "Cuidados Paliativos",
-            "ICO (Insuficiência Coronariana)",
-            "Oncologia",
-            "Pediatria",
-            "Programa Autoimune - Gastroenterologia",
-            "Programa Autoimune - Neuro-desmielinizante",
-            "Programa Autoimune - Neuro-muscular",
-            "Programa Autoimune - Reumatologia",
-            "Vida Mais Leve Care",
-            "Crônicos - Cardiologia",
-            "Crônicos - Endocrinologia",
-            "Crônicos - Geriatria",
-            "Crônicos - Melhor Cuidado",
-            "Crônicos - Neurologia",
-            "Crônicos - Pneumologia",
-            "Crônicos - Pós-bariátrica",
-            "Crônicos - Reumatologia"
-        ];
-    }
-}
-
-// Carregar dados iniciais
-function loadInitialData() {
-    logInfo('Carregando dados iniciais...');
-    
-    // Verificar se há dados salvos no localStorage
-    const savedData = localStorage.getItem('archipelagoData');
-    if (savedData) {
-        try {
-            const parsedData = JSON.parse(savedData);
-            window.hospitalData = parsedData.hospitals || window.hospitalData;
-            logSuccess('Dados carregados do localStorage');
-        } catch (error) {
-            logError('Erro ao carregar dados salvos:', error);
-        }
-    }
-    
-    // Carregar dados da API se configurado
-    if (window.fetchDataFromAPI) {
-        window.fetchDataFromAPI();
-    }
-}
-
-// Timer de atualização
-function startUpdateTimer() {
-    clearInterval(timerInterval);
-    timeRemaining = 240; // 4 minutos
-    
-    timerInterval = setInterval(() => {
-        timeRemaining--;
-        
-        if (timeRemaining <= 0) {
-            timeRemaining = 240;
-            updateData();
-        }
-        
-        updateTimerDisplay();
-    }, 1000);
-}
-
-function updateTimerDisplay() {
-    const minutes = Math.floor(timeRemaining / 60);
-    const seconds = timeRemaining % 60;
-    const display = `${minutes}:${seconds.toString().padStart(2, '0')}`;
-    
-    const timerElement = document.getElementById('updateTimer');
-    if (timerElement) {
-        timerElement.textContent = `Próxima atualização em: ${display}`;
-    }
-}
-
-// Função de atualização de dados
-window.updateData = function() {
-    logInfo('Atualizando dados...');
-    
-    // Resetar timer
-    timeRemaining = 240;
-    
-    // Atualizar dados da API
-    if (window.fetchDataFromAPI) {
-        window.fetchDataFromAPI();
-    }
-    
-    // Re-renderizar view atual
-    if (currentTab === 'leitos' && window.renderCards) {
-        window.renderCards();
-    } else if (currentTab === 'dash1' && window.renderDashboardHospitalar) {
-        window.renderDashboardHospitalar();
-    } else if (currentTab === 'dash2' && window.renderDashboardExecutivo) {
-        window.renderDashboardExecutivo();
-    }
-    
-    // Salvar dados no localStorage
-    saveDataToLocalStorage();
-    
-    logSuccess('Dados atualizados');
+// =================== FUNÇÕES DE UTILIDADE ===================
+window.formatarData = function(data) {
+    if (!data) return '';
+    const d = new Date(data);
+    return d.toLocaleDateString('pt-BR');
 };
 
-// Salvar dados no localStorage
-function saveDataToLocalStorage() {
+window.formatarHora = function(data) {
+    if (!data) return '';
+    const d = new Date(data);
+    return d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+};
+
+window.calcularIdade = function(dataNascimento) {
+    if (!dataNascimento) return 0;
+    const hoje = new Date();
+    const nascimento = new Date(dataNascimento);
+    let idade = hoje.getFullYear() - nascimento.getFullYear();
+    const mes = hoje.getMonth() - nascimento.getMonth();
+    
+    if (mes < 0 || (mes === 0 && hoje.getDate() < nascimento.getDate())) {
+        idade--;
+    }
+    
+    return idade;
+};
+
+// =================== GERENCIAMENTO DE ESTADO ===================
+window.getSystemState = function() {
+    return {
+        authenticated: window.isAuthenticated,
+        currentView: window.currentView,
+        currentHospital: window.currentHospital,
+        hospitalsData: window.hospitalData
+    };
+};
+
+window.saveSystemState = function() {
     try {
-        const dataToSave = {
-            hospitals: window.hospitalData,
-            lastUpdate: new Date().toISOString()
-        };
-        localStorage.setItem('archipelagoData', JSON.stringify(dataToSave));
-        logInfo('Dados salvos no localStorage');
+        const state = window.getSystemState();
+        localStorage.setItem('archipelago_state', JSON.stringify(state));
+        logInfo('Estado do sistema salvo');
     } catch (error) {
-        logError('Erro ao salvar dados:', error);
+        logError('Erro ao salvar estado do sistema', error);
     }
-}
+};
 
-// Navegação entre tabs
-window.setActiveTab = function(tab) {
-    logInfo(`Mudando para tab: ${tab}`);
-    
-    currentTab = tab;
-    
-    // Esconder todas as seções
-    document.querySelectorAll('main section').forEach(section => {
-        section.classList.add('hidden');
-    });
-    
-    // Mostrar seção ativa
-    let activeSection;
-    if (tab === 'leitos') {
-        activeSection = document.getElementById('leitosView');
-    } else {
-        activeSection = document.getElementById(tab);
-    }
-    
-    if (activeSection) {
-        activeSection.classList.remove('hidden');
-    }
-    
-    // Atualizar menu lateral
-    document.querySelectorAll('.side-menu-item').forEach(item => {
-        item.classList.remove('active');
-        if (item.dataset.tab === tab) {
-            item.classList.add('active');
+window.loadSystemState = function() {
+    try {
+        const savedState = localStorage.getItem('archipelago_state');
+        if (savedState) {
+            const state = JSON.parse(savedState);
+            
+            // Restaurar apenas dados seguros (não autenticação)
+            if (state.currentView) {
+                window.currentView = state.currentView;
+            }
+            if (state.currentHospital) {
+                window.currentHospital = state.currentHospital;
+            }
+            
+            logInfo('Estado do sistema carregado');
+            return state;
         }
-    });
-    
-    // Renderizar conteúdo específico da tab
-    if (tab === 'leitos' && window.renderCards) {
-        window.renderCards();
-    } else if (tab === 'dash1') {
-        setTimeout(() => {
-            if (window.renderDashboardHospitalar) {
-                window.renderDashboardHospitalar();
-            }
-        }, 100);
-    } else if (tab === 'dash2') {
-        setTimeout(() => {
-            if (window.renderDashboardExecutivo) {
-                window.renderDashboardExecutivo();
-            }
-        }, 100);
+    } catch (error) {
+        logError('Erro ao carregar estado do sistema', error);
     }
-    
-    // Fechar menu em mobile
-    if (window.innerWidth <= 1024) {
-        closeMenu();
-    }
+    return null;
 };
 
-// Toggle Menu
-window.toggleMenu = function() {
-    const sideMenu = document.getElementById('side-menu');
-    const menuOverlay = document.getElementById('menuOverlay');
+// =================== TRATAMENTO DE ERROS GLOBAIS ===================
+window.addEventListener('error', function(event) {
+    logError('Erro JavaScript:', event.error);
     
-    if (sideMenu.classList.contains('open')) {
-        closeMenu();
-    } else {
-        openMenu();
+    // Mostrar erro para desenvolvimento (remover em produção)
+    if (event.error && event.error.stack) {
+        console.group('🔍 Detalhes do Erro:');
+        console.error('Mensagem:', event.error.message);
+        console.error('Arquivo:', event.filename);
+        console.error('Linha:', event.lineno);
+        console.error('Stack:', event.error.stack);
+        console.groupEnd();
     }
-};
+});
 
-function openMenu() {
-    const sideMenu = document.getElementById('side-menu');
-    const menuOverlay = document.getElementById('menuOverlay');
-    
-    sideMenu.classList.add('open');
-    menuOverlay.classList.add('show');
-    document.body.classList.add('menu-open');
-}
+window.addEventListener('unhandledrejection', function(event) {
+    logError('Promise rejeitada:', event.reason);
+    event.preventDefault(); // Previne que apareça no console como erro não tratado
+});
 
-function closeMenu() {
-    const sideMenu = document.getElementById('side-menu');
-    const menuOverlay = document.getElementById('menuOverlay');
-    
-    sideMenu.classList.remove('open');
-    menuOverlay.classList.remove('show');
-    document.body.classList.remove('menu-open');
-}
-
-// Event Listeners
-function setupEventListeners() {
-    // Menu toggle
-    const menuToggle = document.getElementById('menuToggle');
-    if (menuToggle) {
-        menuToggle.addEventListener('click', toggleMenu);
-    }
-    
-    // Menu items
-    document.querySelectorAll('.side-menu-item').forEach(item => {
-        item.addEventListener('click', function(e) {
-            e.preventDefault();
-            const tab = this.dataset.tab;
-            if (tab) {
-                setActiveTab(tab);
-            }
-        });
-    });
-    
-    // Filtros
-    const hospitalFilter = document.getElementById('hospitalFilter');
-    if (hospitalFilter) {
-        hospitalFilter.addEventListener('change', filterCards);
-    }
-    
-    const statusFilter = document.getElementById('statusFilter');
-    if (statusFilter) {
-        statusFilter.addEventListener('change', filterCards);
-    }
-    
-    // Responsividade
-    window.addEventListener('resize', handleResize);
-}
-
-// Filtrar cards
-window.filterCards = function() {
-    const hospitalFilter = document.getElementById('hospitalFilter').value;
-    const statusFilter = document.getElementById('statusFilter').value;
-    
-    if (window.renderCards) {
-        window.renderCards(hospitalFilter, statusFilter);
-    }
-};
-
-// Handle resize
-function handleResize() {
+// =================== RESPONSIVIDADE ===================
+window.addEventListener('resize', function() {
+    // Fechar menu em telas grandes
     if (window.innerWidth > 1024) {
-        closeMenu();
+        const menu = document.getElementById('sideMenu');
+        const overlay = document.getElementById('menuOverlay');
+        
+        if (menu && menu.classList.contains('open')) {
+            menu.classList.remove('open');
+            if (overlay) overlay.classList.remove('show');
+            document.body.classList.remove('menu-open');
+        }
     }
+    
+    // Re-renderizar gráficos se necessário
+    if (window.chartInstances && Object.keys(window.chartInstances).length > 0) {
+        setTimeout(() => {
+            Object.values(window.chartInstances).forEach(chart => {
+                if (chart && typeof chart.resize === 'function') {
+                    chart.resize();
+                }
+            });
+        }, 100);
+    }
+});
+
+// =================== ATALHOS DE TECLADO ===================
+document.addEventListener('keydown', function(event) {
+    // Alt + 1, 2, 3 para navegar entre tabs
+    if (event.altKey && !event.ctrlKey && !event.shiftKey) {
+        switch(event.key) {
+            case '1':
+                event.preventDefault();
+                if (window.setActiveTab) window.setActiveTab('leitos');
+                break;
+            case '2':
+                event.preventDefault();
+                if (window.setActiveTab) window.setActiveTab('dash1');
+                break;
+            case '3':
+                event.preventDefault();
+                if (window.setActiveTab) window.setActiveTab('dash2');
+                break;
+        }
+    }
+    
+    // Esc para fechar modais
+    if (event.key === 'Escape') {
+        // Fechar menu lateral
+        const menu = document.getElementById('sideMenu');
+        if (menu && menu.classList.contains('open')) {
+            window.toggleMenu();
+        }
+        
+        // Fechar modais
+        const modals = document.querySelectorAll('.modal:not(.hidden), .admin-modal, .qr-modal');
+        modals.forEach(modal => {
+            const closeBtn = modal.querySelector('.close-btn, .modal-close, [onclick*="close"]');
+            if (closeBtn) closeBtn.click();
+        });
+    }
+    
+    // Ctrl + R para atualizar dados
+    if (event.ctrlKey && event.key === 'r' && window.isAuthenticated) {
+        event.preventDefault();
+        if (window.updateData) window.updateData();
+    }
+});
+
+// =================== LIFECYCLE HOOKS ===================
+window.addEventListener('beforeunload', function(event) {
+    // Salvar estado antes de sair
+    window.saveSystemState();
+    
+    // Limpar timers
+    if (window.timerInterval) {
+        clearInterval(window.timerInterval);
+    }
+    
+    if (window.qrTimeoutTimer) {
+        clearInterval(window.qrTimeoutTimer);
+    }
+});
+
+// =================== DETECÇÃO DE CONECTIVIDADE ===================
+window.addEventListener('online', function() {
+    logSuccess('Conexão restaurada');
+    
+    // Atualizar dados quando voltar online
+    if (window.isAuthenticated && window.updateData) {
+        setTimeout(() => {
+            window.updateData();
+        }, 2000);
+    }
+});
+
+window.addEventListener('offline', function() {
+    logInfo('Sem conexão com internet');
+});
+
+// =================== PERFORMANCE MONITORING ===================
+window.addEventListener('load', function() {
+    // Medir performance de carregamento
+    if (performance.timing) {
+        const loadTime = performance.timing.loadEventEnd - performance.timing.navigationStart;
+        logInfo(`Página carregada em ${loadTime}ms`);
+    }
+    
+    // Verificar se todos os módulos críticos foram carregados
+    const requiredModules = [
+        'CONFIG', 'loadHospitalData', 'renderCards', 
+        'renderDashboardHospitalar', 'renderDashboardExecutivo',
+        'authenticate', 'setActiveTab'
+    ];
+    
+    const missingModules = requiredModules.filter(module => typeof window[module] === 'undefined');
+    
+    if (missingModules.length > 0) {
+        logError('Módulos não carregados:', missingModules.join(', '));
+    } else {
+        logSuccess('Todos os módulos críticos carregados');
+    }
+});
+
+// =================== DEBUG HELPERS (Remover em produção) ===================
+window.debug = {
+    getState: () => window.getSystemState(),
+    getHospitalData: () => window.hospitalData,
+    getConfig: () => window.CONFIG,
+    reloadData: () => window.loadHospitalData && window.loadHospitalData(),
+    testAuth: (password) => {
+        document.getElementById('authPassword').value = password;
+        window.authenticate();
+    }
+};
+
+// =================== POLYFILLS PARA BROWSERS ANTIGOS ===================
+if (!String.prototype.padStart) {
+    String.prototype.padStart = function padStart(targetLength, padString) {
+        targetLength = targetLength >> 0;
+        padString = String(typeof padString !== 'undefined' ? padString : ' ');
+        if (this.length >= targetLength) {
+            return String(this);
+        }
+        targetLength = targetLength - this.length;
+        if (targetLength > padString.length) {
+            padString += padString.repeat(targetLength / padString.length);
+        }
+        return padString.slice(0, targetLength) + String(this);
+    };
 }
 
-// Funções de configuração
-window.openConfig = function() {
-    logInfo('Abrindo configurações');
-    alert('Configurações em desenvolvimento');
-};
-
-window.openQRGenerator = function() {
-    logInfo('Abrindo gerador de QR Codes');
-    alert('Gerador de QR Codes em desenvolvimento');
-};
-
-window.openAdmin = function() {
-    logInfo('Abrindo área administrativa');
-    alert('Área administrativa em desenvolvimento');
-};
-
-// Modal functions
-window.closeModal = function() {
-    const modal = document.getElementById('patientModal');
-    if (modal) {
-        modal.classList.add('hidden');
-    }
-};
-
-// Funções utilitárias
-window.logInfo = function(message) {
-    console.log(`%c[INFO] ${message}`, 'color: #3b82f6');
-};
-
-window.logSuccess = function(message) {
-    console.log(`%c[SUCCESS] ${message}`, 'color: #10b981');
-};
-
-window.logWarning = function(message) {
-    console.warn(`%c[WARNING] ${message}`, 'color: #f59e0b');
-};
-
-window.logError = function(message, error) {
-    console.error(`%c[ERROR] ${message}`, 'color: #ef4444', error);
-};
-
-// Inicializar
-logSuccess('Main.js carregado - Sistema pronto');
+// =================== INICIALIZAÇÃO FINAL ===================
+logSuccess('Main.js carregado - Sistema pronto para inicialização');

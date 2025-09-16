@@ -3,17 +3,63 @@
 window.renderDashboardExecutivo = function() {
     logInfo('Renderizando Dashboard Executivo');
     
-    const container = document.getElementById('executiveDashboardContainer');
-    if (!container) return;
+    const container = document.getElementById('executiveDashboardContainer') || 
+        document.getElementById('dashExecutivoContent') || 
+        (() => {
+            const section = document.getElementById('dash2');
+            if (section) {
+                const newContainer = document.createElement('div');
+                newContainer.id = 'executiveDashboardContainer';
+                section.appendChild(newContainer);
+                return newContainer;
+            }
+            return null;
+        })();
+    
+    if (!container) {
+        logError('Container para Dashboard Executivo não encontrado');
+        return;
+    }
     
     const hoje = new Date().toLocaleDateString('pt-BR');
-    const kpis = calcularKPIsExecutivos();
+    
+    // NOVO: Verificar quais hospitais têm dados reais
+    const hospitaisComDados = Object.keys(CONFIG.HOSPITAIS).filter(hospitalId => {
+        const hospital = window.hospitalData[hospitalId];
+        return hospital && hospital.leitos && hospital.leitos.some(l => 
+            l.status === 'ocupado' && l.paciente && l.paciente.nome && l.paciente.matricula
+        );
+    });
+    
+    if (hospitaisComDados.length === 0) {
+        container.innerHTML = `
+            <div style="text-align: center; padding: 50px; color: #666;">
+                <h2 style="color: #1a1f2e; margin-bottom: 20px;">Rede Hospitalar Externa</h2>
+                <div style="background: #f8f9fa; border-radius: 8px; padding: 30px; max-width: 600px; margin: 0 auto;">
+                    <h3 style="color: #6c757d; margin-bottom: 15px;">📋 Aguardando Dados da Planilha</h3>
+                    <p style="margin-bottom: 10px;">Nenhum hospital possui dados de pacientes na planilha Google.</p>
+                    <p><strong>Hospitais configurados:</strong> ${Object.values(CONFIG.HOSPITAIS).map(h => h.nome).join(', ')}</p>
+                    <p style="color: #28a745; margin-top: 15px;"><em>✅ API conectada e funcionando</em></p>
+                </div>
+            </div>
+        `;
+        return;
+    }
+    
+    const kpis = calcularKPIsExecutivos(hospitaisComDados);
     
     // HTML do Dashboard
     container.innerHTML = `
         <h2 style="text-align: center; color: #1a1f2e; margin-bottom: 30px; font-size: 24px; font-weight: 700;">
             Rede Hospitalar Externa
         </h2>
+        
+        <!-- Aviso sobre dados reais -->
+        <div style="background: #f0f9ff; border: 1px solid #0ea5e9; border-radius: 8px; padding: 15px; margin-bottom: 20px; text-align: center;">
+            <p style="margin: 0; color: #0369a1; font-size: 14px;">
+                📊 <strong>Dados reais da planilha Google</strong> • ${hospitaisComDados.length} hospitais ativos • ${kpis.leitosOcupados} pacientes internados
+            </p>
+        </div>
         
         <!-- Grid de KPIs -->
         <div class="executive-kpis-grid">
@@ -25,7 +71,7 @@ window.renderDashboardExecutivo = function() {
                     <div class="gauge-label">OCUPAÇÃO GERAL</div>
                 </div>
                 <div class="hospitais-list">
-                    ${Object.keys(CONFIG.HOSPITAIS).map(hospitalId => {
+                    ${hospitaisComDados.map(hospitalId => {
                         const hospital = CONFIG.HOSPITAIS[hospitalId];
                         const ocupacao = calcularOcupacaoHospital(hospitalId);
                         return `
@@ -40,8 +86,8 @@ window.renderDashboardExecutivo = function() {
             
             <!-- KPIs Linha 1 -->
             <div class="kpi-box">
-                <div class="kpi-value">${kpis.totalHospitais}</div>
-                <div class="kpi-label">HOSPITAIS</div>
+                <div class="kpi-value">${hospitaisComDados.length}</div>
+                <div class="kpi-label">HOSPITAIS ATIVOS</div>
             </div>
             
             <div class="kpi-box">
@@ -106,15 +152,14 @@ window.renderDashboardExecutivo = function() {
     // Renderizar gráficos após o DOM estar pronto
     setTimeout(() => {
         renderGaugeOcupacao(kpis.ocupacaoGeral);
-        renderGraficoAltasExecutivo();
-        renderGraficoConcessoesExecutivo();
-        renderGraficoLinhasExecutivo();
+        renderGraficoAltasExecutivo(hospitaisComDados);
+        renderGraficoConcessoesExecutivo(hospitaisComDados);
+        renderGraficoLinhasExecutivo(hospitaisComDados);
     }, 100);
 };
 
-// Calcular KPIs consolidados
-function calcularKPIsExecutivos() {
-    const hospitaisAtivos = Object.keys(CONFIG.HOSPITAIS);
+// Calcular KPIs consolidados APENAS dos hospitais com dados reais
+function calcularKPIsExecutivos(hospitaisComDados = []) {
     let totalLeitos = 0;
     let leitosOcupados = 0;
     let leitosEmAlta = 0;
@@ -124,7 +169,7 @@ function calcularKPIsExecutivos() {
     let totalPacientes = 0;
     let tempoTotalInternacao = 0;
     
-    hospitaisAtivos.forEach(hospitalId => {
+    hospitaisComDados.forEach(hospitalId => {
         const hospital = window.hospitalData[hospitalId];
         if (!hospital) return;
         
@@ -165,7 +210,7 @@ function calcularKPIsExecutivos() {
     });
     
     return {
-        totalHospitais: hospitaisAtivos.length,
+        totalHospitais: hospitaisComDados.length,
         totalLeitos,
         leitosOcupados,
         leitosVagos: totalLeitos - leitosOcupados,
@@ -177,7 +222,7 @@ function calcularKPIsExecutivos() {
     };
 }
 
-// Calcular ocupação por hospital
+// Calcular ocupação por hospital (somente se tiver dados)
 function calcularOcupacaoHospital(hospitalId) {
     const hospital = window.hospitalData[hospitalId];
     if (!hospital) return { ocupados: 0, total: 0, percentual: 0 };
@@ -223,12 +268,12 @@ function renderGaugeOcupacao(percentual) {
     });
 }
 
-// Gráfico de Altas Executivo
-function renderGraficoAltasExecutivo() {
+// Gráfico de Altas Executivo (somente hospitais com dados)
+function renderGraficoAltasExecutivo(hospitaisComDados) {
     const ctx = document.getElementById('chartAltasExecutivo');
     if (!ctx) return;
     
-    const dados = calcularDadosAltasExecutivo();
+    const dados = calcularDadosAltasExecutivo(hospitaisComDados);
     
     destroyChart('altasExecutivo');
     
@@ -263,12 +308,12 @@ function renderGraficoAltasExecutivo() {
     });
 }
 
-// Gráfico de Concessões Executivo
-function renderGraficoConcessoesExecutivo() {
+// Gráfico de Concessões Executivo (somente hospitais com dados)
+function renderGraficoConcessoesExecutivo(hospitaisComDados) {
     const ctx = document.getElementById('chartConcessoesExecutivo');
     if (!ctx) return;
     
-    const dados = calcularDadosConcessoesExecutivo();
+    const dados = calcularDadosConcessoesExecutivo(hospitaisComDados);
     
     destroyChart('concessoesExecutivo');
     
@@ -299,12 +344,12 @@ function renderGraficoConcessoesExecutivo() {
     });
 }
 
-// Gráfico de Linhas de Cuidado Executivo
-function renderGraficoLinhasExecutivo() {
+// Gráfico de Linhas de Cuidado Executivo (somente hospitais com dados)
+function renderGraficoLinhasExecutivo(hospitaisComDados) {
     const ctx = document.getElementById('chartLinhasExecutivo');
     if (!ctx) return;
     
-    const dados = calcularDadosLinhasExecutivo();
+    const dados = calcularDadosLinhasExecutivo(hospitaisComDados);
     
     destroyChart('linhasExecutivo');
     
@@ -335,12 +380,12 @@ function renderGraficoLinhasExecutivo() {
     });
 }
 
-// Funções de cálculo de dados
-function calcularDadosAltasExecutivo() {
+// Funções de cálculo de dados - APENAS hospitais com dados reais
+function calcularDadosAltasExecutivo(hospitaisComDados) {
     const categorias = ['Hoje Ouro', 'Hoje 2R', 'Hoje 3R', '24h Ouro', '24h 2R', '24h 3R', '48h', '72h', '96h'];
     const hospitais = [];
     
-    Object.keys(CONFIG.HOSPITAIS).forEach(hospitalId => {
+    hospitaisComDados.forEach(hospitalId => {
         const hospital = CONFIG.HOSPITAIS[hospitalId];
         const hospitalData = window.hospitalData[hospitalId];
         if (!hospitalData) return;
@@ -363,7 +408,7 @@ function calcularDadosAltasExecutivo() {
     return { categorias, hospitais };
 }
 
-function calcularDadosConcessoesExecutivo() {
+function calcularDadosConcessoesExecutivo(hospitaisComDados) {
     const periodos = ['Hoje', '24h', '48h', '72h', '96h'];
     const concessoesMap = new Map();
     
@@ -372,8 +417,8 @@ function calcularDadosConcessoesExecutivo() {
         concessoesMap.set(conc, periodos.map(() => 0));
     });
     
-    // REGRA CRÍTICA: Contar apenas no dia exato da alta
-    Object.keys(CONFIG.HOSPITAIS).forEach(hospitalId => {
+    // REGRA CRÍTICA: Contar apenas no dia exato da alta - SOMENTE hospitais com dados
+    hospitaisComDados.forEach(hospitalId => {
         const hospitalData = window.hospitalData[hospitalId];
         if (!hospitalData) return;
         
@@ -414,7 +459,7 @@ function calcularDadosConcessoesExecutivo() {
     return { periodos, concessoes };
 }
 
-function calcularDadosLinhasExecutivo() {
+function calcularDadosLinhasExecutivo(hospitaisComDados) {
     const periodos = ['Hoje', '24h', '48h', '72h', '96h'];
     const linhasMap = new Map();
     
@@ -423,8 +468,8 @@ function calcularDadosLinhasExecutivo() {
         linhasMap.set(linha, periodos.map(() => 0));
     });
     
-    // REGRA CRÍTICA: Contar apenas no dia exato da alta
-    Object.keys(CONFIG.HOSPITAIS).forEach(hospitalId => {
+    // REGRA CRÍTICA: Contar apenas no dia exato da alta - SOMENTE hospitais com dados
+    hospitaisComDados.forEach(hospitalId => {
         const hospitalData = window.hospitalData[hospitalId];
         if (!hospitalData) return;
         
@@ -465,4 +510,4 @@ function calcularDadosLinhasExecutivo() {
     return { periodos, linhas };
 }
 
-logSuccess('Dashboard Executivo carregado');
+logSuccess('Dashboard Executivo carregado - SOMENTE DADOS REAIS DA PLANILHA');

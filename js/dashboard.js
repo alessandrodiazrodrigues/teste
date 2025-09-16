@@ -1,365 +1,324 @@
-/* =================== ESTILOS DOS DASHBOARDS =================== */
+// =================== DASHBOARD EXECUTIVO ===================
+window.renderDashboardExecutivo = function() {
+    logInfo('Renderizando Dashboard Executivo...');
+    
+    const container = document.getElementById('dashExecutivoContent');
+    if (!container) {
+        logError('Container dashExecutivoContent não encontrado');
+        return;
+    }
+    
+    // Calcular KPIs consolidados
+    let totalLeitos = 0;
+    let leitosOcupados = 0;
+    let leitosEmAlta = 0;
+    let ppsTotal = 0;
+    let ppsCont = 0;
+    let spictElegiveis = 0;
+    let spictTotal = 0;
+    
+    Object.values(window.hospitalData).forEach(hospital => {
+        totalLeitos += hospital.leitos.length;
+        hospital.leitos.forEach(leito => {
+            if (leito.status === 'ocupado' && leito.paciente) {
+                leitosOcupados++;
+                
+                if (leito.paciente.previsaoAlta && leito.paciente.previsaoAlta.startsWith('Hoje')) {
+                    leitosEmAlta++;
+                }
+                
+                if (leito.paciente.pps) {
+                    const ppsNum = parseInt(leito.paciente.pps);
+                    if (!isNaN(ppsNum)) {
+                        ppsTotal += ppsNum;
+                        ppsCont++;
+                    }
+                }
+                
+                if (leito.paciente.spictBr === 'Elegível') {
+                    spictElegiveis++;
+                }
+                spictTotal++;
+            }
+        });
+    });
+    
+    const leitosVagos = totalLeitos - leitosOcupados;
+    const ocupacaoGeral = totalLeitos > 0 ? Math.round((leitosOcupados / totalLeitos) * 100) : 0;
+    const ppsMedia = ppsCont > 0 ? Math.round(ppsTotal / ppsCont) : 0;
+    const spictPerc = spictTotal > 0 ? Math.round((spictElegiveis / spictTotal) * 100) : 0;
+    
+    container.innerHTML = `
+        <div class="dashboard-executivo">
+            <!-- Título Principal -->
+            <h2 style="text-align: center; color: #1a1f2e; margin-bottom: 30px; font-size: 24px; font-weight: 700;">
+                Rede Hospitalar Externa
+            </h2>
+            
+            <!-- KPIs Grid (6 colunas x 2 linhas) -->
+            <div class="executive-kpis-grid">
+                <!-- Box Principal com Gauge -->
+                <div class="kpi-principal">
+                    <div class="gauge-container">
+                        <canvas id="gaugeExecutivo" width="200" height="100"></canvas>
+                        <div class="gauge-value">${ocupacaoGeral}%</div>
+                        <div class="gauge-label">OCUPAÇÃO GERAL</div>
+                    </div>
+                    <div class="hospitais-list">
+                        ${Object.entries(window.hospitalData).map(([id, hospital]) => {
+                            const ocupados = hospital.leitos.filter(l => l.status === 'ocupado').length;
+                            const perc = hospital.leitos.length > 0 ? Math.round((ocupados / hospital.leitos.length) * 100) : 0;
+                            return `<div class="hospital-item">
+                                <span class="hospital-nome">${hospital.nome}</span>
+                                <span class="hospital-pct">${perc}%</span>
+                            </div>`;
+                        }).join('')}
+                    </div>
+                </div>
+                
+                <!-- KPIs Linha 1 -->
+                <div class="kpi-box">
+                    <div class="kpi-value">${Object.keys(window.hospitalData).length}</div>
+                    <div class="kpi-label">HOSPITAIS</div>
+                </div>
+                <div class="kpi-box">
+                    <div class="kpi-value">${totalLeitos}</div>
+                    <div class="kpi-label">TOTAL DE LEITOS</div>
+                </div>
+                <div class="kpi-box">
+                    <div class="kpi-value">${leitosOcupados}</div>
+                    <div class="kpi-label">LEITOS OCUPADOS</div>
+                </div>
+                <div class="kpi-box">
+                    <div class="kpi-value">${leitosVagos}</div>
+                    <div class="kpi-label">LEITOS VAGOS</div>
+                </div>
+                
+                <!-- KPIs Linha 2 -->
+                <div class="kpi-box">
+                    <div class="kpi-value">${leitosEmAlta}</div>
+                    <div class="kpi-label">LEITOS EM ALTA</div>
+                </div>
+                <div class="kpi-box">
+                    <div class="kpi-value">3.2d</div>
+                    <div class="kpi-label">TPH</div>
+                </div>
+                <div class="kpi-box">
+                    <div class="kpi-value">${ppsMedia}%</div>
+                    <div class="kpi-label">PPS MÉDIO</div>
+                </div>
+                <div class="kpi-box">
+                    <div class="kpi-value">${spictPerc}%</div>
+                    <div class="kpi-label">SPICT-BR ELEGÍVEL</div>
+                </div>
+            </div>
+            
+            <!-- Gráficos Executivos -->
+            <div class="executive-charts">
+                <div class="chart-container">
+                    <h3>Análise Preditiva de Altas em ${new Date().toLocaleDateString('pt-BR')}</h3>
+                    <canvas id="graficoAltasExecutivo"></canvas>
+                </div>
+                <div class="chart-container">
+                    <h3>Análise Preditiva de Concessões em ${new Date().toLocaleDateString('pt-BR')}</h3>
+                    <canvas id="graficoConcessoesExecutivo"></canvas>
+                </div>
+                <div class="chart-container">
+                    <h3>Análise Preditiva de Linha de Cuidados em ${new Date().toLocaleDateString('pt-BR')}</h3>
+                    <canvas id="graficoLinhasExecutivo"></canvas>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Renderizar gráficos após DOM estar pronto
+    setTimeout(() => {
+        if (window.renderGaugeExecutivo) {
+            window.renderGaugeExecutivo(ocupacaoGeral);
+        }
+        if (window.renderGraficosExecutivos) {
+            window.renderGraficosExecutivos();
+        }
+    }, 100);
+    
+    logSuccess('Dashboard Executivo renderizado');
+};
 
-/* === DASHBOARD EXECUTIVO === */
-.executive-kpis-grid {
+// =================== DASHBOARD HOSPITALAR ===================
+window.renderDashboardHospitalar = function() {
+    logInfo('Renderizando Dashboard Hospitalar...');
+    
+    const container = document.getElementById('dashHospitalarContent');
+    if (!container) {
+        logError('Container dashHospitalarContent não encontrado');
+        return;
+    }
+    
+    let html = '<div class="dashboard-hospitalar">';
+    html += `<h2 style="text-align: center; color: #1a1f2e; margin-bottom: 30px; font-size: 24px; font-weight: 700;">
+                Dashboard Hospitalar
+             </h2>`;
+    html += '<div class="hospitalar-grid">';
+    
+    Object.entries(window.hospitalData).forEach(([hospitalId, hospital]) => {
+        const ocupados = hospital.leitos.filter(l => l.status === 'ocupado').length;
+        const vagos = hospital.leitos.length - ocupados;
+        const emAlta = hospital.leitos.filter(l => 
+            l.status === 'ocupado' && 
+            l.paciente &&
+            l.paciente.previsaoAlta && 
+            l.paciente.previsaoAlta.startsWith('Hoje')
+        ).length;
+        const ocupacao = hospital.leitos.length > 0 ? Math.round((ocupados / hospital.leitos.length) * 100) : 0;
+        
+        html += `
+            <div class="hospital-section" data-hospital="${hospitalId}">
+                <h3 class="hospital-title">${hospital.nome}</h3>
+                
+                <!-- KPIs do Hospital -->
+                <div class="hospital-kpis">
+                    <div class="hospital-gauge">
+                        <canvas id="gauge${hospitalId}" width="120" height="60"></canvas>
+                        <div class="gauge-label">${ocupacao}%</div>
+                    </div>
+                    <div class="kpi-mini">
+                        <div class="kpi-value">${hospital.leitos.length}</div>
+                        <div class="kpi-label">TOTAL</div>
+                    </div>
+                    <div class="kpi-mini">
+                        <div class="kpi-value">${ocupados}</div>
+                        <div class="kpi-label">OCUPADOS</div>
+                    </div>
+                    <div class="kpi-mini">
+                        <div class="kpi-value">${vagos}</div>
+                        <div class="kpi-label">VAGOS</div>
+                    </div>
+                    <div class="kpi-mini">
+                        <div class="kpi-value">${emAlta}</div>
+                        <div class="kpi-label">EM ALTA</div>
+                    </div>
+                </div>
+                
+                <!-- Gráficos do Hospital -->
+                <div class="hospital-graficos">
+                    <div class="chart-container">
+                        <h4>Projeção de Altas em ${new Date().toLocaleDateString('pt-BR')}</h4>
+                        <canvas id="graficoAltas${hospitalId}"></canvas>
+                    </div>
+                    <div class="chart-container">
+                        <h4>Projeção de Concessões em ${new Date().toLocaleDateString('pt-BR')}</h4>
+                        <div class="chart-type-selector">
+                            <button class="chart-type-btn" onclick="changeChartType('${hospitalId}', 'concessoes', 'scatter')">Bolinhas</button>
+                            <button class="chart-type-btn" onclick="changeChartType('${hospitalId}', 'concessoes', 'bubble')">Agrupadas</button>
+                            <button class="chart-type-btn active" onclick="changeChartType('${hospitalId}', 'concessoes', 'bar')">Barras</button>
+                            <button class="chart-type-btn" onclick="changeChartType('${hospitalId}', 'concessoes', 'line')">Linhas</button>
+                            <button class="chart-type-btn" onclick="changeChartType('${hospitalId}', 'concessoes', '3d')">3D</button>
+                        </div>
+                        <canvas id="graficoConcessoes${hospitalId}"></canvas>
+                    </div>
+                    <div class="chart-container">
+                        <h4>Projeção Linha de Cuidados em ${new Date().toLocaleDateString('pt-BR')}</h4>
+                        <div class="chart-type-selector">
+                            <button class="chart-type-btn" onclick="changeChartType('${hospitalId}', 'linhas', 'scatter')">Bolinhas</button>
+                            <button class="chart-type-btn" onclick="changeChartType('${hospitalId}', 'linhas', 'bubble')">Agrupadas</button>
+                            <button class="chart-type-btn active" onclick="changeChartType('${hospitalId}', 'linhas', 'bar')">Barras</button>
+                            <button class="chart-type-btn" onclick="changeChartType('${hospitalId}', 'linhas', 'line')">Linhas</button>
+                            <button class="chart-type-btn" onclick="changeChartType('${hospitalId}', 'linhas', '3d')">3D</button>
+                        </div>
+                        <canvas id="graficoLinhas${hospitalId}"></canvas>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    
+    html += '</div></div>';
+    container.innerHTML = html;
+    
+    // Renderizar todos os gráficos
+    setTimeout(() => {
+        Object.keys(window.hospitalData).forEach(hospitalId => {
+            if (window.renderHospitalCharts) {
+                window.renderHospitalCharts(hospitalId);
+            }
+        });
+    }, 100);
+    
+    logSuccess('Dashboard Hospitalar renderizado');
+};
+
+// =================== FUNÇÃO PARA MUDANÇA DE TIPO DE GRÁFICO ===================
+window.changeChartType = function(hospitalId, chartType, newType) {
+    logInfo(`Mudando tipo de gráfico: ${hospitalId} - ${chartType} - ${newType}`);
+    
+    // Atualizar botões visuais
+    const chartContainer = document.getElementById(`grafico${chartType === 'concessoes' ? 'Concessoes' : 'Linhas'}${hospitalId}`);
+    if (chartContainer) {
+        const selector = chartContainer.closest('.chart-container').querySelector('.chart-type-selector');
+        if (selector) {
+            selector.querySelectorAll('.chart-type-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+        }
+    }
+    
+    // Re-renderizar gráfico
+    if (chartType === 'concessoes' && window.renderHospitalConcessoesChart) {
+        window.renderHospitalConcessoesChart(hospitalId, newType);
+    } else if (chartType === 'linhas' && window.renderHospitalLinhasChart) {
+        window.renderHospitalLinhasChart(hospitalId, newType);
+    }
+};
+
+// =================== ESTILOS ADICIONAIS PARA DASHBOARDS ===================
+const dashboardStyles = `
+<style>
+.dashboard-executivo {
+    padding: 20px;
+}
+
+.dashboard-hospitalar {
+    padding: 20px;
+}
+
+.hospital-graficos {
     display: grid;
-    grid-template-columns: repeat(6, 1fr);
-    grid-template-rows: repeat(2, 120px);
-    gap: 16px;
-    margin-bottom: 30px;
-    padding: 20px;
-    background: white;
-    border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.kpi-principal {
-    grid-column: span 2;
-    grid-row: span 2;
-    background: #1a1f2e;
-    border-radius: 12px;
-    padding: 20px;
-    display: flex;
-    align-items: center;
-    color: white;
-    position: relative;
-}
-
-.gauge-container {
-    position: relative;
-    width: 200px;
-    height: 100px;
-}
-
-.gauge-value {
-    position: absolute;
-    bottom: 10px;
-    left: 50%;
-    transform: translateX(-50%);
-    font-size: 24px;
-    font-weight: 700;
-    color: #60a5fa;
-}
-
-.gauge-label {
-    position: absolute;
-    bottom: -5px;
-    left: 50%;
-    transform: translateX(-50%);
-    font-size: 10px;
-    text-transform: uppercase;
-    color: #e2e8f0;
-    font-weight: 600;
-}
-
-.hospitais-list {
-    flex: 1;
-    padding-left: 20px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    gap: 8px;
-}
-
-.hospital-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 12px;
-}
-
-.hospital-nome {
-    color: #e2e8f0;
-    font-weight: 600;
-}
-
-.hospital-pct {
-    color: #60a5fa;
-    font-weight: 700;
-}
-
-.kpi-box {
-    background: #1a1f2e;
-    border-radius: 12px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    color: white;
-    padding: 15px;
-}
-
-.kpi-value {
-    font-size: 28px;
-    font-weight: 700;
-    color: #60a5fa;
-    margin-bottom: 4px;
-}
-
-.kpi-label {
-    font-size: 10px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    color: #e2e8f0;
-}
-
-.executive-charts {
-    display: flex;
-    flex-direction: column;
-    gap: 24px;
-}
-
-/* ✅ CORREÇÃO PRINCIPAL: Container dos gráficos com altura fixa */
-.chart-container {
-    background: #1a1f2e;
-    border-radius: 12px;
-    padding: 20px;
-    color: white;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    position: relative;  /* ✅ ESSENCIAL para o Chart.js calcular corretamente */
-    height: 350px;       /* ✅ RESOLVE o problema dos gráficos infinitos */
-    min-height: 300px;   /* ✅ GARANTIA adicional */
-}
-
-.chart-container h3,
-.chart-container h4 {
-    margin: 0 0 16px 0;
-    font-size: 14px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    color: #60a5fa;
-}
-
-.chart-container canvas {
-    max-height: 280px; /* ✅ Deixa espaço para o título */
-    width: 100% !important; /* ✅ Garante responsividade */
-}
-
-/* === DASHBOARD HOSPITALAR === */
-.hospitalar-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+    grid-template-columns: 1fr;
     gap: 20px;
+    margin-top: 20px;
 }
 
-.hospital-section {
-    background: #1a1f2e;
-    border-radius: 12px;
-    padding: 20px;
-    color: white;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.hospital-title {
-    margin: 0 0 20px 0;
-    font-size: 18px;
-    font-weight: 700;
-    text-transform: uppercase;
-    color: #60a5fa;
-    text-align: center;
-}
-
-.hospital-kpis {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 24px;
-    padding: 16px;
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 8px;
-}
-
-.hospital-gauge {
-    flex-shrink: 0;
-    text-align: center;
-    position: relative;
-    width: 120px;
-    height: 60px;
-}
-
-.hospital-gauge .gauge-label {
-    position: absolute;
-    bottom: -15px;
-    left: 50%;
-    transform: translateX(-50%);
-    font-size: 14px;
-    font-weight: 700;
-    color: #60a5fa;
-}
-
-.kpi-mini {
-    flex: 1;
-    text-align: center;
-    min-height: 60px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    background: rgba(255, 255, 255, 0.03);
-    border-radius: 6px;
-    padding: 8px;
-}
-
-.kpi-mini .kpi-value {
-    font-size: 20px;
-    margin-bottom: 2px;
-}
-
-.kpi-mini .kpi-label {
-    font-size: 9px;
-}
-
-/* ✅ CORREÇÃO: Gráficos hospitalares menores */
-.hospital-section .chart-container {
-    height: 280px; /* ✅ Menor que os executivos */
-    min-height: 250px;
-}
-
-.hospital-section .chart-container canvas {
-    max-height: 220px; /* ✅ Ajustado proporcionalmente */
-}
-
-/* === SELETORES DE TIPO DE GRÁFICO === */
-.chart-type-selector {
-    display: flex;
-    gap: 6px;
-    margin-bottom: 12px;
-    flex-wrap: wrap;
-}
-
-.chart-type-btn {
-    padding: 6px 12px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    background: rgba(255, 255, 255, 0.1);
-    color: white;
-    border-radius: 6px;
-    font-size: 11px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    text-transform: uppercase;
-}
-
-.chart-type-btn:hover {
-    background: rgba(255, 255, 255, 0.2);
-}
-
-.chart-type-btn.active {
-    background: #60a5fa;
-    color: white;
-    border-color: #60a5fa;
-}
-
-/* === RESPONSIVIDADE === */
-@media (max-width: 1200px) {
-    .executive-kpis-grid {
-        grid-template-columns: repeat(4, 1fr);
-        grid-template-rows: auto;
-    }
-    
-    .kpi-principal {
-        grid-column: span 4;
-    }
-    
-    /* ✅ Ajuste de altura para telas médias */
-    .chart-container {
-        height: 320px;
-    }
-    
-    .hospital-section .chart-container {
-        height: 260px;
+/* Responsive para gráficos hospitalares */
+@media (min-width: 1400px) {
+    .hospital-graficos {
+        grid-template-columns: repeat(2, 1fr);
     }
 }
 
 @media (max-width: 768px) {
-    .executive-kpis-grid {
-        grid-template-columns: repeat(2, 1fr);
-        grid-template-rows: auto;
-    }
-    
-    .kpi-principal {
-        grid-column: span 2;
-        flex-direction: column;
-        text-align: center;
-    }
-    
-    .hospitais-list {
-        padding-left: 0;
-        margin-top: 20px;
-    }
-    
-    .hospitalar-grid {
-        grid-template-columns: 1fr;
-    }
-    
     .hospital-kpis {
-        flex-wrap: wrap;
-    }
-    
-    .hospital-gauge {
-        flex-basis: 100%;
-        margin-bottom: 15px;
-    }
-    
-    .kpi-mini {
-        flex-basis: calc(50% - 6px);
+        flex-direction: column;
+        gap: 10px;
     }
     
     .chart-type-selector {
+        flex-wrap: wrap;
         justify-content: center;
     }
     
-    /* ✅ Ajuste de altura para mobile */
-    .chart-container {
-        height: 280px;
-        padding: 15px;
-    }
-    
-    .hospital-section .chart-container {
-        height: 240px;
-    }
-    
-    .chart-container canvas {
-        max-height: 220px;
-    }
-    
-    .hospital-section .chart-container canvas {
-        max-height: 180px;
-    }
-}
-
-@media (max-width: 480px) {
-    .executive-kpis-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    .kpi-principal {
-        grid-column: span 1;
-    }
-    
     .chart-type-btn {
-        font-size: 9px;
+        font-size: 10px;
         padding: 4px 8px;
     }
-    
-    .chart-container h3,
-    .chart-container h4 {
-        font-size: 12px;
-    }
-    
-    .hospital-title {
-        font-size: 16px;
-    }
-    
-    /* ✅ Altura compacta para celulares pequenos */
-    .chart-container {
-        height: 250px;
-        padding: 12px;
-    }
-    
-    .hospital-section .chart-container {
-        height: 220px;
-    }
 }
+</style>
+`;
+
+// Adicionar estilos ao documento apenas uma vez
+if (!document.getElementById('dashboardStyles')) {
+    const styleElement = document.createElement('div');
+    styleElement.id = 'dashboardStyles';
+    styleElement.innerHTML = dashboardStyles;
+    document.head.appendChild(styleElement);
+}
+
+logSuccess('Dashboard.js carregado e configurado');

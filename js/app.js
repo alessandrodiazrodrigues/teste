@@ -121,7 +121,8 @@ window.startTimer = function() {
         const minutes = Math.floor(timeLeft / 60);
         const seconds = timeLeft % 60;
         
-        const timerElement = document.getElementById('timer');
+        // ID CORRIGIDO: timer -> updateTimer
+        const timerElement = document.getElementById('updateTimer');
         if (timerElement) {
             timerElement.textContent = 
                 `Próxima atualização em: ${minutes}:${seconds.toString().padStart(2, '0')}`;

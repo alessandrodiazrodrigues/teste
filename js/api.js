@@ -150,17 +150,12 @@ window.atualizarPaciente = async function(payload) {
     }
 };
 
-// Dar alta
+// Dar alta a um paciente
 window.darAltaPaciente = async function(hospital, leito) {
     try {
-        logInfo(`Dando alta: ${hospital}-${leito}`);
-        
-        const result = await apiGet('alta', {
-            hospital: hospital,
-            leito: leito
-        });
-        
-        logSuccess('Alta processada com sucesso');
+        logInfo(`Dando alta no leito ${hospital}-${leito}...`);
+        const result = await apiGet('discharge', { hospital: hospital, leito: leito });
+        logSuccess('Alta realizada com sucesso');
         return result;
     } catch (error) {
         logError('Erro ao dar alta:', error);
@@ -168,28 +163,11 @@ window.darAltaPaciente = async function(hospital, leito) {
     }
 };
 
-// =================== FUNÇÕES DE CORES ===================
-
-// Buscar cores customizadas
-window.fetchColors = async function() {
-    try {
-        const data = await apiGet('getcolors');
-        return data || {};
-    } catch (error) {
-        logError('Erro ao buscar cores:', error);
-        return {};
-    }
-};
-
-// Salvar cores customizadas
+// Salvar cores personalizadas
 window.saveColors = async function(colors) {
     try {
-        logInfo('Salvando cores via API...');
-        
-        const result = await apiGet('savecolors', {
-            colors: JSON.stringify(colors)
-        });
-        
+        logInfo('Salvando cores personalizadas...');
+        const result = await apiPost('saveColors', { colors: colors });
         logSuccess('Cores salvas com sucesso');
         return result;
     } catch (error) {
@@ -202,7 +180,7 @@ window.saveColors = async function(colors) {
 window.resetColors = async function() {
     try {
         logInfo('Resetando cores para padrão...');
-        const result = await apiGet('resetcolors');
+        const result = await apiGet('resetColors');
         logSuccess('Cores resetadas com sucesso');
         return result;
     } catch (error) {
@@ -211,44 +189,30 @@ window.resetColors = async function() {
     }
 };
 
-// =================== FUNÇÕES AUXILIARES ===================
-
-// Testar conectividade com a API
-window.testAPI = async function() {
-    try {
-        logInfo('Testando conectividade da API...');
-        const result = await apiGet('test');
-        logSuccess('API funcionando corretamente');
-        return result;
-    } catch (error) {
-        logError('Erro no teste da API:', error);
-        return false;
-    }
-};
-
-// Converter dados da API para formato interno
+// =================== PARSEAR DADOS DA API ===================
 window.parseApiData = function(apiData) {
-    if (!apiData) return null;
+    if (!apiData || !apiData.leito) return null;
     
     return {
-        hospital: apiData.hospital || '',
-        leito: Number(apiData.leito) || 0,
-        tipo: apiData.tipo || '',
+        leito: parseInt(apiData.leito),
+        tipo: apiData.tipo || 'ENF/APTO',
         status: apiData.status || 'Vago',
         nome: apiData.nome || '',
         matricula: apiData.matricula || '',
-        idade: apiData.idade || null,
-        admAt: apiData.admAt || '',
-        pps: apiData.pps || null,
+        idade: apiData.idade ? parseInt(apiData.idade) : null,
+        pps: apiData.pps ? parseInt(apiData.pps) : null,
         spict: apiData.spict || '',
-        complexidade: apiData.complexidade || '',
+        complexidade: apiData.complexidade || 'I',
         previsaoAlta: apiData.prevAlta || '',
-        linhasCuidado: apiData.linhas ? (typeof apiData.linhas === 'string' ? apiData.linhas.split('|').filter(x => x) : apiData.linhas) : [],
-        concessoes: apiData.concessoes ? (typeof apiData.concessoes === 'string' ? apiData.concessoes.split('|').filter(x => x) : apiData.concessoes) : []
+        admAt: apiData.admAt || '',
+        linhasCuidado: apiData.linhas ? 
+            (typeof apiData.linhas === 'string' ? apiData.linhas.split('|').filter(x => x) : apiData.linhas) : [],
+        concessoes: apiData.concessoes ? 
+            (typeof apiData.concessoes === 'string' ? apiData.concessoes.split('|').filter(x => x) : apiData.concessoes) : []
     };
 };
 
-// Carregar dados de todos os hospitais
+// =================== FUNÇÃO PRINCIPAL: CARREGAR DADOS DE TODOS OS HOSPITAIS ===================
 window.loadAllHospitalsData = async function() {
     try {
         logInfo('Carregando dados de todos os hospitais...');
@@ -314,4 +278,128 @@ window.loadAllHospitalsData = async function() {
     }
 };
 
-logSuccess('API.js carregado - Integração Google Apps Script ativa');
+// =================== CORREÇÃO CRÍTICA: FUNÇÃO loadHospitalData ===================
+// Esta função estava faltando e é essencial para o funcionamento do sistema
+window.loadHospitalData = async function() {
+    try {
+        logInfo('🔄 Iniciando carregamento dos dados hospitalares...');
+        
+        // Carregar todos os dados dos hospitais
+        const hospitalsData = await window.loadAllHospitalsData();
+        
+        // Atualizar variável global
+        window.hospitalData = hospitalsData;
+        
+        // Verificar se dados foram carregados
+        const totalHospitais = Object.keys(hospitalsData).length;
+        const totalLeitos = Object.values(hospitalsData).reduce((acc, h) => acc + (h.leitos ? h.leitos.length : 0), 0);
+        
+        if (totalHospitais > 0) {
+            logSuccess(`✅ Dados reais carregados com sucesso: ${totalHospitais} hospitais, ${totalLeitos} leitos`);
+            
+            // Trigger para rerender dashboards se necessário
+            if (window.renderCards && typeof window.renderCards === 'function') {
+                setTimeout(() => {
+                    window.renderCards();
+                }, 500);
+            }
+            
+            return hospitalsData;
+        } else {
+            logError('❌ Nenhum dado foi carregado da API - sem fallback, aguardando dados reais');
+            throw new Error('Nenhum dado real encontrado na API');
+        }
+        
+    } catch (error) {
+        logError('❌ Erro crítico ao carregar dados hospitalares:', error);
+        logError('⚠️ Sistema permanecerá sem dados até API responder corretamente');
+        
+        // SEM FALLBACK - apenas dados reais da API
+        // Manter window.hospitalData vazio se não conseguir carregar da API
+        window.hospitalData = {};
+        
+        throw error;
+    }
+};
+
+// =================== FUNÇÃO AUXILIAR: GERAR DADOS MOCK ===================
+function generateMockData() {
+    const mockData = {};
+    
+    Object.keys(CONFIG.HOSPITAIS).forEach(hospitalId => {
+        const hospital = CONFIG.HOSPITAIS[hospitalId];
+        if (!hospital.ativo) return;
+        
+        const leitos = [];
+        for (let i = 1; i <= hospital.leitos; i++) {
+            const isOcupado = Math.random() > 0.3; // 70% chance de estar ocupado
+            
+            leitos.push({
+                numero: i,
+                tipo: i <= 10 ? 'ENF/APTO' : 'UTI',
+                status: isOcupado ? 'ocupado' : 'vago',
+                paciente: isOcupado ? {
+                    nome: `Paciente ${i}`,
+                    matricula: `${hospitalId}${String(i).padStart(3, '0')}`,
+                    idade: Math.floor(Math.random() * 80) + 20,
+                    pps: `${Math.floor(Math.random() * 100)}%`,
+                    spictBr: Math.random() > 0.5 ? 'Elegível' : 'Não elegível',
+                    complexidade: ['I', 'II', 'III'][Math.floor(Math.random() * 3)],
+                    previsaoAlta: ['Hoje Ouro', '24h 2R', '48h 3R'][Math.floor(Math.random() * 3)],
+                    concessoes: ['Fisioterapia', 'Oxigenoterapia'].slice(0, Math.floor(Math.random() * 2) + 1),
+                    linhasCuidado: ['Cuidados Paliativos', 'APS'].slice(0, Math.floor(Math.random() * 2) + 1),
+                    admissao: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toLocaleString('pt-BR')
+                } : null
+            });
+        }
+        
+        mockData[hospitalId] = {
+            nome: hospital.nome,
+            leitos: leitos
+        };
+    });
+    
+    logInfo('📋 Dados mock gerados para fallback');
+    return mockData;
+}
+
+// =================== TESTES E MONITORAMENTO ===================
+
+// Testar conectividade da API
+window.testAPI = async function() {
+    try {
+        logInfo('🔍 Testando conectividade da API...');
+        const result = await apiGet('test');
+        
+        if (result) {
+            logSuccess('✅ API funcionando corretamente');
+            return true;
+        } else {
+            throw new Error('Resposta inválida da API');
+        }
+    } catch (error) {
+        logError('❌ Erro na conectividade da API:', error);
+        return false;
+    }
+};
+
+// Monitorar API (executar a cada 5 minutos)
+window.monitorAPI = function() {
+    // Teste inicial
+    window.testAPI();
+    
+    // Monitoramento contínuo
+    setInterval(async () => {
+        const isWorking = await window.testAPI();
+        if (!isWorking) {
+            logError('⚠️ API com problemas - recarregando dados em 30 segundos...');
+            setTimeout(() => {
+                window.loadHospitalData().catch(error => {
+                    logError('Falha no reload automático:', error);
+                });
+            }, 30000);
+        }
+    }, 5 * 60 * 1000); // 5 minutos
+};
+
+logSuccess('✅ API.js carregado - Integração Google Apps Script ativa com loadHospitalData');

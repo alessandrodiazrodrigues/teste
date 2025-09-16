@@ -52,24 +52,57 @@
         gap: 15px;
     }
     
-    /* Layout 3x3 dos cards em mobile */
+    /* *** CORREÇÃO CRÍTICA: LAYOUT 3x3 DOS CARDS EM MOBILE *** */
     .card-row {
-        grid-template-columns: 1fr;
-        gap: 10px;
+        display: grid !important;
+        grid-template-columns: 1fr 1fr 1fr !important; /* MANTER 3 COLUNAS */
+        gap: 8px !important;
+        margin-bottom: 12px;
     }
     
-    .card-field {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 5px 0;
-        border-bottom: 1px solid rgba(255,255,255,0.1);
+    /* *** GARANTIR QUE TODOS OS BOXES TENHAM A MESMA LARGURA *** */
+    .card-field,
+    .card > div > div {
+        flex: 1 !important;
+        min-width: 0 !important; /* Permitir shrinking */
     }
     
-    .field-label {
-        display: inline-block;
-        margin-bottom: 0;
-        margin-right: 10px;
+    /* *** AJUSTAR ESPECIFICAMENTE O BOX DO LEITO (MEIO) *** */
+    .card div[style*="display: flex; align-items: center; justify-content: center"] {
+        width: 100% !important;
+        flex: 1 !important;
+    }
+    
+    .card div[style*="display: flex; align-items: center; justify-content: center"] > div {
+        width: 100% !important;
+        padding: 12px 8px !important; /* Padding menor para mobile */
+        font-size: 12px !important; /* Fonte menor */
+        letter-spacing: 0.5px !important;
+    }
+    
+    /* *** TODOS OS BOXES COM TAMANHO IGUAL *** */
+    .card > div > div {
+        background: rgba(255,255,255,0.05) !important;
+        border: 1px solid rgba(255,255,255,0.1) !important;
+        border-radius: 6px !important;
+        padding: 10px 8px !important;
+        text-align: center !important;
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: center !important;
+        min-height: 60px !important;
+    }
+    
+    /* Labels e valores menores */
+    .card div[style*="font-size: 10px"] {
+        font-size: 9px !important;
+        margin-bottom: 3px !important;
+        padding: 2px 4px !important;
+    }
+    
+    .card div[style*="font-size: 16px"] {
+        font-size: 14px !important;
+        line-height: 1.2 !important;
     }
     
     /* Badge leito centralizado */
@@ -88,23 +121,41 @@
         width: 100%;
     }
     
-    /* KPIs executivos mobile */
-    .kpis-grid-executivo {
-        grid-template-columns: 1fr;
+    /* *** KPIs EXECUTIVOS MOBILE: GAUGE + 2 POR LINHA *** */
+    .executive-kpis-grid {
+        grid-template-columns: 1fr !important;
         gap: 10px;
     }
     
-    .kpi-box-principal {
-        grid-column: 1;
+    /* Primeira linha: Gauge principal ocupa linha completa */
+    .kpi-principal {
+        grid-column: 1 !important;
+        grid-row: auto !important;
         padding: 15px;
     }
     
+    /* Demais KPIs: 2 por linha */
     .kpi-box {
         padding: 15px;
+        min-height: 80px;
+    }
+    
+    /* Container para KPIs menores em 2 colunas */
+    .executive-kpis-grid .kpi-box:not(.kpi-principal) {
+        display: inline-block;
+        width: calc(50% - 5px);
+        margin-right: 10px;
+        margin-bottom: 10px;
+        vertical-align: top;
+    }
+    
+    /* Remover margem do último item de cada linha */
+    .executive-kpis-grid .kpi-box:not(.kpi-principal):nth-child(even) {
+        margin-right: 0;
     }
     
     .kpi-value {
-        font-size: 24px;
+        font-size: 20px;
     }
     
     /* Dashboard hospitalar mobile */
@@ -129,11 +180,12 @@
         padding: 4px 8px;
     }
     
-    /* Formulários mobile */
+    /* *** FORMULÁRIOS MOBILE - CORREÇÃO CRÍTICA *** */
     .form-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: 1fr !important; /* Uma coluna só */
     }
     
+    /* *** MODAIS MOBILE RESPONSIVOS *** */
     .medico-form {
         width: 100%;
         max-width: 100%;
@@ -150,8 +202,67 @@
         padding: 15px;
     }
     
+    /* *** CORREÇÃO DOS BOTÕES NOS FORMULÁRIOS MOBILE *** */
+    .medico-form-actions,
+    .modal-footer {
+        padding: 15px !important;
+        display: flex !important;
+        flex-direction: row !important; /* MANTER HORIZONTAL */
+        justify-content: space-between !important;
+        align-items: center !important;
+        gap: 8px !important;
+    }
+    
+    /* *** BOTÕES ALINHADOS E MESMO TAMANHO *** */
+    .btn-cancelar,
+    .btn-salvar,
+    .btn-alta,
+    .btn-cancel,
+    .btn-save {
+        flex: 1 !important;
+        padding: 12px 8px !important;
+        margin: 0 !important;
+        font-size: 12px !important;
+        font-weight: 600 !important;
+        text-transform: uppercase !important;
+        border-radius: 6px !important;
+        cursor: pointer !important;
+        text-align: center !important;
+        min-height: 44px !important; /* Altura mínima para touch */
+    }
+    
+    /* Cores específicas dos botões */
+    .btn-cancelar,
+    .btn-cancel {
+        background: rgba(255,255,255,0.1) !important;
+        color: #ffffff !important;
+        border: 1px solid rgba(255,255,255,0.2) !important;
+    }
+    
+    .btn-salvar,
+    .btn-save {
+        background: #3b82f6 !important;
+        color: #ffffff !important;
+        border: none !important;
+    }
+    
+    .btn-alta {
+        background: #ef4444 !important;
+        color: #ffffff !important;
+        border: none !important;
+    }
+    
+    /* Container dos botões de ações */
+    .medico-form-actions > div {
+        display: flex !important;
+        gap: 8px !important;
+        flex: 1 !important;
+    }
+    
+    /* Checkbox grid mobile */
     .checkbox-grid {
-        font-size: 14px;
+        max-height: 200px;
+        overflow-y: auto;
     }
     
     .checkbox-item {
@@ -224,13 +335,21 @@
         padding: 15px;
     }
     
-    .field-label {
-        font-size: 10px;
-        padding: 3px 6px;
+    /* *** LABELS E VALORES AINDA MENORES *** */
+    .card div[style*="font-size: 10px"] {
+        font-size: 8px !important;
+        padding: 2px 3px !important;
+        margin-bottom: 2px !important;
     }
     
-    .field-value {
-        font-size: 13px;
+    .card div[style*="font-size: 16px"] {
+        font-size: 12px !important;
+    }
+    
+    /* *** GARANTIR ALINHAMENTO DOS 3 BOXES *** */
+    .card > div > div {
+        min-height: 50px !important;
+        padding: 8px 4px !important;
     }
     
     .section-title {
@@ -264,6 +383,22 @@
         font-size: 14px;
         padding: 8px;
     }
+    
+    /* *** BOTÕES FORMULÁRIO MUITO PEQUENOS *** */
+    .btn-cancelar,
+    .btn-salvar,
+    .btn-alta {
+        font-size: 11px !important;
+        padding: 10px 6px !important;
+        min-height: 40px !important;
+    }
+    
+    /* *** GRID KPIs EXECUTIVOS 1 COLUNA EM TELAS MUITO PEQUENAS *** */
+    .executive-kpis-grid .kpi-box:not(.kpi-principal) {
+        width: 100% !important;
+        margin-right: 0 !important;
+        margin-bottom: 8px !important;
+    }
 }
 
 /* Orientação landscape em mobile */
@@ -278,14 +413,29 @@
         grid-template-columns: repeat(2, 1fr);
     }
     
+    /* *** MANTER LAYOUT 3x3 MESMO EM LANDSCAPE *** */
+    .card-row {
+        grid-template-columns: 1fr 1fr 1fr !important;
+    }
+    
     /* KPIs em 2 linhas */
-    .kpis-grid-executivo {
+    .executive-kpis-grid {
         grid-template-columns: repeat(3, 1fr);
         grid-template-rows: auto auto;
     }
     
     .kpi-box-principal {
         grid-column: span 3;
+    }
+    
+    /* *** KPIs EXECUTIVOS: GAUGE + 4 POR LINHA EM LANDSCAPE *** */
+    .executive-kpis-grid .kpi-box:not(.kpi-principal) {
+        width: calc(25% - 7.5px);
+        margin-right: 10px;
+    }
+    
+    .executive-kpis-grid .kpi-box:not(.kpi-principal):nth-child(4n) {
+        margin-right: 0;
     }
 }
 
@@ -365,5 +515,32 @@
     * {
         animation: none !important;
         transition: none !important;
+    }
+}
+
+/* *** CORREÇÃO ESPECIAL PARA CARDS MOBILE *** */
+@media (max-width: 768px) {
+    /* Forçar layout 3x3 em todas as situações */
+    .card > div:first-child,
+    .card > div:nth-child(2),
+    .card > div:nth-child(3) {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr 1fr !important;
+        gap: 8px !important;
+    }
+    
+    /* Box do meio (leito) com background especial */
+    .card > div:first-child > div:nth-child(2) {
+        background: var(--status-vago) !important;
+    }
+    
+    .card > div:first-child > div:nth-child(2)[style*="background: #fbbf24"] {
+        background: #fbbf24 !important;
+    }
+    
+    /* Previsão de alta mantém cor especial */
+    .card > div:nth-child(3) > div:last-child {
+        background: #8FD3F4 !important;
+        color: #000000 !important;
     }
 }

@@ -175,8 +175,10 @@ window.destroyChart = function(chartId) {
 // =================== CRIAR DATASET SCATTER COM JITTER ===================
 window.createScatterDataset = function(dados, tipo = 'concessoes') {
     const datasets = [];
-    const cores = tipo === 'concessoes' ? window.CHART_COLORS.concessoes : window.CHART_COLORS.linhasCuidado;
+    const cores = tipo === 'concessoes' ? window.CHART_COLORS?.concessoes : window.CHART_COLORS?.linhasCuidado;
     const items = tipo === 'concessoes' ? dados.concessoes : dados.linhas;
+    
+    if (!items) return datasets;
     
     items.forEach(item => {
         const pontos = [];
@@ -196,7 +198,7 @@ window.createScatterDataset = function(dados, tipo = 'concessoes') {
             datasets.push({
                 label: item.nome,
                 data: pontos,
-                backgroundColor: cores[item.nome] || '#6b7280',
+                backgroundColor: cores?.[item.nome] || '#6b7280',
                 pointRadius: 6,
                 pointHoverRadius: 8,
                 pointBorderWidth: 1,
@@ -265,6 +267,7 @@ window.renderChartByType = function(canvasId, data, chartType, yLabel = 'Quantid
             break;
     }
     
+    if (!window.chartInstances) window.chartInstances = {};
     window.chartInstances[chartKey] = new Chart(canvas, chartConfig);
     canvas.parentElement.setAttribute('data-chart-type', chartType);
 };
@@ -360,8 +363,15 @@ window.renderGraficoConcessoes = function(canvasId, hospitalData, chartType = 'b
     const periodos = ['Hoje', '24h', '48h', '72h', '96h'];
     const concessoesMap = new Map();
     
-    // Inicializar todas as concessões
-    window.CONCESSOES_LIST.forEach(conc => {
+    // Inicializar todas as concessões disponíveis
+    const CONCESSOES_DISPONIVEIS = [
+        "Transição Domiciliar", "Aplicação domiciliar de medicamentos", "Fisioterapia",
+        "Fonoaudiologia", "Aspiração", "Banho", "Curativos", "Oxigenoterapia",
+        "Recarga de O2", "Orientação Nutricional - com dispositivo", 
+        "Orientação Nutricional - sem dispositivo", "Clister", "PICC"
+    ];
+    
+    CONCESSOES_DISPONIVEIS.forEach(conc => {
         concessoesMap.set(conc, periodos.map(() => 0));
     });
     
@@ -394,16 +404,33 @@ window.renderGraficoConcessoes = function(canvasId, hospitalData, chartType = 'b
         }
     });
     
+    // Definir cores das concessões
+    const coresConcessoes = {
+        "Transição Domiciliar": "#007A53",
+        "Aplicação domiciliar de medicamentos": "#582C83",
+        "Fisioterapia": "#009639",
+        "Fonoaudiologia": "#FF671F",
+        "Aspiração": "#2E1A47",
+        "Banho": "#8FD3F4",
+        "Curativos": "#00BFB3",
+        "Oxigenoterapia": "#64A70B",
+        "Recarga de O2": "#00AEEF",
+        "Orientação Nutricional - com dispositivo": "#FFC72C",
+        "Orientação Nutricional - sem dispositivo": "#F4E285",
+        "Clister": "#E8927C",
+        "PICC": "#E03C31"
+    };
+    
     const chartData = {
         periodos: periodos,
         concessoes: concessoes.map(item => ({
             ...item,
-            backgroundColor: getItemColor(item.nome)
+            backgroundColor: coresConcessoes[item.nome] || '#6b7280'
         })),
         datasets: concessoes.map(item => ({
             label: item.nome,
             data: item.dados,
-            backgroundColor: getItemColor(item.nome)
+            backgroundColor: coresConcessoes[item.nome] || '#6b7280'
         }))
     };
     
@@ -417,8 +444,18 @@ window.renderGraficoLinhas = function(canvasId, hospitalData, chartType = 'bar')
     const periodos = ['Hoje', '24h', '48h', '72h', '96h'];
     const linhasMap = new Map();
     
-    // Inicializar todas as linhas
-    window.LINHAS_CUIDADO_LIST.forEach(linha => {
+    // Inicializar todas as linhas disponíveis
+    const LINHAS_DISPONIVEIS = [
+        "Assiste", "APS", "Cuidados Paliativos", "ICO (Insuficiência Coronariana)",
+        "Oncologia", "Pediatria", "Programa Autoimune - Gastroenterologia",
+        "Programa Autoimune - Neuro-desmielinizante", "Programa Autoimune - Neuro-muscular",
+        "Programa Autoimune - Reumatologia", "Vida Mais Leve Care", "Crônicos - Cardiologia",
+        "Crônicos - Endocrinologia", "Crônicos - Geriatria", "Crônicos - Melhor Cuidado",
+        "Crônicos - Neurologia", "Crônicos - Pneumologia", "Crônicos - Pós-bariátrica",
+        "Crônicos - Reumatologia"
+    ];
+    
+    LINHAS_DISPONIVEIS.forEach(linha => {
         linhasMap.set(linha, periodos.map(() => 0));
     });
     
@@ -450,16 +487,39 @@ window.renderGraficoLinhas = function(canvasId, hospitalData, chartType = 'bar')
         }
     });
     
+    // Definir cores das linhas de cuidado
+    const coresLinhas = {
+        "Assiste": "#ED0A72",
+        "APS": "#007A33",
+        "Cuidados Paliativos": "#00B5A2",
+        "ICO (Insuficiência Coronariana)": "#A6192E",
+        "Oncologia": "#6A1B9A",
+        "Pediatria": "#5A646B",
+        "Programa Autoimune - Gastroenterologia": "#5C5EBE",
+        "Programa Autoimune - Neuro-desmielinizante": "#00AEEF",
+        "Programa Autoimune - Neuro-muscular": "#00263A",
+        "Programa Autoimune - Reumatologia": "#582D40",
+        "Vida Mais Leve Care": "#FFB81C",
+        "Crônicos - Cardiologia": "#C8102E",
+        "Crônicos - Endocrinologia": "#582C83",
+        "Crônicos - Geriatria": "#FF6F1D",
+        "Crônicos - Melhor Cuidado": "#556F44",
+        "Crônicos - Neurologia": "#0072CE",
+        "Crônicos - Pneumologia": "#E35205",
+        "Crônicos - Pós-bariátrica": "#003C57",
+        "Crônicos - Reumatologia": "#5A0020"
+    };
+    
     const chartData = {
         periodos: periodos,
         linhas: linhas.map(item => ({
             ...item,
-            backgroundColor: getItemColor(item.nome)
+            backgroundColor: coresLinhas[item.nome] || '#6b7280'
         })),
         datasets: linhas.map(item => ({
             label: item.nome,
             data: item.dados,
-            backgroundColor: getItemColor(item.nome)
+            backgroundColor: coresLinhas[item.nome] || '#6b7280'
         }))
     };
     
@@ -473,6 +533,8 @@ window.renderGaugeExecutivo = function(ocupacao) {
     
     const ctx = canvas.getContext('2d');
     destroyChart('gaugeExecutivo');
+    
+    if (!window.chartInstances) window.chartInstances = {};
     
     window.chartInstances.gaugeExecutivo = new Chart(ctx, {
         type: 'doughnut',
@@ -499,4 +561,196 @@ window.renderGaugeExecutivo = function(ocupacao) {
     });
 };
 
-logSuccess('Charts.js carregado - Todas as correções implementadas: eixos inteiros, horizontal, legendas à esquerda, 7 tipos de gráfico');
+// =================== CONFIGURAR CORES GLOBAIS ===================
+window.CHART_COLORS = {
+    // Cores das Concessões (13 cores Pantone)
+    concessoes: {
+        "Transição Domiciliar": "#007A53",
+        "Aplicação domiciliar de medicamentos": "#582C83",
+        "Fisioterapia": "#009639",
+        "Fonoaudiologia": "#FF671F",
+        "Aspiração": "#2E1A47",
+        "Banho": "#8FD3F4",
+        "Curativos": "#00BFB3",
+        "Oxigenoterapia": "#64A70B",
+        "Recarga de O2": "#00AEEF",
+        "Orientação Nutricional - com dispositivo": "#FFC72C",
+        "Orientação Nutricional - sem dispositivo": "#F4E285",
+        "Clister": "#E8927C",
+        "PICC": "#E03C31"
+    },
+    
+    // Cores das Linhas de Cuidado (19 cores Pantone)
+    linhasCuidado: {
+        "Assiste": "#ED0A72",
+        "APS": "#007A33",
+        "Cuidados Paliativos": "#00B5A2",
+        "ICO (Insuficiência Coronariana)": "#A6192E",
+        "Oncologia": "#6A1B9A",
+        "Pediatria": "#5A646B",
+        "Programa Autoimune - Gastroenterologia": "#5C5EBE",
+        "Programa Autoimune - Neuro-desmielinizante": "#00AEEF",
+        "Programa Autoimune - Neuro-muscular": "#00263A",
+        "Programa Autoimune - Reumatologia": "#582D40",
+        "Vida Mais Leve Care": "#FFB81C",
+        "Crônicos - Cardiologia": "#C8102E",
+        "Crônicos - Endocrinologia": "#582C83",
+        "Crônicos - Geriatria": "#FF6F1D",
+        "Crônicos - Melhor Cuidado": "#556F44",
+        "Crônicos - Neurologia": "#0072CE",
+        "Crônicos - Pneumologia": "#E35205",
+        "Crônicos - Pós-bariátrica": "#003C57",
+        "Crônicos - Reumatologia": "#5A0020"
+    },
+    
+    // Cores dos Hospitais
+    hospitais: {
+        "Neomater": "#ffffff",
+        "Cruz Azul": "#60a5fa",
+        "Santa Marcelina": "#8b5cf6",
+        "Santa Clara": "#f59e0b"
+    },
+    
+    // Cores da Timeline/Previsão de Alta
+    timeline: {
+        "Ouro": "#fbbf24",
+        "2R": "#3b82f6",
+        "3R": "#8b5cf6",
+        "SP": "#6b7280",
+        "48h": "#10b981",
+        "72h": "#f59e0b",
+        "96h": "#ef4444"
+    }
+};
+
+// =================== CONFIGURAÇÃO PADRÃO PARA COMPATIBILIDADE ===================
+window.defaultChartConfig = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+        legend: {
+            position: 'left',
+            labels: {
+                padding: 8,
+                usePointStyle: true,
+                font: {
+                    size: 11
+                },
+                generateLabels: function(chart) {
+                    const datasets = chart.data.datasets;
+                    return datasets.map((dataset, i) => ({
+                        text: dataset.label,
+                        fillStyle: dataset.backgroundColor,
+                        strokeStyle: dataset.borderColor || dataset.backgroundColor,
+                        lineWidth: dataset.borderWidth || 0,
+                        hidden: !chart.isDatasetVisible(i),
+                        index: i
+                    }));
+                }
+            }
+        },
+        tooltip: {
+            backgroundColor: 'rgba(26, 31, 46, 0.95)',
+            titleColor: '#ffffff',
+            bodyColor: '#ffffff',
+            borderColor: '#60a5fa',
+            borderWidth: 1,
+            padding: 12,
+            displayColors: true,
+            callbacks: {
+                label: function(context) {
+                    let label = context.dataset.label || '';
+                    if (label) {
+                        label += ': ';
+                    }
+                    label += context.parsed.y || context.parsed;
+                    return label;
+                }
+            }
+        }
+    },
+    scales: {
+        y: {
+            beginAtZero: true,
+            grid: {
+                color: 'rgba(255, 255, 255, 0.1)'
+            },
+            ticks: {
+                color: '#e2e8f0',
+                font: {
+                    size: 11
+                },
+                stepSize: 1
+            },
+            title: {
+                display: true,
+                text: 'Quantidade de Beneficiários',
+                color: '#e2e8f0',
+                font: {
+                    size: 12,
+                    weight: 600
+                }
+            }
+        },
+        x: {
+            grid: {
+                color: 'rgba(255, 255, 255, 0.05)'
+            },
+            ticks: {
+                color: '#e2e8f0',
+                font: {
+                    size: 11
+                },
+                maxRotation: 0,
+                minRotation: 0
+            }
+        }
+    }
+};
+
+// =================== FUNÇÃO AUXILIAR PARA CALCULAR TEMPO DE INTERNAÇÃO ===================
+window.calcularDiasInternacao = function(dataAdmissao) {
+    if (!dataAdmissao) return 0;
+    try {
+        // Tentar diferentes formatos de data
+        let admissao;
+        if (dataAdmissao.includes('/')) {
+            // Formato brasileiro: DD/MM/YYYY
+            const parts = dataAdmissao.split(' ')[0].split('/');
+            admissao = new Date(parts[2], parts[1] - 1, parts[0]);
+        } else {
+            admissao = new Date(dataAdmissao);
+        }
+        
+        const hoje = new Date();
+        const diff = hoje - admissao;
+        return Math.floor(diff / (1000 * 60 * 60 * 24));
+    } catch (error) {
+        console.warn('Erro ao calcular dias de internação:', error);
+        return 0;
+    }
+};
+
+// =================== FUNÇÃO PARA FORMATAR DATA ===================
+window.formatarData = function(data) {
+    if (!data) return '';
+    try {
+        const d = new Date(data);
+        return d.toLocaleDateString('pt-BR');
+    } catch (error) {
+        return data.toString();
+    }
+};
+
+// =================== INICIALIZAÇÃO ===================
+// Garantir que as variáveis globais existam
+if (!window.chartInstances) {
+    window.chartInstances = {};
+}
+
+// Log de sucesso
+if (typeof window.logSuccess === 'function') {
+    logSuccess('Charts.js carregado - Todas as correções implementadas: eixos inteiros, horizontal, legendas à esquerda, 7 tipos de gráfico, cores Pantone');
+} else {
+    console.log('✅ Charts.js carregado - Sistema de gráficos completo ativo');
+}

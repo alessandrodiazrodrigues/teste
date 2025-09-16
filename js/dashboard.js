@@ -136,15 +136,15 @@ window.renderDashboardExecutivo = function() {
         if (window.renderGaugeExecutivo) {
             window.renderGaugeExecutivo(ocupacaoGeral);
         }
-        if (window.renderGraficosExecutivos) {
-            window.renderGraficosExecutivos();
-        }
+        
+        // Renderizar gráficos executivos usando dados consolidados
+        renderGraficosExecutivos();
     }, 100);
     
     logSuccess('Dashboard Executivo renderizado');
 };
 
-// =================== DASHBOARD HOSPITALAR ===================
+// =================== DASHBOARD HOSPITALAR (LAYOUT VERTICAL CORRIGIDO) ===================
 window.renderDashboardHospitalar = function() {
     logInfo('Renderizando Dashboard Hospitalar...');
     
@@ -199,33 +199,40 @@ window.renderDashboardHospitalar = function() {
                     </div>
                 </div>
                 
-                <!-- Gráficos do Hospital -->
+                <!-- *** CORREÇÃO CRÍTICA: GRÁFICOS EM LAYOUT VERTICAL *** -->
                 <div class="hospital-graficos">
+                    <!-- Gráfico 1: Projeção de Altas -->
                     <div class="chart-container">
                         <h4>Projeção de Altas em ${new Date().toLocaleDateString('pt-BR')}</h4>
-                        <canvas id="graficoAltas${hospitalId}"></canvas>
+                        <canvas id="graficoAltas${hospitalId}" height="200"></canvas>
                     </div>
+                    
+                    <!-- Gráfico 2: Projeção de Concessões -->
                     <div class="chart-container">
                         <h4>Projeção de Concessões em ${new Date().toLocaleDateString('pt-BR')}</h4>
                         <div class="chart-type-selector">
-                            <button class="chart-type-btn" onclick="changeChartType('${hospitalId}', 'concessoes', 'scatter')">Bolinhas</button>
-                            <button class="chart-type-btn" onclick="changeChartType('${hospitalId}', 'concessoes', 'bubble')">Agrupadas</button>
-                            <button class="chart-type-btn active" onclick="changeChartType('${hospitalId}', 'concessoes', 'bar')">Barras</button>
-                            <button class="chart-type-btn" onclick="changeChartType('${hospitalId}', 'concessoes', 'line')">Linhas</button>
-                            <button class="chart-type-btn" onclick="changeChartType('${hospitalId}', 'concessoes', '3d')">3D</button>
+                            <button class="chart-type-btn active" data-hospital="${hospitalId}" data-chart="concessoes" data-type="bar">Barras</button>
+                            <button class="chart-type-btn" data-hospital="${hospitalId}" data-chart="concessoes" data-type="scatter">Bolinhas</button>
+                            <button class="chart-type-btn" data-hospital="${hospitalId}" data-chart="concessoes" data-type="line">Linha</button>
+                            <button class="chart-type-btn" data-hospital="${hospitalId}" data-chart="concessoes" data-type="area">Área</button>
+                            <button class="chart-type-btn" data-hospital="${hospitalId}" data-chart="concessoes" data-type="radar">Radar</button>
+                            <button class="chart-type-btn" data-hospital="${hospitalId}" data-chart="concessoes" data-type="polar">Polar</button>
                         </div>
-                        <canvas id="graficoConcessoes${hospitalId}"></canvas>
+                        <canvas id="graficoConcessoes${hospitalId}" height="200"></canvas>
                     </div>
+                    
+                    <!-- Gráfico 3: Projeção de Linhas de Cuidado -->
                     <div class="chart-container">
-                        <h4>Projeção Linha de Cuidados em ${new Date().toLocaleDateString('pt-BR')}</h4>
+                        <h4>Projeção de Linha de Cuidados em ${new Date().toLocaleDateString('pt-BR')}</h4>
                         <div class="chart-type-selector">
-                            <button class="chart-type-btn" onclick="changeChartType('${hospitalId}', 'linhas', 'scatter')">Bolinhas</button>
-                            <button class="chart-type-btn" onclick="changeChartType('${hospitalId}', 'linhas', 'bubble')">Agrupadas</button>
-                            <button class="chart-type-btn active" onclick="changeChartType('${hospitalId}', 'linhas', 'bar')">Barras</button>
-                            <button class="chart-type-btn" onclick="changeChartType('${hospitalId}', 'linhas', 'line')">Linhas</button>
-                            <button class="chart-type-btn" onclick="changeChartType('${hospitalId}', 'linhas', '3d')">3D</button>
+                            <button class="chart-type-btn active" data-hospital="${hospitalId}" data-chart="linhas" data-type="bar">Barras</button>
+                            <button class="chart-type-btn" data-hospital="${hospitalId}" data-chart="linhas" data-type="scatter">Bolinhas</button>
+                            <button class="chart-type-btn" data-hospital="${hospitalId}" data-chart="linhas" data-type="line">Linha</button>
+                            <button class="chart-type-btn" data-hospital="${hospitalId}" data-chart="linhas" data-type="area">Área</button>
+                            <button class="chart-type-btn" data-hospital="${hospitalId}" data-chart="linhas" data-type="radar">Radar</button>
+                            <button class="chart-type-btn" data-hospital="${hospitalId}" data-chart="linhas" data-type="polar">Polar</button>
                         </div>
-                        <canvas id="graficoLinhas${hospitalId}"></canvas>
+                        <canvas id="graficoLinhas${hospitalId}" height="200"></canvas>
                     </div>
                 </div>
             </div>
@@ -235,39 +242,212 @@ window.renderDashboardHospitalar = function() {
     html += '</div></div>';
     container.innerHTML = html;
     
-    // Renderizar todos os gráficos
+    // *** ADICIONAR EVENT LISTENERS PARA OS 7 TIPOS DE GRÁFICO ***
     setTimeout(() => {
+        document.querySelectorAll('.chart-type-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const hospital = e.target.dataset.hospital;
+                const chart = e.target.dataset.chart;
+                const type = e.target.dataset.type;
+                
+                // Atualizar botões visuais
+                const selector = e.target.closest('.chart-type-selector');
+                selector.querySelectorAll('.chart-type-btn').forEach(b => b.classList.remove('active'));
+                e.target.classList.add('active');
+                
+                // Re-renderizar gráfico com novo tipo
+                if (chart === 'concessoes') {
+                    const hospitalData = window.hospitalData[hospital];
+                    if (hospitalData) {
+                        window.renderGraficoConcessoes(`graficoConcessoes${hospital}`, hospitalData, type);
+                    }
+                } else if (chart === 'linhas') {
+                    const hospitalData = window.hospitalData[hospital];
+                    if (hospitalData) {
+                        window.renderGraficoLinhas(`graficoLinhas${hospital}`, hospitalData, type);
+                    }
+                }
+                
+                logInfo(`Gráfico alterado: ${hospital} - ${chart} - ${type}`);
+            });
+        });
+        
+        // Renderizar todos os gráficos iniciais
         Object.keys(window.hospitalData).forEach(hospitalId => {
-            if (window.renderHospitalCharts) {
-                window.renderHospitalCharts(hospitalId);
+            renderGaugeHospital(hospitalId);
+            
+            const hospitalData = window.hospitalData[hospitalId];
+            if (hospitalData) {
+                window.renderGraficoAltas(`graficoAltas${hospitalId}`, hospitalData);
+                window.renderGraficoConcessoes(`graficoConcessoes${hospitalId}`, hospitalData, 'bar');
+                window.renderGraficoLinhas(`graficoLinhas${hospitalId}`, hospitalData, 'bar');
             }
         });
     }, 100);
     
-    logSuccess('Dashboard Hospitalar renderizado');
+    logSuccess('Dashboard Hospitalar renderizado com layout vertical');
 };
 
-// =================== FUNÇÃO PARA MUDANÇA DE TIPO DE GRÁFICO ===================
-window.changeChartType = function(hospitalId, chartType, newType) {
-    logInfo(`Mudando tipo de gráfico: ${hospitalId} - ${chartType} - ${newType}`);
+// =================== RENDERIZAR GAUGE DO HOSPITAL ===================
+function renderGaugeHospital(hospitalId) {
+    const canvas = document.getElementById(`gauge${hospitalId}`);
+    if (!canvas) return;
     
-    // Atualizar botões visuais
-    const chartContainer = document.getElementById(`grafico${chartType === 'concessoes' ? 'Concessoes' : 'Linhas'}${hospitalId}`);
-    if (chartContainer) {
-        const selector = chartContainer.closest('.chart-container').querySelector('.chart-type-selector');
-        if (selector) {
-            selector.querySelectorAll('.chart-type-btn').forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
+    const hospitalData = window.hospitalData[hospitalId];
+    if (!hospitalData) return;
+    
+    const ocupados = hospitalData.leitos.filter(l => l.status === 'ocupado').length;
+    const total = hospitalData.leitos.length;
+    const ocupacao = total > 0 ? Math.round((ocupados / total) * 100) : 0;
+    
+    const chartKey = `gauge${hospitalId}`;
+    window.destroyChart(chartKey);
+    
+    const ctx = canvas.getContext('2d');
+    window.chartInstances[chartKey] = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            datasets: [{
+                data: [ocupacao, 100 - ocupacao],
+                backgroundColor: [
+                    ocupacao >= 80 ? '#ef4444' : ocupacao >= 60 ? '#f59e0b' : '#16a34a',
+                    'rgba(255, 255, 255, 0.1)'
+                ],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            circumference: Math.PI,
+            rotation: Math.PI,
+            cutout: '70%',
+            plugins: {
+                legend: { display: false },
+                tooltip: { enabled: false }
+            }
         }
+    });
+}
+
+// =================== RENDERIZAR GRÁFICOS EXECUTIVOS ===================
+function renderGraficosExecutivos() {
+    // Consolidar dados de todos os hospitais
+    const dadosConsolidados = consolidarDadosHospitais();
+    
+    // Gráfico de Altas Executivo (com divisões Ouro/2R/3R)
+    const canvasAltas = document.getElementById('graficoAltasExecutivo');
+    if (canvasAltas) {
+        renderGraficoAltasConsolidado(dadosConsolidados);
     }
     
-    // Re-renderizar gráfico
-    if (chartType === 'concessoes' && window.renderHospitalConcessoesChart) {
-        window.renderHospitalConcessoesChart(hospitalId, newType);
-    } else if (chartType === 'linhas' && window.renderHospitalLinhasChart) {
-        window.renderHospitalLinhasChart(hospitalId, newType);
+    // Gráfico de Concessões Executivo
+    const canvasConcessoes = document.getElementById('graficoConcessoesExecutivo');
+    if (canvasConcessoes) {
+        window.renderGraficoConcessoes('graficoConcessoesExecutivo', dadosConsolidados, 'bar');
     }
-};
+    
+    // Gráfico de Linhas Executivo
+    const canvasLinhas = document.getElementById('graficoLinhasExecutivo');
+    if (canvasLinhas) {
+        window.renderGraficoLinhas('graficoLinhasExecutivo', dadosConsolidados, 'bar');
+    }
+}
+
+// =================== CONSOLIDAR DADOS DE TODOS OS HOSPITAIS ===================
+function consolidarDadosHospitais() {
+    const leitosConsolidados = [];
+    
+    Object.values(window.hospitalData).forEach(hospital => {
+        leitosConsolidados.push(...hospital.leitos);
+    });
+    
+    return {
+        nome: 'Consolidado',
+        leitos: leitosConsolidados
+    };
+}
+
+// =================== GRÁFICO DE ALTAS CONSOLIDADO (COM DIVISÕES) ===================
+function renderGraficoAltasConsolidado(dadosConsolidados) {
+    const canvas = document.getElementById('graficoAltasExecutivo');
+    if (!canvas) return;
+    
+    // *** CORREÇÃO: INCLUIR DIVISÕES OURO/2R/3R PARA HOJE E 24H ***
+    const categorias = ['Hoje Ouro', 'Hoje 2R', 'Hoje 3R', '24h Ouro', '24h 2R', '24h 3R', '48h', '72h', '96h', 'SP'];
+    
+    const dados = categorias.map(cat => {
+        return dadosConsolidados.leitos.filter(l => 
+            l.status === 'ocupado' && 
+            l.paciente && 
+            l.paciente.previsaoAlta === cat
+        ).length;
+    });
+    
+    const cores = categorias.map(cat => {
+        if (cat.includes('Ouro')) return '#fbbf24';
+        if (cat.includes('2R')) return '#3b82f6';
+        if (cat.includes('3R')) return '#8b5cf6';
+        if (cat === 'SP') return '#6b7280';
+        if (cat === '48h') return '#10b981';
+        if (cat === '72h') return '#f59e0b';
+        if (cat === '96h') return '#ef4444';
+        return '#10b981';
+    });
+    
+    const chartData = {
+        labels: categorias,
+        datasets: [{
+            label: 'Altas Previstas',
+            data: dados,
+            backgroundColor: cores,
+            borderWidth: 0
+        }]
+    };
+    
+    window.destroyChart('graficoAltasExecutivo');
+    
+    window.chartInstances.graficoAltasExecutivo = new Chart(canvas, {
+        type: 'bar',
+        data: chartData,
+        options: {
+            ...window.getChartOptions('Quantidade de Beneficiários', false, 'bar'),
+            plugins: {
+                ...window.getChartOptions('Quantidade de Beneficiários', false, 'bar').plugins,
+                legend: {
+                    display: true,
+                    position: 'left',
+                    align: 'start',
+                    labels: {
+                        color: '#ffffff',
+                        padding: 8,
+                        font: { size: 11, weight: 600 },
+                        generateLabels: function(chart) {
+                            // Agrupar por tipo (Ouro, 2R, 3R, etc.)
+                            const grupos = [
+                                { nome: 'Ouro', cor: '#fbbf24' },
+                                { nome: '2R', cor: '#3b82f6' },
+                                { nome: '3R', cor: '#8b5cf6' },
+                                { nome: '48h', cor: '#10b981' },
+                                { nome: '72h', cor: '#f59e0b' },
+                                { nome: '96h', cor: '#ef4444' },
+                                { nome: 'SP', cor: '#6b7280' }
+                            ];
+                            
+                            return grupos.map((grupo, index) => ({
+                                text: grupo.nome,
+                                fillStyle: grupo.cor,
+                                hidden: false,
+                                index: index,
+                                pointStyle: 'rect'
+                            }));
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
 
 // =================== ESTILOS ADICIONAIS PARA DASHBOARDS ===================
 const dashboardStyles = `
@@ -280,20 +460,21 @@ const dashboardStyles = `
     padding: 20px;
 }
 
+/* *** GARANTIR LAYOUT VERTICAL DOS GRÁFICOS HOSPITALARES *** */
 .hospital-graficos {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 20px;
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    grid-template-rows: auto auto auto !important;
+    gap: 20px !important;
     margin-top: 20px;
 }
 
-/* Responsive para gráficos hospitalares */
-@media (min-width: 1400px) {
-    .hospital-graficos {
-        grid-template-columns: repeat(2, 1fr);
-    }
+.hospital-section .chart-container {
+    width: 100% !important;
+    margin-bottom: 0 !important;
 }
 
+/* Responsive para gráficos hospitalares */
 @media (max-width: 768px) {
     .hospital-kpis {
         flex-direction: column;
@@ -303,13 +484,36 @@ const dashboardStyles = `
     .chart-type-selector {
         flex-wrap: wrap;
         justify-content: center;
+        gap: 4px;
     }
     
     .chart-type-btn {
         font-size: 10px;
         padding: 4px 8px;
+        min-width: 60px;
+    }
+    
+    /* GARANTIR QUE GRÁFICOS FIQUEM UM EMBAIXO DO OUTRO NO MOBILE */
+    .hospital-graficos {
+        grid-template-columns: 1fr !important;
+        gap: 15px !important;
     }
 }
+
+/* Cores específicas para cada tipo de gráfico */
+.chart-type-btn[data-type="bar"] { border-left: 3px solid #3b82f6; }
+.chart-type-btn[data-type="scatter"] { border-left: 3px solid #10b981; }
+.chart-type-btn[data-type="line"] { border-left: 3px solid #8b5cf6; }
+.chart-type-btn[data-type="area"] { border-left: 3px solid #f59e0b; }
+.chart-type-btn[data-type="radar"] { border-left: 3px solid #ef4444; }
+.chart-type-btn[data-type="polar"] { border-left: 3px solid #14b8a6; }
+
+.chart-type-btn.active[data-type="bar"] { background: #3b82f6; }
+.chart-type-btn.active[data-type="scatter"] { background: #10b981; }
+.chart-type-btn.active[data-type="line"] { background: #8b5cf6; }
+.chart-type-btn.active[data-type="area"] { background: #f59e0b; }
+.chart-type-btn.active[data-type="radar"] { background: #ef4444; }
+.chart-type-btn.active[data-type="polar"] { background: #14b8a6; }
 </style>
 `;
 
@@ -321,4 +525,4 @@ if (!document.getElementById('dashboardStyles')) {
     document.head.appendChild(styleElement);
 }
 
-logSuccess('Dashboard.js carregado e configurado');
+logSuccess('Dashboard.js carregado - Layout vertical forçado + 7 tipos de gráfico implementados');

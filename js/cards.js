@@ -1,4 +1,4 @@
-// =================== DADOS DOS HOSPITAIS ===================
+// =================== DADOS DOS HOSPITAIS (API REAL) ===================
 window.hospitalData = {};
 
 // =================== LISTAS DE OPÇÕES ===================
@@ -46,24 +46,44 @@ window.PREVISAO_ALTA_OPTIONS = [
     '48h', '72h', '96h', 'SP'
 ];
 
-// =================== CARREGAR DADOS DOS HOSPITAIS ===================
-window.loadHospitalData = function() {
-    logInfo('Carregando dados dos hospitais...');
+window.COMPLEXIDADE_OPTIONS = ['I', 'II', 'III'];
+
+// =================== CARREGAR DADOS DOS HOSPITAIS (API REAL) ===================
+window.loadHospitalData = async function() {
+    logInfo('Carregando dados dos hospitais via API...');
     
-    // Gerar dados mock para cada hospital
+    try {
+        // Usar função da API para carregar dados reais
+        if (typeof window.loadAllHospitalsData === 'function') {
+            window.hospitalData = await window.loadAllHospitalsData();
+            logSuccess(`Dados carregados da API: ${Object.keys(window.hospitalData).length} hospitais`);
+        } else {
+            logError('API não disponível, gerando dados mockados');
+            window.hospitalData = generateMockData();
+        }
+    } catch (error) {
+        logError('Erro ao carregar dados da API, usando dados mockados:', error);
+        window.hospitalData = generateMockData();
+    }
+};
+
+// =================== GERAR DADOS MOCK (FALLBACK) ===================
+function generateMockData() {
+    const mockData = {};
+    
     Object.keys(CONFIG.HOSPITAIS).forEach(hospitalId => {
         const hospital = CONFIG.HOSPITAIS[hospitalId];
-        window.hospitalData[hospitalId] = {
+        mockData[hospitalId] = {
             nome: hospital.nome,
             leitos: []
         };
         
-        // Gerar leitos
+        // Gerar leitos mock
         for (let i = 1; i <= hospital.leitos; i++) {
             const isOcupado = Math.random() > 0.3; // 70% de ocupação
             
             if (isOcupado) {
-                window.hospitalData[hospitalId].leitos.push({
+                mockData[hospitalId].leitos.push({
                     numero: i,
                     tipo: i <= 10 ? 'ENF/APTO' : 'UTI',
                     status: 'ocupado',
@@ -73,6 +93,7 @@ window.loadHospitalData = function() {
                         idade: 45 + (i * 3) % 40,
                         pps: `${(Math.floor(Math.random() * 10) + 1) * 10}%`,
                         spictBr: Math.random() > 0.5 ? 'Elegível' : 'Não elegível',
+                        complexidade: COMPLEXIDADE_OPTIONS[Math.floor(Math.random() * 3)],
                         previsaoAlta: PREVISAO_ALTA_OPTIONS[Math.floor(Math.random() * PREVISAO_ALTA_OPTIONS.length)],
                         concessoes: CONCESSOES_LIST.slice(0, Math.floor(Math.random() * 3) + 1),
                         linhasCuidado: LINHAS_CUIDADO_LIST.slice(0, Math.floor(Math.random() * 2) + 1),
@@ -80,7 +101,7 @@ window.loadHospitalData = function() {
                     }
                 });
             } else {
-                window.hospitalData[hospitalId].leitos.push({
+                mockData[hospitalId].leitos.push({
                     numero: i,
                     tipo: i <= 10 ? 'ENF/APTO' : 'UTI',
                     status: 'vago'
@@ -89,8 +110,8 @@ window.loadHospitalData = function() {
         }
     });
     
-    logSuccess('Dados dos hospitais carregados');
-};
+    return mockData;
+}
 
 // =================== RENDERIZAR CARDS ===================
 window.renderCards = function() {
@@ -110,14 +131,14 @@ window.renderCards = function() {
     logInfo(`${hospital.leitos.length} cards renderizados para ${hospital.nome}`);
 };
 
-// =================== CRIAR CARD INDIVIDUAL - LAYOUT IDÊNTICO À IMAGEM ===================
+// =================== CRIAR CARD INDIVIDUAL - LAYOUT 3x3 ===================
 function createCard(leito, hospitalNome) {
     const card = document.createElement('div');
     card.className = 'card';
     card.style.cssText = 'background: #1a1f2e; border-radius: 12px; padding: 20px; color: #ffffff;';
     
     const isVago = leito.status === 'vago';
-    const tempoInternacao = !isVago && leito.paciente.admissao ? 
+    const tempoInternacao = !isVago && leito.paciente && leito.paciente.admissao ? 
         calcularTempoInternacao(leito.paciente.admissao) : '';
     
     card.innerHTML = `
@@ -154,7 +175,7 @@ function createCard(leito, hospitalNome) {
             </div>
         </div>
 
-        <!-- LINHA 3: PPS / SPICT-BR / Previsão de Alta -->
+        <!-- LINHA 3: PPS / SPICT-BR / Complexidade / Previsão de Alta -->
         <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 15px;">
             <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 12px;">
                 <div style="font-size: 10px; color: rgba(255,255,255,0.6); text-transform: uppercase; font-weight: 600; margin-bottom: 4px;">PPS</div>
@@ -170,11 +191,21 @@ function createCard(leito, hospitalNome) {
             </div>
         </div>
 
-        <!-- LINHA 4: CONCESSÕES PREVISTAS NA ALTA -->
+        <!-- LINHA 4: Complexidade (NOVA) -->
+        ${!isVago && leito.paciente.complexidade ? `
+        <div style="margin-bottom: 15px;">
+            <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 12px; text-align: center;">
+                <div style="font-size: 10px; color: rgba(255,255,255,0.6); text-transform: uppercase; font-weight: 600; margin-bottom: 4px;">COMPLEXIDADE</div>
+                <div style="font-size: 18px; font-weight: 700; color: #60a5fa;">${leito.paciente.complexidade}</div>
+            </div>
+        </div>
+        ` : ''}
+
+        <!-- LINHA 5: CONCESSÕES PREVISTAS -->
         <div style="margin-bottom: 15px;">
             <div style="background: #60a5fa; padding: 10px 15px; border-radius: 6px; margin-bottom: 10px;">
                 <div style="font-size: 11px; color: #ffffff; text-transform: uppercase; font-weight: 700;">
-                    CONCESSÕES PREVISTAS NA ALTA
+                    CONCESSÕES PREVISTAS
                 </div>
             </div>
             <div style="display: flex; flex-wrap: wrap; gap: 6px; padding: 10px; background: rgba(255,255,255,0.03); border-radius: 6px; min-height: 40px;">
@@ -185,7 +216,7 @@ function createCard(leito, hospitalNome) {
             </div>
         </div>
 
-        <!-- LINHA 5: LINHA DE CUIDADOS PROPOSTA NA ALTA -->
+        <!-- LINHA 6: LINHA DE CUIDADOS PROPOSTA -->
         <div style="margin-bottom: 15px;">
             <div style="background: #60a5fa; padding: 10px 15px; border-radius: 6px; margin-bottom: 10px;">
                 <div style="font-size: 11px; color: #ffffff; text-transform: uppercase; font-weight: 700;">
@@ -200,7 +231,7 @@ function createCard(leito, hospitalNome) {
             </div>
         </div>
 
-        <!-- LINHA 6: Admissão / Internado há + Botão -->
+        <!-- LINHA 7: Admissão / Internado há + Botão -->
         <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.1);">
             <div style="display: flex; gap: 40px;">
                 <div>
@@ -215,7 +246,7 @@ function createCard(leito, hospitalNome) {
                 ` : ''}
             </div>
             <button 
-                onclick="window.openForm(${leito.numero}, ${isVago})" 
+                onclick="window.openForm('${window.currentHospital}', ${leito.numero}, ${isVago})" 
                 style="padding: 12px 30px; background: ${isVago ? '#3b82f6' : 'rgba(255,255,255,0.1)'}; color: #ffffff; border: 1px solid ${isVago ? '#3b82f6' : 'rgba(255,255,255,0.2)'}; border-radius: 8px; font-weight: 600; text-transform: uppercase; font-size: 14px; cursor: pointer; transition: all 0.3s;">
                 ${isVago ? 'ADMITIR' : 'ATUALIZAR'}
             </button>
@@ -241,21 +272,33 @@ function calcularTempoInternacao(dataAdmissao) {
     return `${dias}d ${horas}h`;
 }
 
-// =================== ABRIR FORMULÁRIO ===================
-window.openForm = function(leitoNumero, isAdmissao) {
-    logInfo(`Abrindo formulário - Leito ${leitoNumero} - ${isAdmissao ? 'Admissão' : 'Atualização'}`);
+// =================== ABRIR FORMULÁRIO (API INTEGRADA) ===================
+window.openForm = async function(hospitalId, leitoNumero, isAdmissao) {
+    logInfo(`Abrindo formulário - ${hospitalId} Leito ${leitoNumero} - ${isAdmissao ? 'Admissão' : 'Atualização'}`);
+    
+    // Buscar dados atualizados do leito da API
+    let leitoData = null;
+    if (!isAdmissao) {
+        try {
+            leitoData = await window.fetchLeitoData(hospitalId, leitoNumero);
+            if (leitoData) {
+                leitoData = window.parseApiData(leitoData);
+            }
+        } catch (error) {
+            logError('Erro ao buscar dados do leito:', error);
+        }
+    }
     
     // Criar modal de formulário
     const modal = document.createElement('div');
     modal.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 9999;';
     
-    const hospital = window.hospitalData[window.currentHospital];
-    const leito = hospital.leitos.find(l => l.numero === leitoNumero);
+    const hospitalNome = CONFIG.HOSPITAIS[hospitalId].nome;
     
     if (isAdmissao) {
-        modal.innerHTML = createAdmissaoForm(hospital.nome, leitoNumero, leito.tipo);
+        modal.innerHTML = createAdmissaoForm(hospitalNome, leitoNumero, hospitalId);
     } else {
-        modal.innerHTML = createAtualizacaoForm(hospital.nome, leito);
+        modal.innerHTML = createAtualizacaoForm(hospitalNome, leitoData, hospitalId, leitoNumero);
     }
     
     document.body.appendChild(modal);
@@ -270,55 +313,57 @@ window.openForm = function(leitoNumero, isAdmissao) {
     });
     
     if (!isAdmissao) {
-        modal.querySelector('.btn-alta').addEventListener('click', () => {
+        modal.querySelector('.btn-alta').addEventListener('click', async () => {
             if (confirm('Confirma a alta do paciente?')) {
-                // Atualizar dados
-                leito.status = 'vago';
-                delete leito.paciente;
-                
-                // Re-renderizar
-                window.renderCards();
-                document.body.removeChild(modal);
-                
-                logSuccess('Alta registrada com sucesso');
+                try {
+                    await window.darAltaPaciente(hospitalId, leitoNumero);
+                    await window.loadHospitalData();
+                    window.renderCards();
+                    document.body.removeChild(modal);
+                    logSuccess('Alta registrada com sucesso');
+                } catch (error) {
+                    alert('Erro ao processar alta: ' + error.message);
+                }
             }
         });
     }
     
-    modal.querySelector('.btn-salvar').addEventListener('click', () => {
-        // Coletar dados do formulário e salvar
-        if (isAdmissao) {
-            leito.status = 'ocupado';
-            leito.paciente = {
-                nome: modal.querySelector('#nome').value || 'Paciente',
-                matricula: modal.querySelector('#matricula').value || '000000',
-                idade: modal.querySelector('#idade').value || 0,
-                pps: modal.querySelector('#pps').value,
-                spictBr: modal.querySelector('#spict').value,
-                previsaoAlta: modal.querySelector('#prevAlta').value,
+    modal.querySelector('.btn-salvar').addEventListener('click', async () => {
+        try {
+            const payload = {
+                hospital: hospitalId,
+                leito: parseInt(leitoNumero),
+                nome: modal.querySelector('#nome')?.value || 'Paciente',
+                matricula: modal.querySelector('#matricula')?.value || '000000',
+                idade: modal.querySelector('#idade')?.value ? parseInt(modal.querySelector('#idade').value) : null,
+                pps: modal.querySelector('#pps')?.value ? parseInt(modal.querySelector('#pps').value) : null,
+                spict: modal.querySelector('#spict')?.value || '',
+                complexidade: modal.querySelector('#complexidade')?.value || 'I',
+                prevAlta: modal.querySelector('#prevAlta')?.value || '',
                 concessoes: Array.from(modal.querySelectorAll('.concessoes-list input:checked')).map(cb => cb.value),
-                linhasCuidado: Array.from(modal.querySelectorAll('.linhas-list input:checked')).map(cb => cb.value),
-                admissao: new Date().toLocaleString('pt-BR')
+                linhas: Array.from(modal.querySelectorAll('.linhas-list input:checked')).map(cb => cb.value)
             };
-        } else {
-            // Atualizar dados existentes
-            leito.paciente.pps = modal.querySelector('#pps').value;
-            leito.paciente.spictBr = modal.querySelector('#spict').value;
-            leito.paciente.previsaoAlta = modal.querySelector('#prevAlta').value;
-            leito.paciente.concessoes = Array.from(modal.querySelectorAll('.concessoes-list input:checked')).map(cb => cb.value);
-            leito.paciente.linhasCuidado = Array.from(modal.querySelectorAll('.linhas-list input:checked')).map(cb => cb.value);
+            
+            if (isAdmissao) {
+                await window.admitirPaciente(payload);
+            } else {
+                await window.atualizarPaciente(payload);
+            }
+            
+            // Recarregar dados e re-renderizar
+            await window.loadHospitalData();
+            window.renderCards();
+            document.body.removeChild(modal);
+            
+            logSuccess(isAdmissao ? 'Paciente admitido com sucesso' : 'Dados atualizados com sucesso');
+        } catch (error) {
+            alert('Erro ao salvar: ' + error.message);
         }
-        
-        // Re-renderizar
-        window.renderCards();
-        document.body.removeChild(modal);
-        
-        logSuccess(isAdmissao ? 'Paciente admitido com sucesso' : 'Dados atualizados com sucesso');
     });
 };
 
-// =================== FORMULÁRIO DE ADMISSÃO ===================
-function createAdmissaoForm(hospitalNome, leitoNumero, tipoLeito) {
+// =================== FORMULÁRIO DE ADMISSÃO (COM COMPLEXIDADE) ===================
+function createAdmissaoForm(hospitalNome, leitoNumero, hospitalId) {
     return `
         <div style="background: #1a1f2e; border-radius: 12px; max-width: 800px; width: 90%; max-height: 90vh; overflow-y: auto; color: #ffffff;">
             <div style="display: flex; justify-content: space-between; align-items: center; padding: 20px; border-bottom: 1px solid rgba(255,255,255,0.1);">
@@ -327,22 +372,6 @@ function createAdmissaoForm(hospitalNome, leitoNumero, tipoLeito) {
             </div>
             
             <div style="padding: 20px;">
-                <!-- Informações do Leito -->
-                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px;">
-                    <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 12px;">
-                        <div style="font-size: 10px; color: rgba(255,255,255,0.6); text-transform: uppercase; font-weight: 600; margin-bottom: 4px;">HOSPITAL</div>
-                        <div style="font-size: 16px; font-weight: 600;">${hospitalNome}</div>
-                    </div>
-                    <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 12px;">
-                        <div style="font-size: 10px; color: rgba(255,255,255,0.6); text-transform: uppercase; font-weight: 600; margin-bottom: 4px;">LEITO</div>
-                        <div style="font-size: 16px; font-weight: 600;">${leitoNumero}</div>
-                    </div>
-                    <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 12px;">
-                        <div style="font-size: 10px; color: rgba(255,255,255,0.6); text-transform: uppercase; font-weight: 600; margin-bottom: 4px;">TIPO</div>
-                        <div style="font-size: 16px; font-weight: 600;">${tipoLeito}</div>
-                    </div>
-                </div>
-                
                 <!-- Dados do Paciente -->
                 <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px;">
                     <div>
@@ -355,23 +384,29 @@ function createAdmissaoForm(hospitalNome, leitoNumero, tipoLeito) {
                     </div>
                     <div>
                         <label style="font-size: 10px; color: rgba(255,255,255,0.6); text-transform: uppercase; font-weight: 600; display: block; margin-bottom: 4px;">IDADE</label>
-                        <input id="idade" type="number" style="width: 100%; padding: 10px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: #ffffff;">
+                        <input id="idade" type="number" min="0" max="120" style="width: 100%; padding: 10px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: #ffffff;">
                     </div>
                 </div>
                 
-                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px;">
+                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px;">
                     <div>
                         <label style="font-size: 10px; color: rgba(255,255,255,0.6); text-transform: uppercase; font-weight: 600; display: block; margin-bottom: 4px;">PPS</label>
                         <select id="pps" style="width: 100%; padding: 10px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: #ffffff;">
                             <option value="">Selecione</option>
-                            ${[10,20,30,40,50,60,70,80,90,100].map(v => `<option value="${v}%">${v}%</option>`).join('')}
+                            ${[10,20,30,40,50,60,70,80,90,100].map(v => `<option value="${v}">${v}%</option>`).join('')}
                         </select>
                     </div>
                     <div>
                         <label style="font-size: 10px; color: rgba(255,255,255,0.6); text-transform: uppercase; font-weight: 600; display: block; margin-bottom: 4px;">SPICT-BR</label>
                         <select id="spict" style="width: 100%; padding: 10px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: #ffffff;">
-                            <option value="Elegível">Elegível</option>
-                            <option value="Não elegível">Não elegível</option>
+                            <option value="nao_elegivel">Não elegível</option>
+                            <option value="elegivel">Elegível</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="font-size: 10px; color: rgba(255,255,255,0.6); text-transform: uppercase; font-weight: 600; display: block; margin-bottom: 4px;">COMPLEXIDADE</label>
+                        <select id="complexidade" style="width: 100%; padding: 10px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: #ffffff;">
+                            ${COMPLEXIDADE_OPTIONS.map(opt => `<option value="${opt}">${opt}</option>`).join('')}
                         </select>
                     </div>
                     <div>
@@ -386,7 +421,7 @@ function createAdmissaoForm(hospitalNome, leitoNumero, tipoLeito) {
                 <div style="margin-bottom: 20px;">
                     <div style="background: #60a5fa; padding: 10px 15px; border-radius: 6px; margin-bottom: 10px;">
                         <div style="font-size: 11px; color: #ffffff; text-transform: uppercase; font-weight: 700;">
-                            CONCESSÕES PREVISTAS NA ALTA
+                            CONCESSÕES PREVISTAS
                         </div>
                     </div>
                     <div class="concessoes-list" style="max-height: 150px; overflow-y: auto; background: rgba(255,255,255,0.03); border-radius: 6px; padding: 10px;">
@@ -426,9 +461,9 @@ function createAdmissaoForm(hospitalNome, leitoNumero, tipoLeito) {
     `;
 }
 
-// =================== FORMULÁRIO DE ATUALIZAÇÃO ===================
-function createAtualizacaoForm(hospitalNome, leito) {
-    const tempoInternacao = calcularTempoInternacao(leito.paciente.admissao);
+// =================== FORMULÁRIO DE ATUALIZAÇÃO (COM COMPLEXIDADE) ===================
+function createAtualizacaoForm(hospitalNome, leitoData, hospitalId, leitoNumero) {
+    const tempoInternacao = leitoData && leitoData.admAt ? calcularTempoInternacao(leitoData.admAt) : '';
     
     return `
         <div style="background: #1a1f2e; border-radius: 12px; max-width: 800px; width: 90%; max-height: 90vh; overflow-y: auto; color: #ffffff;">
@@ -442,41 +477,49 @@ function createAtualizacaoForm(hospitalNome, leito) {
                 <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px;">
                     <div style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.05); border-radius: 8px; padding: 12px;">
                         <div style="font-size: 10px; color: rgba(255,255,255,0.4); text-transform: uppercase; font-weight: 600; margin-bottom: 4px;">INICIAIS</div>
-                        <div style="font-size: 16px; font-weight: 600; color: rgba(255,255,255,0.6);">${getIniciais(leito.paciente.nome)}</div>
+                        <div style="font-size: 16px; font-weight: 600; color: rgba(255,255,255,0.6);">${leitoData ? getIniciais(leitoData.nome) : '—'}</div>
                     </div>
                     <div style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.05); border-radius: 8px; padding: 12px;">
                         <div style="font-size: 10px; color: rgba(255,255,255,0.4); text-transform: uppercase; font-weight: 600; margin-bottom: 4px;">MATRÍCULA</div>
-                        <div style="font-size: 16px; font-weight: 600; color: rgba(255,255,255,0.6);">${leito.paciente.matricula}</div>
+                        <div style="font-size: 16px; font-weight: 600; color: rgba(255,255,255,0.6);">${leitoData ? leitoData.matricula : '—'}</div>
                     </div>
                     <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 12px;">
                         <div style="font-size: 10px; color: rgba(255,255,255,0.6); text-transform: uppercase; font-weight: 600; margin-bottom: 4px;">IDADE</div>
-                        <div style="font-size: 16px; font-weight: 600;">${leito.paciente.idade}</div>
+                        <div style="font-size: 16px; font-weight: 600;">${leitoData ? leitoData.idade + ' anos' : '—'}</div>
                     </div>
                 </div>
                 
                 <!-- Campos editáveis -->
-                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px;">
+                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px;">
                     <div>
                         <label style="font-size: 10px; color: rgba(255,255,255,0.6); text-transform: uppercase; font-weight: 600; display: block; margin-bottom: 4px;">PPS</label>
                         <select id="pps" style="width: 100%; padding: 10px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: #ffffff;">
                             <option value="">Selecione</option>
                             ${[10,20,30,40,50,60,70,80,90,100].map(v => 
-                                `<option value="${v}%" ${leito.paciente.pps === v+'%' ? 'selected' : ''}>${v}%</option>`
+                                `<option value="${v}" ${leitoData && leitoData.pps === v ? 'selected' : ''}>${v}%</option>`
                             ).join('')}
                         </select>
                     </div>
                     <div>
                         <label style="font-size: 10px; color: rgba(255,255,255,0.6); text-transform: uppercase; font-weight: 600; display: block; margin-bottom: 4px;">SPICT-BR</label>
                         <select id="spict" style="width: 100%; padding: 10px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: #ffffff;">
-                            <option value="Elegível" ${leito.paciente.spictBr === 'Elegível' ? 'selected' : ''}>Elegível</option>
-                            <option value="Não elegível" ${leito.paciente.spictBr === 'Não elegível' ? 'selected' : ''}>Não elegível</option>
+                            <option value="nao_elegivel" ${leitoData && leitoData.spict === 'nao_elegivel' ? 'selected' : ''}>Não elegível</option>
+                            <option value="elegivel" ${leitoData && leitoData.spict === 'elegivel' ? 'selected' : ''}>Elegível</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="font-size: 10px; color: rgba(255,255,255,0.6); text-transform: uppercase; font-weight: 600; display: block; margin-bottom: 4px;">COMPLEXIDADE</label>
+                        <select id="complexidade" style="width: 100%; padding: 10px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: #ffffff;">
+                            ${COMPLEXIDADE_OPTIONS.map(opt => 
+                                `<option value="${opt}" ${leitoData && leitoData.complexidade === opt ? 'selected' : ''}>${opt}</option>`
+                            ).join('')}
                         </select>
                     </div>
                     <div>
                         <label style="font-size: 10px; color: rgba(255,255,255,0.6); text-transform: uppercase; font-weight: 600; display: block; margin-bottom: 4px;">PREV ALTA</label>
                         <select id="prevAlta" style="width: 100%; padding: 10px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: #ffffff;">
                             ${PREVISAO_ALTA_OPTIONS.map(opt => 
-                                `<option value="${opt}" ${leito.paciente.previsaoAlta === opt ? 'selected' : ''}>${opt}</option>`
+                                `<option value="${opt}" ${leitoData && leitoData.previsaoAlta === opt ? 'selected' : ''}>${opt}</option>`
                             ).join('')}
                         </select>
                     </div>
@@ -486,13 +529,13 @@ function createAtualizacaoForm(hospitalNome, leito) {
                 <div style="margin-bottom: 20px;">
                     <div style="background: #60a5fa; padding: 10px 15px; border-radius: 6px; margin-bottom: 10px;">
                         <div style="font-size: 11px; color: #ffffff; text-transform: uppercase; font-weight: 700;">
-                            CONCESSÕES PREVISTAS NA ALTA
+                            CONCESSÕES PREVISTAS
                         </div>
                     </div>
                     <div class="concessoes-list" style="max-height: 150px; overflow-y: auto; background: rgba(255,255,255,0.03); border-radius: 6px; padding: 10px;">
                         ${CONCESSOES_LIST.map(c => `
                             <label style="display: block; padding: 6px 0; cursor: pointer;">
-                                <input type="checkbox" value="${c}" ${leito.paciente.concessoes.includes(c) ? 'checked' : ''} style="margin-right: 8px;">
+                                <input type="checkbox" value="${c}" ${leitoData && leitoData.concessoes && leitoData.concessoes.includes(c) ? 'checked' : ''} style="margin-right: 8px;">
                                 <span style="font-size: 14px;">${c}</span>
                             </label>
                         `).join('')}
@@ -509,7 +552,7 @@ function createAtualizacaoForm(hospitalNome, leito) {
                     <div class="linhas-list" style="max-height: 150px; overflow-y: auto; background: rgba(255,255,255,0.03); border-radius: 6px; padding: 10px;">
                         ${LINHAS_CUIDADO_LIST.map(l => `
                             <label style="display: block; padding: 6px 0; cursor: pointer;">
-                                <input type="checkbox" value="${l}" ${leito.paciente.linhasCuidado.includes(l) ? 'checked' : ''} style="margin-right: 8px;">
+                                <input type="checkbox" value="${l}" ${leitoData && leitoData.linhasCuidado && leitoData.linhasCuidado.includes(l) ? 'checked' : ''} style="margin-right: 8px;">
                                 <span style="font-size: 14px;">${l}</span>
                             </label>
                         `).join('')}
@@ -517,16 +560,18 @@ function createAtualizacaoForm(hospitalNome, leito) {
                 </div>
                 
                 <!-- Informações de internação -->
+                ${leitoData && leitoData.admAt ? `
                 <div style="display: flex; gap: 40px; padding: 15px; background: rgba(255,255,255,0.03); border-radius: 6px;">
                     <div>
                         <span style="font-size: 12px; color: rgba(255,255,255,0.6);">Admissão:</span>
-                        <strong style="margin-left: 8px;">${leito.paciente.admissao}</strong>
+                        <strong style="margin-left: 8px;">${new Date(leitoData.admAt).toLocaleString('pt-BR')}</strong>
                     </div>
                     <div>
                         <span style="font-size: 12px; color: rgba(255,255,255,0.6);">Internado há:</span>
                         <strong style="margin-left: 8px;">${tempoInternacao}</strong>
                     </div>
                 </div>
+                ` : ''}
             </div>
             
             <!-- Botões -->
@@ -540,3 +585,5 @@ function createAtualizacaoForm(hospitalNome, leito) {
         </div>
     `;
 }
+
+logSuccess('Cards.js carregado - API real integrada + Campo complexidade');

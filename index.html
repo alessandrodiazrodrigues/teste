@@ -5,63 +5,63 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Archipelago Dashboard</title>
     
-    <!-- CSS Files -->
+    <!-- CSS Modular -->
     <link rel="stylesheet" href="css/variables.css">
     <link rel="stylesheet" href="css/layout.css">
     <link rel="stylesheet" href="css/cards.css">
     <link rel="stylesheet" href="css/modals.css">
     <link rel="stylesheet" href="css/dashboards.css">
+    <link rel="stylesheet" href="css/mobile.css">
     
-    <!-- Chart.js -->
+    <!-- Bibliotecas Externas -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 </head>
 <body>
+    <!-- Modal de Autenticação -->
+    <div id="authModal" class="modal-auth">
+        <div class="auth-container">
+            <h1>Archipelago Dashboard</h1>
+            <p>Digite a senha de acesso:</p>
+            <input type="password" id="authPassword" placeholder="Senha" maxlength="6">
+            <button onclick="authenticate()">Entrar</button>
+            <div id="authError" class="error-msg hidden">Senha incorreta</div>
+        </div>
+    </div>
+
     <!-- Header -->
-    <header class="header">
-        <button class="menu-toggle" id="menuToggle">☰</button>
-        <h1 class="logo">Archipelago Dashboard</h1>
-        <div class="header-actions">
-            <div class="timer" id="updateTimer">Próxima atualização em: 4:00</div>
-            <button class="btn-update" onclick="updateData()">Atualizar</button>
+    <header id="mainHeader" class="header hidden">
+        <div class="header-left">
+            <span class="hamburger" onclick="toggleMenu()">☰</span>
+            <h1>Archipelago Dashboard</h1>
+        </div>
+        <div class="header-right">
+            <div id="timer">Próxima atualização em: 4:00</div>
+            <button onclick="updateData()">Atualizar</button>
         </div>
     </header>
 
     <!-- Menu Lateral -->
-    <aside class="side-menu" id="side-menu">
-        <div class="menu-header">
-            <h2>Menu</h2>
-            <button class="menu-close" onclick="toggleMenu()">×</button>
-        </div>
+    <aside id="sideMenu" class="side-menu">
+        <span class="close-btn" onclick="toggleMenu()">×</span>
         
         <nav class="menu-items">
             <a href="#" class="side-menu-item active" data-tab="leitos" onclick="setActiveTab('leitos')">
-                <span>🏥</span>
-                <span>Leitos</span>
+                <span>🏥</span> Leitos
             </a>
             <a href="#" class="side-menu-item" data-tab="dash1" onclick="setActiveTab('dash1')">
-                <span>📊</span>
-                <span>Dashboard Hospitalar</span>
+                <span>📊</span> Dashboard Hospitalar
             </a>
             <a href="#" class="side-menu-item" data-tab="dash2" onclick="setActiveTab('dash2')">
-                <span>📈</span>
-                <span>Rede Hospitalar Externa</span>
+                <span>📈</span> Rede Hospitalar Externa
             </a>
         </nav>
         
         <div class="menu-footer">
-            <div class="menu-divider"></div>
-            <a href="#" class="menu-config" onclick="openConfig()">
-                <span>⚙️</span>
-                <span>Configurações</span>
-            </a>
-            <a href="#" class="menu-qr" onclick="openQRGenerator()">
-                <span>📱</span>
-                <span>Gerar QR Codes</span>
-            </a>
-            <a href="#" class="menu-admin" onclick="openAdmin()">
-                <span>🔐</span>
-                <span>ADM</span>
-            </a>
+            <button onclick="openConfig()">⚙️ Configurações</button>
+            <button onclick="openQRCodes()">📱 Gerar QR Codes</button>
+            <button onclick="openAdmin()">🔐 ADM</button>
         </div>
     </aside>
 
@@ -69,11 +69,17 @@
     <div class="menu-overlay" id="menuOverlay" onclick="toggleMenu()"></div>
 
     <!-- Main Content -->
-    <main class="main-content">
+    <main id="mainContent" class="main-content hidden">
         <!-- Seção de Leitos -->
         <section id="leitosView" class="section-leitos">
             <div class="leitos-header">
                 <h2>Gestão de Leitos Hospitalares</h2>
+                <div class="hospital-selector" id="hospitalSelector">
+                    <button class="hospital-btn active" data-hospital="H1" onclick="selectHospital('H1')">Neomater</button>
+                    <button class="hospital-btn" data-hospital="H2" onclick="selectHospital('H2')">Cruz Azul</button>
+                    <button class="hospital-btn" data-hospital="H3" onclick="selectHospital('H3')">Santa Marcelina</button>
+                    <button class="hospital-btn" data-hospital="H4" onclick="selectHospital('H4')">Santa Clara</button>
+                </div>
                 <div class="filter-controls">
                     <select id="hospitalFilter" onchange="filterCards()">
                         <option value="">Todos os Hospitais</option>
@@ -104,24 +110,13 @@
     </main>
 
     <!-- Footer -->
-    <footer class="footer">
+    <footer id="mainFooter" class="footer hidden">
         <p>Sistema em versão BETA - não pode ser usado como única fonte de referência</p>
         <p>Para decisões críticas, consulte sempre fontes adicionais e profissionais qualificados</p>
         <p><strong>Desenvolvido por: Alessandro Rodrigues - Versão V3.0 - Setembro/2025</strong></p>
     </footer>
 
-    <!-- Modal de Autenticação -->
-    <div id="authModal" class="modal">
-        <div class="modal-content">
-            <h2>Autenticação Necessária</h2>
-            <p>Digite a senha de acesso:</p>
-            <input type="password" id="authPassword" placeholder="Senha">
-            <button onclick="authenticate()">Entrar</button>
-            <div id="authError" class="error-message hidden">Senha incorreta</div>
-        </div>
-    </div>
-
-    <!-- Modal de Admissão/Atualização -->
+    <!-- Modal de Paciente -->
     <div id="patientModal" class="modal hidden">
         <div class="modal-content">
             <div class="modal-header">
@@ -136,19 +131,26 @@
             <div class="modal-footer">
                 <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
                 <button class="btn-save" onclick="savePatient()">Salvar</button>
+                <button class="btn-alta" onclick="darAlta()" style="display:none;">Dar Alta</button>
             </div>
         </div>
     </div>
 
-    <!-- Scripts -->
-    <script src="js/config.js"></script>
-    <script src="js/auth.js"></script>
-    <script src="js/api.js"></script>
+    <!-- JavaScript Modular - ORDEM CORRETA -->
+    <script src="js/app.js"></script>
     <script src="js/cards.js"></script>
-    <script src="js/modals.js"></script>
     <script src="js/dashboards/charts-config.js"></script>
     <script src="js/dashboards/dashboard-executive.js"></script>
     <script src="js/dashboards/dashboard-hospital.js"></script>
+    <script src="js/qrcode.js"></script>
+    <script src="js/admin.js"></script>
     <script src="js/main.js"></script>
+    
+    <script>
+        // Inicializar sistema após carregar todos os módulos
+        document.addEventListener('DOMContentLoaded', function() {
+            window.initApp();
+        });
+    </script>
 </body>
 </html>

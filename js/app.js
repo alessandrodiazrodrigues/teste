@@ -6,19 +6,20 @@ window.CONFIG = {
     REFRESH_INTERVAL: 240000, // 4 minutos
     QR_TIMEOUT: 120000, // 2 minutos
     HOSPITAIS: {
-        H1: { nome: "Neomater", leitos: 13 },
-        H2: { nome: "Cruz Azul", leitos: 16 },
-        H3: { nome: "Santa Marcelina", leitos: 7 },
-        H4: { nome: "Santa Clara", leitos: 13 }
+        H1: { nome: "Neomater", leitos: 13, ativo: true },
+        H2: { nome: "Cruz Azul", leitos: 16, ativo: true },
+        H3: { nome: "Santa Marcelina", leitos: 7, ativo: false }, // *** DESABILITADO INICIALMENTE ***
+        H4: { nome: "Santa Clara", leitos: 13, ativo: false }     // *** DESABILITADO INICIALMENTE ***
     }
 };
 
 // =================== VARIÁVEIS GLOBAIS ===================
-window.currentHospital = 'H1';
+window.currentHospital = 'H1'; // *** SEMPRE INICIA COM NEOMATER ***
 window.currentView = 'leitos';
 window.isAuthenticated = false;
 window.refreshTimer = null;
 window.timerInterval = null;
+window.isLoading = false; // *** NOVO: CONTROLE DE LOADING ***
 
 // =================== FUNÇÕES DE LOG (GLOBAIS) ===================
 window.logInfo = function(msg) {
@@ -31,6 +32,83 @@ window.logSuccess = function(msg) {
 
 window.logError = function(msg, error = null) {
     console.error(`❌ [ERROR] ${msg}`, error || '');
+};
+
+// =================== MOSTRAR/ESCONDER LOADING ===================
+window.showLoading = function(container = null, message = 'Carregando dados...') {
+    window.isLoading = true;
+    
+    const loadingHTML = `
+        <div class="loading-container" style="
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 50px;
+            min-height: 300px;
+            background: rgba(26, 31, 46, 0.95);
+            border-radius: 12px;
+            color: white;
+            text-align: center;
+        ">
+            <div class="spinner" style="
+                width: 40px;
+                height: 40px;
+                border: 4px solid rgba(255, 255, 255, 0.1);
+                border-left-color: #60a5fa;
+                border-radius: 50%;
+                animation: spin 1s linear infinite;
+                margin-bottom: 20px;
+            "></div>
+            <h3 style="margin: 0 0 10px 0; font-size: 18px; color: #60a5fa;">${message}</h3>
+            <p style="margin: 0; color: rgba(255, 255, 255, 0.7); font-size: 14px;">
+                Por favor, aguarde...
+            </p>
+        </div>
+    `;
+    
+    if (container) {
+        container.innerHTML = loadingHTML;
+    } else {
+        // Aplicar em todos os containers principais
+        const containers = [
+            'cardsContainer',
+            'dashExecutivoContent', 
+            'dashHospitalarContent'
+        ];
+        
+        containers.forEach(containerId => {
+            const element = document.getElementById(containerId);
+            if (element) {
+                element.innerHTML = loadingHTML;
+            }
+        });
+    }
+    
+    // Adicionar CSS da animação se não existir
+    if (!document.getElementById('loadingStyles')) {
+        const style = document.createElement('style');
+        style.id = 'loadingStyles';
+        style.textContent = `
+            @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+            }
+            .loading-container {
+                animation: fadeIn 0.3s ease-in;
+            }
+            @keyframes fadeIn {
+                from { opacity: 0; transform: translateY(10px); }
+                to { opacity: 1; transform: translateY(0); }
+            }
+        `;
+        document.head.appendChild(style);
+    }
+};
+
+window.hideLoading = function() {
+    window.isLoading = false;
+    // Loading será removido quando o conteúdo for renderizado
 };
 
 // =================== VERIFICAÇÃO DE AUTENTICAÇÃO ===================
@@ -90,27 +168,49 @@ window.authenticate = function() {
     }
 };
 
-// =================== INICIALIZAÇÃO DO SISTEMA ===================
-window.initSystem = function() {
+// =================== INICIALIZAÇÃO DO SISTEMA (CORRIGIDA) ===================
+window.initSystem = async function() {
     logInfo('Inicializando sistema...');
     
-    // Testar API
-    if (window.testAPI) {
-        window.testAPI();
+    // *** MOSTRAR LOADING IMEDIATAMENTE ***
+    showLoading(null, 'Inicializando sistema...');
+    
+    try {
+        // Testar API
+        if (window.testAPI) {
+            await window.testAPI();
+        }
+        
+        // *** CARREGAR DADOS DOS HOSPITAIS ANTES DE RENDERIZAR ***
+        if (window.loadHospitalData) {
+            showLoading(null, 'Carregando dados dos hospitais...');
+            await window.loadHospitalData();
+        }
+        
+        // Iniciar timer
+        window.startTimer();
+        
+        // *** RENDERIZAR VIEW INICIAL COM NEOMATER AUTOMATICAMENTE ***
+        window.setActiveTab('leitos');
+        
+        // *** AGUARDAR UM POUCO E FORÇAR RENDERIZAÇÃO DO NEOMATER ***
+        setTimeout(() => {
+            if (window.renderCards) {
+                showLoading(document.getElementById('cardsContainer'), 'Carregando leitos do Neomater...');
+                setTimeout(() => {
+                    window.renderCards();
+                    hideLoading();
+                }, 500);
+            }
+        }, 1000);
+        
+        logSuccess('Sistema inicializado com Neomater carregado');
+        
+    } catch (error) {
+        logError('Erro na inicialização:', error);
+        hideLoading();
+        alert('Erro ao inicializar o sistema. Tente recarregar a página.');
     }
-    
-    // Carregar dados dos hospitais (API real)
-    if (window.loadHospitalData) {
-        window.loadHospitalData();
-    }
-    
-    // Iniciar timer
-    window.startTimer();
-    
-    // Renderizar view inicial
-    window.setActiveTab('leitos');
-    
-    logSuccess('Sistema inicializado');
 };
 
 // =================== TIMER DE ATUALIZAÇÃO ===================
@@ -141,28 +241,46 @@ window.startTimer = function() {
     }, 1000);
 };
 
-// =================== REFRESH DE DADOS ===================
-window.updateData = function() {
+// =================== REFRESH DE DADOS (CORRIGIDO) ===================
+window.updateData = async function() {
     logInfo('Atualizando dados...');
     
-    // Recarregar dados dos hospitais (API real)
-    if (window.loadHospitalData) {
-        window.loadHospitalData();
+    try {
+        // *** MOSTRAR LOADING DURANTE ATUALIZAÇÃO ***
+        if (window.currentView === 'leitos') {
+            showLoading(document.getElementById('cardsContainer'), 'Atualizando dados...');
+        } else if (window.currentView === 'dash1') {
+            showLoading(document.getElementById('dashHospitalarContent'), 'Atualizando gráficos...');
+        } else if (window.currentView === 'dash2') {
+            showLoading(document.getElementById('dashExecutivoContent'), 'Atualizando análises...');
+        }
+        
+        // Recarregar dados dos hospitais (API real)
+        if (window.loadHospitalData) {
+            await window.loadHospitalData();
+        }
+        
+        // Re-renderizar view atual com delay para mostrar loading
+        setTimeout(() => {
+            if (window.currentView === 'leitos' && window.renderCards) {
+                window.renderCards();
+            } else if (window.currentView === 'dash1' && window.renderDashboardHospitalar) {
+                window.renderDashboardHospitalar();
+            } else if (window.currentView === 'dash2' && window.renderDashboardExecutivo) {
+                window.renderDashboardExecutivo();
+            }
+            hideLoading();
+        }, 800);
+        
+        logSuccess('Dados atualizados');
+        
+    } catch (error) {
+        logError('Erro na atualização:', error);
+        hideLoading();
     }
-    
-    // Re-renderizar view atual
-    if (window.currentView === 'leitos' && window.renderCards) {
-        window.renderCards();
-    } else if (window.currentView === 'dash1' && window.renderDashboardHospitalar) {
-        window.renderDashboardHospitalar();
-    } else if (window.currentView === 'dash2' && window.renderDashboardExecutivo) {
-        window.renderDashboardExecutivo();
-    }
-    
-    logSuccess('Dados atualizados');
 };
 
-// =================== NAVEGAÇÃO ENTRE TABS (CORRIGIDO - MENU SE FECHA) ===================
+// =================== NAVEGAÇÃO ENTRE TABS (CORRIGIDO COM LOADING) ===================
 window.setActiveTab = function(tab) {
     logInfo(`Mudando para tab: ${tab}`);
     
@@ -195,7 +313,7 @@ window.setActiveTab = function(tab) {
         }
     });
     
-    // *** CORREÇÃO: FECHAR MENU AUTOMATICAMENTE APÓS CLICAR ***
+    // *** FECHAR MENU AUTOMATICAMENTE APÓS CLICAR ***
     const menu = document.getElementById('sideMenu');
     const overlay = document.getElementById('menuOverlay');
     if (menu && menu.classList.contains('open')) {
@@ -204,14 +322,35 @@ window.setActiveTab = function(tab) {
         document.body.classList.remove('menu-open');
     }
     
-    // Renderizar conteúdo específico da tab
+    // *** RENDERIZAR CONTEÚDO COM LOADING ***
     setTimeout(() => {
         if (tab === 'leitos' && window.renderCards) {
-            window.renderCards();
+            // Se não há dados, mostrar loading e carregar
+            if (!window.hospitalData || Object.keys(window.hospitalData).length === 0) {
+                showLoading(document.getElementById('cardsContainer'), 'Carregando dados dos hospitais...');
+                if (window.loadHospitalData) {
+                    window.loadHospitalData().then(() => {
+                        setTimeout(() => {
+                            window.renderCards();
+                            hideLoading();
+                        }, 500);
+                    });
+                }
+            } else {
+                window.renderCards();
+            }
         } else if (tab === 'dash1' && window.renderDashboardHospitalar) {
-            window.renderDashboardHospitalar();
+            showLoading(document.getElementById('dash1'), 'Carregando Dashboard Hospitalar...');
+            setTimeout(() => {
+                window.renderDashboardHospitalar();
+                hideLoading();
+            }, 800);
         } else if (tab === 'dash2' && window.renderDashboardExecutivo) {
-            window.renderDashboardExecutivo();
+            showLoading(document.getElementById('dash2'), 'Carregando Dashboard Executivo...');
+            setTimeout(() => {
+                window.renderDashboardExecutivo();
+                hideLoading();
+            }, 800);
         }
     }, 100);
 };
@@ -232,8 +371,14 @@ window.toggleMenu = function() {
     }
 };
 
-// =================== SELEÇÃO DE HOSPITAL ===================
+// =================== SELEÇÃO DE HOSPITAL (CORRIGIDO COM LOADING) ===================
 window.selectHospital = function(hospitalId) {
+    // *** VERIFICAR SE HOSPITAL ESTÁ ATIVO ***
+    if (!CONFIG.HOSPITAIS[hospitalId] || !CONFIG.HOSPITAIS[hospitalId].ativo) {
+        logInfo(`Hospital ${hospitalId} está desabilitado`);
+        return;
+    }
+    
     window.currentHospital = hospitalId;
     
     // Atualizar botões
@@ -246,22 +391,16 @@ window.selectHospital = function(hospitalId) {
         activeBtn.classList.add('active');
     }
     
-    // Re-renderizar cards
+    // *** RE-RENDERIZAR CARDS COM LOADING ***
     if (window.renderCards) {
-        window.renderCards();
+        showLoading(document.getElementById('cardsContainer'), `Carregando leitos do ${CONFIG.HOSPITAIS[hospitalId].nome}...`);
+        setTimeout(() => {
+            window.renderCards();
+            hideLoading();
+        }, 500);
     }
     
     logInfo(`Hospital selecionado: ${CONFIG.HOSPITAIS[hospitalId].nome}`);
-};
-
-// =================== FILTRAR CARDS ===================
-window.filterCards = function() {
-    const hospitalFilter = document.getElementById('hospitalFilter').value;
-    const statusFilter = document.getElementById('statusFilter').value;
-    
-    if (window.renderCards) {
-        window.renderCards(hospitalFilter, statusFilter);
-    }
 };
 
 // =================== FUNÇÕES DE CONFIGURAÇÃO ===================
@@ -301,8 +440,8 @@ window.darAlta = function() {
     }
 };
 
-// =================== INICIALIZAÇÃO DO APP ===================
-window.initApp = function() {
+// =================== INICIALIZAÇÃO DO APP (CORRIGIDA) ===================
+window.initApp = async function() {
     logInfo('Archipelago Dashboard V3.0 - Iniciando...');
     
     // Verificar autenticação
@@ -313,8 +452,8 @@ window.initApp = function() {
         document.getElementById('mainContent').classList.remove('hidden');
         document.getElementById('mainFooter').classList.remove('hidden');
         
-        // Inicializar sistema
-        window.initSystem();
+        // *** INICIALIZAR SISTEMA COM LOADING ***
+        await window.initSystem();
     } else {
         // Mostrar tela de autenticação
         window.showAuthModal();
@@ -350,4 +489,36 @@ window.restoreDefaultColors = function() {
     logSuccess('Cores padrão restauradas');
 };
 
-logSuccess('App.js carregado - Sistema configurado');
+// =================== FUNÇÃO PARA OBTER HOSPITAIS ATIVOS ===================
+window.getActiveHospitals = function() {
+    return Object.entries(CONFIG.HOSPITAIS)
+        .filter(([id, hospital]) => hospital.ativo)
+        .map(([id, hospital]) => ({ id, ...hospital }));
+};
+
+// =================== FUNÇÃO PARA TOGGLEAR HOSPITAL ===================
+window.toggleHospital = function(hospitalId, ativo) {
+    if (CONFIG.HOSPITAIS[hospitalId]) {
+        CONFIG.HOSPITAIS[hospitalId].ativo = ativo;
+        
+        // Atualizar interface
+        const btn = document.querySelector(`[data-hospital="${hospitalId}"]`);
+        if (btn) {
+            if (ativo) {
+                btn.style.display = 'block';
+            } else {
+                btn.style.display = 'none';
+                // Se hospital ativo foi desabilitado, mudar para H1
+                if (window.currentHospital === hospitalId) {
+                    window.selectHospital('H1');
+                }
+            }
+        }
+        
+        logInfo(`Hospital ${hospitalId} ${ativo ? 'ativado' : 'desativado'}`);
+        return true;
+    }
+    return false;
+};
+
+logSuccess('App.js carregado - Sistema configurado com carregamento automático e loading');

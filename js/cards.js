@@ -1,4 +1,7 @@
-// =================== CARDS.JS - CORREÇÕES FINAIS ===================
+// =================== CARDS.JS - ARQUIVO COMPLETO COM CORREÇÕES ===================
+
+// =================== DADOS DOS HOSPITAIS (API REAL) ===================
+window.hospitalData = {};
 
 // =================== LISTAS DE OPÇÕES ===================
 window.CONCESSOES_LIST = [
@@ -41,6 +44,26 @@ window.LINHAS_CUIDADO_LIST = [
 
 window.PREVISAO_ALTA_OPTIONS = ['Hoje Ouro', '24h 2R', '48h 3R', '72h', '96h', 'Não definido'];
 
+// =================== FUNÇÕES DE LOADING DOS BOTÕES ===================
+window.showButtonLoading = function(button, originalText) {
+    button.disabled = true;
+    button.style.opacity = '0.7';
+    button.style.cursor = 'not-allowed';
+    button.innerHTML = `
+        <div style="display: flex; align-items: center; justify-content: center; gap: 8px;">
+            <div style="width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-top: 2px solid #ffffff; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+            Carregando...
+        </div>
+    `;
+};
+
+window.hideButtonLoading = function(button, originalText) {
+    button.disabled = false;
+    button.style.opacity = '1';
+    button.style.cursor = 'pointer';
+    button.innerHTML = originalText;
+};
+
 // =================== GERAR DADOS MOCK (FALLBACK) ===================
 function generateMockData() {
     const mockData = {};
@@ -67,7 +90,7 @@ function generateMockData() {
                         idade: 45 + (i * 3) % 40,
                         pps: `${(Math.floor(Math.random() * 10) + 1) * 10}%`,
                         spictBr: Math.random() > 0.5 ? 'Elegível' : 'Não elegível',
-                        // *** COMPLEXIDADE REMOVIDA ***
+                        // *** COMPLEXIDADE REMOVIDA COMPLETAMENTE ***
                         previsaoAlta: PREVISAO_ALTA_OPTIONS[Math.floor(Math.random() * PREVISAO_ALTA_OPTIONS.length)],
                         concessoes: CONCESSOES_LIST.slice(0, Math.floor(Math.random() * 3) + 1),
                         linhasCuidado: LINHAS_CUIDADO_LIST.slice(0, Math.floor(Math.random() * 2) + 1),
@@ -109,7 +132,7 @@ window.renderCards = function() {
     }
     
     // *** VERIFICAR SE HOSPITAL ESTÁ ATIVO ***
-    if (!CONFIG.HOSPITAIS[window.currentHospital].ativo) {
+    if (CONFIG.HOSPITAIS[window.currentHospital] && !CONFIG.HOSPITAIS[window.currentHospital].ativo) {
         container.innerHTML = '<div style="text-align: center; padding: 50px; color: #666;">Hospital desabilitado</div>';
         return;
     }
@@ -272,27 +295,7 @@ window.openForm = function(hospitalId, leitoNumero, isVago) {
     }, 800); // 800ms de delay para simular carregamento
 };
 
-// =================== FUNÇÕES DE LOADING DOS BOTÕES ===================
-function showButtonLoading(button, originalText) {
-    button.disabled = true;
-    button.style.opacity = '0.7';
-    button.style.cursor = 'not-allowed';
-    button.innerHTML = `
-        <div style="display: flex; align-items: center; justify-content: center; gap: 8px;">
-            <div style="width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-top: 2px solid #ffffff; border-radius: 50%; animation: spin 1s linear infinite;"></div>
-            Carregando...
-        </div>
-    `;
-}
-
-function hideButtonLoading(button, originalText) {
-    button.disabled = false;
-    button.style.opacity = '1';
-    button.style.cursor = 'pointer';
-    button.innerHTML = originalText;
-}
-
-// =================== FORMULÁRIO DE ADMISSÃO (INICIAIS) ===================
+// =================== FORMULÁRIO DE ADMISSÃO (INICIAIS EM VEZ DE NOME) ===================
 function createAdmissaoForm(hospitalId, leitoNumero) {
     const hospitalNome = CONFIG.HOSPITAIS[hospitalId].nome;
     
@@ -406,8 +409,8 @@ function createAdmissaoForm(hospitalId, leitoNumero) {
 
 // =================== FORMULÁRIO DE ATUALIZAÇÃO (SEM COMPLEXIDADE) ===================
 function createAtualizacaoForm(hospitalNome, leitoData, hospitalId, leitoNumero) {
-    const tempoInternacao = leitoData && leitoData.admAt ?
-        calcularTempoInternacao(leitoData.admAt) : '';
+    const tempoInternacao = leitoData && leitoData.admissao ?
+        calcularTempoInternacao(leitoData.admissao) : '';
     
     return `
         <div style="background: #1a1f2e; border-radius: 12px; padding: 30px; max-width: 600px; width: 95%; max-height: 90vh; overflow-y: auto; color: #ffffff;">
@@ -423,15 +426,15 @@ function createAtualizacaoForm(hospitalNome, leitoData, hospitalId, leitoNumero)
                 <!-- INICIAIS (não Nome Completo) -->
                 <div>
                     <label style="display: block; margin-bottom: 5px; color: #e2e8f0; font-weight: 600;">INICIAIS</label>
-                    <input type="text" value="${leitoData ? getIniciais(leitoData.nome) : ''}" maxlength="3" style="width: 100%; padding: 10px; background: #374151; color: #ffffff; border: 1px solid rgba(255,255,255,0.3); border-radius: 6px;">
+                    <input type="text" value="${leitoData && leitoData.paciente ? getIniciais(leitoData.paciente.nome) : ''}" maxlength="3" style="width: 100%; padding: 10px; background: #374151; color: #ffffff; border: 1px solid rgba(255,255,255,0.3); border-radius: 6px;">
                 </div>
                 <div>
                     <label style="display: block; margin-bottom: 5px; color: #e2e8f0; font-weight: 600;">MATRÍCULA</label>
-                    <input type="text" value="${leitoData ? leitoData.matricula : ''}" style="width: 100%; padding: 10px; background: #374151; color: #ffffff; border: 1px solid rgba(255,255,255,0.3); border-radius: 6px;">
+                    <input type="text" value="${leitoData && leitoData.paciente ? leitoData.paciente.matricula : ''}" style="width: 100%; padding: 10px; background: #374151; color: #ffffff; border: 1px solid rgba(255,255,255,0.3); border-radius: 6px;">
                 </div>
                 <div>
                     <label style="display: block; margin-bottom: 5px; color: #e2e8f0; font-weight: 600;">IDADE</label>
-                    <input type="number" value="${leitoData ? leitoData.idade : ''}" style="width: 100%; padding: 10px; background: #374151; color: #ffffff; border: 1px solid rgba(255,255,255,0.3); border-radius: 6px;">
+                    <input type="number" value="${leitoData && leitoData.paciente ? leitoData.paciente.idade : ''}" style="width: 100%; padding: 10px; background: #374151; color: #ffffff; border: 1px solid rgba(255,255,255,0.3); border-radius: 6px;">
                 </div>
             </div>
             
@@ -442,22 +445,22 @@ function createAtualizacaoForm(hospitalNome, leitoData, hospitalId, leitoNumero)
                     <label style="display: block; margin-bottom: 5px; color: #e2e8f0; font-weight: 600;">PPS</label>
                     <select style="width: 100%; padding: 10px; background: #374151; color: #ffffff; border: 1px solid rgba(255,255,255,0.3); border-radius: 6px;">
                         ${['10%', '20%', '30%', '40%', '50%', '60%', '70%', '80%', '90%', '100%'].map(p => `
-                            <option ${leitoData && leitoData.pps === p ? 'selected' : ''}>${p}</option>
+                            <option ${leitoData && leitoData.paciente && leitoData.paciente.pps === p ? 'selected' : ''}>${p}</option>
                         `).join('')}
                     </select>
                 </div>
                 <div>
                     <label style="display: block; margin-bottom: 5px; color: #e2e8f0; font-weight: 600;">SPICT-BR</label>
                     <select style="width: 100%; padding: 10px; background: #374151; color: #ffffff; border: 1px solid rgba(255,255,255,0.3); border-radius: 6px;">
-                        <option ${leitoData && leitoData.spictBr === 'Não elegível' ? 'selected' : ''}>Não elegível</option>
-                        <option ${leitoData && leitoData.spictBr === 'Elegível' ? 'selected' : ''}>Elegível</option>
+                        <option ${leitoData && leitoData.paciente && leitoData.paciente.spictBr === 'Não elegível' ? 'selected' : ''}>Não elegível</option>
+                        <option ${leitoData && leitoData.paciente && leitoData.paciente.spictBr === 'Elegível' ? 'selected' : ''}>Elegível</option>
                     </select>
                 </div>
                 <div>
                     <label style="display: block; margin-bottom: 5px; color: #e2e8f0; font-weight: 600;">PREV ALTA</label>
                     <select style="width: 100%; padding: 10px; background: #374151; color: #ffffff; border: 1px solid rgba(255,255,255,0.3); border-radius: 6px;">
                         ${PREVISAO_ALTA_OPTIONS.map(p => `
-                            <option ${leitoData && leitoData.previsaoAlta === p ? 'selected' : ''}>${p}</option>
+                            <option ${leitoData && leitoData.paciente && leitoData.paciente.previsaoAlta === p ? 'selected' : ''}>${p}</option>
                         `).join('')}
                     </select>
                 </div>
@@ -473,7 +476,7 @@ function createAtualizacaoForm(hospitalNome, leitoData, hospitalId, leitoNumero)
                 <div class="concessoes-list" style="max-height: 150px; overflow-y: auto; background: rgba(255,255,255,0.03); border-radius: 6px; padding: 10px;">
                     ${CONCESSOES_LIST.map(c => `
                         <label style="display: block; padding: 6px 0; cursor: pointer;">
-                            <input type="checkbox" value="${c}" ${leitoData && leitoData.concessoes && leitoData.concessoes.includes(c) ? 'checked' : ''} style="margin-right: 8px;">
+                            <input type="checkbox" value="${c}" ${leitoData && leitoData.paciente && leitoData.paciente.concessoes && leitoData.paciente.concessoes.includes(c) ? 'checked' : ''} style="margin-right: 8px;">
                             <span style="font-size: 14px;">${c}</span>
                         </label>
                     `).join('')}
@@ -490,7 +493,7 @@ function createAtualizacaoForm(hospitalNome, leitoData, hospitalId, leitoNumero)
                 <div class="linhas-list" style="max-height: 150px; overflow-y: auto; background: rgba(255,255,255,0.03); border-radius: 6px; padding: 10px;">
                     ${LINHAS_CUIDADO_LIST.map(l => `
                         <label style="display: block; padding: 6px 0; cursor: pointer;">
-                            <input type="checkbox" value="${l}" ${leitoData && leitoData.linhasCuidado && leitoData.linhasCuidado.includes(l) ? 'checked' : ''} style="margin-right: 8px;">
+                            <input type="checkbox" value="${l}" ${leitoData && leitoData.paciente && leitoData.paciente.linhasCuidado && leitoData.paciente.linhasCuidado.includes(l) ? 'checked' : ''} style="margin-right: 8px;">
                             <span style="font-size: 14px;">${l}</span>
                         </label>
                     `).join('')}
@@ -498,11 +501,11 @@ function createAtualizacaoForm(hospitalNome, leitoData, hospitalId, leitoNumero)
             </div>
             
             <!-- Informações de internação -->
-            ${leitoData && leitoData.admAt ? `
+            ${leitoData && leitoData.paciente && leitoData.paciente.admissao ? `
             <div style="display: flex; gap: 40px; padding: 15px; background: rgba(255,255,255,0.03); border-radius: 6px; margin-bottom: 20px;">
                 <div>
                     <span style="font-size: 12px; color: rgba(255,255,255,0.6);">Admissão:</span>
-                    <strong style="margin-left: 8px;">${new Date(leitoData.admAt).toLocaleString('pt-BR')}</strong>
+                    <strong style="margin-left: 8px;">${leitoData.paciente.admissao}</strong>
                 </div>
                 <div>
                     <span style="font-size: 12px; color: rgba(255,255,255,0.6);">Internado há:</span>
@@ -523,7 +526,7 @@ function createAtualizacaoForm(hospitalNome, leitoData, hospitalId, leitoNumero)
     `;
 }
 
-// =================== EVENT LISTENERS DOS FORMULÁRIOS ===================
+// =================== EVENT LISTENERS DOS FORMULÁRIOS COM LOADING ===================
 function addFormEventListeners(modal) {
     // Botão Cancelar
     const btnCancelar = modal.querySelector('.btn-cancelar');
@@ -533,7 +536,7 @@ function addFormEventListeners(modal) {
         });
     }
     
-    // Botão Salvar
+    // Botão Salvar com Loading
     const btnSalvar = modal.querySelector('.btn-salvar');
     if (btnSalvar) {
         btnSalvar.addEventListener('click', function() {
@@ -554,7 +557,7 @@ function addFormEventListeners(modal) {
         });
     }
     
-    // Botão Alta
+    // Botão Alta com Loading
     const btnAlta = modal.querySelector('.btn-alta');
     if (btnAlta) {
         btnAlta.addEventListener('click', function() {
@@ -596,22 +599,67 @@ function getIniciais(nomeCompleto) {
 function calcularTempoInternacao(admissao) {
     if (!admissao) return '';
     
-    const agora = new Date();
-    const dataAdmissao = new Date(admissao);
-    const diffTime = Math.abs(agora - dataAdmissao);
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
-    if (diffDays === 1) return '1 dia';
-    return `${diffDays} dias`;
+    try {
+        let dataAdmissao;
+        
+        // Tentar diferentes formatos de data
+        if (typeof admissao === 'string') {
+            if (admissao.includes('/')) {
+                // Formato brasileiro: DD/MM/YYYY HH:MM:SS
+                const [datePart] = admissao.split(' ');
+                const [dia, mes, ano] = datePart.split('/');
+                dataAdmissao = new Date(ano, mes - 1, dia);
+            } else {
+                dataAdmissao = new Date(admissao);
+            }
+        } else {
+            dataAdmissao = new Date(admissao);
+        }
+        
+        const agora = new Date();
+        const diffTime = Math.abs(agora - dataAdmissao);
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        
+        if (diffDays === 1) return '1 dia';
+        return `${diffDays} dias`;
+    } catch (error) {
+        return '';
+    }
 }
 
-// =================== CSS PARA DROPDOWN CORRIGIDO ===================
+// =================== FECHAR MODAL ===================
+window.closeModal = function() {
+    const modal = document.querySelector('.modal-overlay');
+    if (modal) {
+        modal.remove();
+    }
+};
+
+// =================== CSS PARA DROPDOWN CORRIGIDO + LOADING ===================
 const cardsCSS = `
 <style>
 /* =================== LOADING SPINNER =================== */
 @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
+}
+
+.loading-spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top: 2px solid #ffffff;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+.btn-loading {
+    pointer-events: none;
+    opacity: 0.7;
+}
+
+.btn-loading .loading-spinner {
+    margin-right: 8px;
 }
 
 /* =================== DROPDOWN FIX CRÍTICO =================== */
@@ -658,6 +706,24 @@ select:focus {
     color: #ffffff !important;
 }
 
+/* Correção para WebKit (Chrome/Safari) */
+select::-webkit-scrollbar {
+    width: 8px;
+}
+
+select::-webkit-scrollbar-track {
+    background: #374151;
+}
+
+select::-webkit-scrollbar-thumb {
+    background: #6b7280;
+    border-radius: 4px;
+}
+
+select::-webkit-scrollbar-thumb:hover {
+    background: #9ca3af;
+}
+
 /* =================== RESPONSIVIDADE MOBILE =================== */
 @media (max-width: 768px) {
     .card > div {
@@ -673,6 +739,19 @@ select:focus {
         padding: 10px 20px !important;
         font-size: 12px !important;
     }
+    
+    /* *** ALINHAMENTO DOS BOXES MOBILE *** */
+    .card-row {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr 1fr !important;
+        gap: 8px !important;
+        margin-bottom: 12px !important;
+    }
+    
+    .card-field {
+        flex: 1 !important;
+        min-width: 0 !important;
+    }
 }
 </style>
 `;
@@ -685,4 +764,9 @@ if (!document.getElementById('cardsStyles')) {
     document.head.appendChild(styleEl);
 }
 
-logSuccess('✅ Cards.js corrigido: ENF/APTO + Iniciais + Loading + Dropdowns + Sem Complexidade');
+// =================== INICIALIZAÇÃO ===================
+document.addEventListener('DOMContentLoaded', function() {
+    logInfo('✅ Cards.js carregado com todas as correções aplicadas');
+});
+
+logSuccess('✅ Cards.js COMPLETO: ENF/APTO + Iniciais + Loading + Dropdowns escuros + Sem Complexidade + Botão ALTA');

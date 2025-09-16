@@ -94,7 +94,12 @@ window.authenticate = function() {
 window.initSystem = function() {
     logInfo('Inicializando sistema...');
     
-    // Carregar dados dos hospitais
+    // Testar API
+    if (window.testAPI) {
+        window.testAPI();
+    }
+    
+    // Carregar dados dos hospitais (API real)
     if (window.loadHospitalData) {
         window.loadHospitalData();
     }
@@ -121,7 +126,6 @@ window.startTimer = function() {
         const minutes = Math.floor(timeLeft / 60);
         const seconds = timeLeft % 60;
         
-        // ID CORRIGIDO: timer -> updateTimer
         const timerElement = document.getElementById('updateTimer');
         if (timerElement) {
             timerElement.textContent = 
@@ -141,7 +145,7 @@ window.startTimer = function() {
 window.updateData = function() {
     logInfo('Atualizando dados...');
     
-    // Recarregar dados dos hospitais
+    // Recarregar dados dos hospitais (API real)
     if (window.loadHospitalData) {
         window.loadHospitalData();
     }
@@ -158,7 +162,7 @@ window.updateData = function() {
     logSuccess('Dados atualizados');
 };
 
-// =================== NAVEGAÇÃO ENTRE TABS ===================
+// =================== NAVEGAÇÃO ENTRE TABS (CORRIGIDO - MENU SE FECHA) ===================
 window.setActiveTab = function(tab) {
     logInfo(`Mudando para tab: ${tab}`);
     
@@ -191,6 +195,15 @@ window.setActiveTab = function(tab) {
         }
     });
     
+    // *** CORREÇÃO: FECHAR MENU AUTOMATICAMENTE APÓS CLICAR ***
+    const menu = document.getElementById('sideMenu');
+    const overlay = document.getElementById('menuOverlay');
+    if (menu && menu.classList.contains('open')) {
+        menu.classList.remove('open');
+        if (overlay) overlay.classList.remove('show');
+        document.body.classList.remove('menu-open');
+    }
+    
     // Renderizar conteúdo específico da tab
     setTimeout(() => {
         if (tab === 'leitos' && window.renderCards) {
@@ -201,11 +214,6 @@ window.setActiveTab = function(tab) {
             window.renderDashboardExecutivo();
         }
     }, 100);
-    
-    // Fechar menu em mobile
-    if (window.innerWidth <= 1024) {
-        window.toggleMenu();
-    }
 };
 
 // =================== MENU LATERAL ===================

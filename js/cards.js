@@ -46,7 +46,7 @@ window.PREVISAO_ALTA_OPTIONS = [
     '48h', '72h', '96h', 'SP'
 ];
 
-window.COMPLEXIDADE_OPTIONS = ['I', 'II', 'III'];
+// *** COMPLEXIDADE_OPTIONS REMOVIDO - NÃO SERÁ MAIS USADO ***
 
 // =================== CARREGAR DADOS DOS HOSPITAIS (API REAL) ===================
 window.loadHospitalData = async function() {
@@ -85,7 +85,7 @@ function generateMockData() {
             if (isOcupado) {
                 mockData[hospitalId].leitos.push({
                     numero: i,
-                    tipo: i <= 10 ? 'ENF/APTO' : 'UTI',
+                    tipo: 'ENF/APTO', // *** SIMPLIFICADO CONFORME SOLICITADO ***
                     status: 'ocupado',
                     paciente: {
                         nome: `Paciente ${hospital.nome.substring(0,3)}-${i}`,
@@ -93,7 +93,7 @@ function generateMockData() {
                         idade: 45 + (i * 3) % 40,
                         pps: `${(Math.floor(Math.random() * 10) + 1) * 10}%`,
                         spictBr: Math.random() > 0.5 ? 'Elegível' : 'Não elegível',
-                        complexidade: COMPLEXIDADE_OPTIONS[Math.floor(Math.random() * 3)],
+                        // *** COMPLEXIDADE REMOVIDA ***
                         previsaoAlta: PREVISAO_ALTA_OPTIONS[Math.floor(Math.random() * PREVISAO_ALTA_OPTIONS.length)],
                         concessoes: CONCESSOES_LIST.slice(0, Math.floor(Math.random() * 3) + 1),
                         linhasCuidado: LINHAS_CUIDADO_LIST.slice(0, Math.floor(Math.random() * 2) + 1),
@@ -103,7 +103,7 @@ function generateMockData() {
             } else {
                 mockData[hospitalId].leitos.push({
                     numero: i,
-                    tipo: i <= 10 ? 'ENF/APTO' : 'UTI',
+                    tipo: 'ENF/APTO', // *** SIMPLIFICADO CONFORME SOLICITADO ***
                     status: 'vago'
                 });
             }
@@ -118,10 +118,27 @@ window.renderCards = function() {
     const container = document.getElementById('cardsContainer');
     if (!container) return;
     
+    // *** VERIFICAR SE HÁ DADOS ANTES DE RENDERIZAR ***
+    if (!window.hospitalData || Object.keys(window.hospitalData).length === 0) {
+        if (window.showLoading) {
+            window.showLoading(container, 'Carregando dados dos hospitais...');
+        }
+        return;
+    }
+    
     container.innerHTML = '';
     
     const hospital = window.hospitalData[window.currentHospital];
-    if (!hospital) return;
+    if (!hospital) {
+        container.innerHTML = '<div style="text-align: center; padding: 50px; color: #666;">Hospital não encontrado</div>';
+        return;
+    }
+    
+    // *** VERIFICAR SE HOSPITAL ESTÁ ATIVO ***
+    if (!CONFIG.HOSPITAIS[window.currentHospital].ativo) {
+        container.innerHTML = '<div style="text-align: center; padding: 50px; color: #666;">Hospital desabilitado</div>';
+        return;
+    }
     
     hospital.leitos.forEach(leito => {
         const card = createCard(leito, hospital.nome);
@@ -131,7 +148,7 @@ window.renderCards = function() {
     logInfo(`${hospital.leitos.length} cards renderizados para ${hospital.nome}`);
 };
 
-// =================== CRIAR CARD INDIVIDUAL - LAYOUT 3x3 ===================
+// =================== CRIAR CARD INDIVIDUAL - LAYOUT 3x3 SEM COMPLEXIDADE ===================
 function createCard(leito, hospitalNome) {
     const card = document.createElement('div');
     card.className = 'card';
@@ -175,7 +192,7 @@ function createCard(leito, hospitalNome) {
             </div>
         </div>
 
-        <!-- LINHA 3: PPS / SPICT-BR / Complexidade / Previsão de Alta -->
+        <!-- LINHA 3: PPS / SPICT-BR / Previsão de Alta (SEM COMPLEXIDADE) -->
         <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 15px;">
             <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 12px;">
                 <div style="font-size: 10px; color: rgba(255,255,255,0.6); text-transform: uppercase; font-weight: 600; margin-bottom: 4px;">PPS</div>
@@ -191,15 +208,7 @@ function createCard(leito, hospitalNome) {
             </div>
         </div>
 
-        <!-- LINHA 4: Complexidade (NOVA) -->
-        ${!isVago && leito.paciente.complexidade ? `
-        <div style="margin-bottom: 15px;">
-            <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 12px; text-align: center;">
-                <div style="font-size: 10px; color: rgba(255,255,255,0.6); text-transform: uppercase; font-weight: 600; margin-bottom: 4px;">COMPLEXIDADE</div>
-                <div style="font-size: 18px; font-weight: 700; color: #60a5fa;">${leito.paciente.complexidade}</div>
-            </div>
-        </div>
-        ` : ''}
+        <!-- *** LINHA 4 DA COMPLEXIDADE REMOVIDA COMPLETAMENTE *** -->
 
         <!-- LINHA 5: CONCESSÕES PREVISTAS -->
         <div style="margin-bottom: 15px;">
@@ -272,7 +281,7 @@ function calcularTempoInternacao(dataAdmissao) {
     return `${dias}d ${horas}h`;
 }
 
-// =================== ABRIR FORMULÁRIO (API INTEGRADA) ===================
+// =================== ABRIR FORMULÁRIO (API INTEGRADA - SEM COMPLEXIDADE) ===================
 window.openForm = async function(hospitalId, leitoNumero, isAdmissao) {
     logInfo(`Abrindo formulário - ${hospitalId} Leito ${leitoNumero} - ${isAdmissao ? 'Admissão' : 'Atualização'}`);
     
@@ -338,7 +347,7 @@ window.openForm = async function(hospitalId, leitoNumero, isAdmissao) {
                 idade: modal.querySelector('#idade')?.value ? parseInt(modal.querySelector('#idade').value) : null,
                 pps: modal.querySelector('#pps')?.value ? parseInt(modal.querySelector('#pps').value) : null,
                 spict: modal.querySelector('#spict')?.value || '',
-                complexidade: modal.querySelector('#complexidade')?.value || 'I',
+                // *** COMPLEXIDADE REMOVIDA DO PAYLOAD ***
                 prevAlta: modal.querySelector('#prevAlta')?.value || '',
                 concessoes: Array.from(modal.querySelectorAll('.concessoes-list input:checked')).map(cb => cb.value),
                 linhas: Array.from(modal.querySelectorAll('.linhas-list input:checked')).map(cb => cb.value)
@@ -362,7 +371,7 @@ window.openForm = async function(hospitalId, leitoNumero, isAdmissao) {
     });
 };
 
-// =================== FORMULÁRIO DE ADMISSÃO (COM COMPLEXIDADE) ===================
+// =================== FORMULÁRIO DE ADMISSÃO (SEM COMPLEXIDADE + INICIAIS) ===================
 function createAdmissaoForm(hospitalNome, leitoNumero, hospitalId) {
     return `
         <div style="background: #1a1f2e; border-radius: 12px; max-width: 800px; width: 90%; max-height: 90vh; overflow-y: auto; color: #ffffff;">
@@ -372,11 +381,11 @@ function createAdmissaoForm(hospitalNome, leitoNumero, hospitalId) {
             </div>
             
             <div style="padding: 20px;">
-                <!-- Dados do Paciente -->
+                <!-- Dados do Paciente - SEM COMPLEXIDADE = 3 COLUNAS PERFEITAS -->
                 <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px;">
                     <div>
-                        <label style="font-size: 10px; color: rgba(255,255,255,0.6); text-transform: uppercase; font-weight: 600; display: block; margin-bottom: 4px;">NOME COMPLETO</label>
-                        <input id="nome" type="text" style="width: 100%; padding: 10px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: #ffffff;">
+                        <label style="font-size: 10px; color: rgba(255,255,255,0.6); text-transform: uppercase; font-weight: 600; display: block; margin-bottom: 4px;">INICIAIS</label>
+                        <input id="nome" type="text" maxlength="3" placeholder="ABC" style="width: 100%; padding: 10px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: #ffffff; text-transform: uppercase;">
                     </div>
                     <div>
                         <label style="font-size: 10px; color: rgba(255,255,255,0.6); text-transform: uppercase; font-weight: 600; display: block; margin-bottom: 4px;">MATRÍCULA</label>
@@ -388,7 +397,7 @@ function createAdmissaoForm(hospitalNome, leitoNumero, hospitalId) {
                     </div>
                 </div>
                 
-                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px;">
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px;">
                     <div>
                         <label style="font-size: 10px; color: rgba(255,255,255,0.6); text-transform: uppercase; font-weight: 600; display: block; margin-bottom: 4px;">PPS</label>
                         <select id="pps" style="width: 100%; padding: 10px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: #ffffff;">
@@ -403,12 +412,7 @@ function createAdmissaoForm(hospitalNome, leitoNumero, hospitalId) {
                             <option value="elegivel">Elegível</option>
                         </select>
                     </div>
-                    <div>
-                        <label style="font-size: 10px; color: rgba(255,255,255,0.6); text-transform: uppercase; font-weight: 600; display: block; margin-bottom: 4px;">COMPLEXIDADE</label>
-                        <select id="complexidade" style="width: 100%; padding: 10px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: #ffffff;">
-                            ${COMPLEXIDADE_OPTIONS.map(opt => `<option value="${opt}">${opt}</option>`).join('')}
-                        </select>
-                    </div>
+                    <!-- *** COMPLEXIDADE REMOVIDA - AGORA SÃO APENAS 3 COLUNAS *** -->
                     <div>
                         <label style="font-size: 10px; color: rgba(255,255,255,0.6); text-transform: uppercase; font-weight: 600; display: block; margin-bottom: 4px;">PREV ALTA</label>
                         <select id="prevAlta" style="width: 100%; padding: 10px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: #ffffff;">
@@ -461,7 +465,7 @@ function createAdmissaoForm(hospitalNome, leitoNumero, hospitalId) {
     `;
 }
 
-// =================== FORMULÁRIO DE ATUALIZAÇÃO (COM COMPLEXIDADE) ===================
+// =================== FORMULÁRIO DE ATUALIZAÇÃO (SEM COMPLEXIDADE) ===================
 function createAtualizacaoForm(hospitalNome, leitoData, hospitalId, leitoNumero) {
     const tempoInternacao = leitoData && leitoData.admAt ? calcularTempoInternacao(leitoData.admAt) : '';
     
@@ -473,7 +477,7 @@ function createAtualizacaoForm(hospitalNome, leitoData, hospitalId, leitoNumero)
             </div>
             
             <div style="padding: 20px;">
-                <!-- Dados fixos do paciente -->
+                <!-- Dados fixos do paciente - SEM COMPLEXIDADE = 3 COLUNAS -->
                 <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px;">
                     <div style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.05); border-radius: 8px; padding: 12px;">
                         <div style="font-size: 10px; color: rgba(255,255,255,0.4); text-transform: uppercase; font-weight: 600; margin-bottom: 4px;">INICIAIS</div>
@@ -489,8 +493,8 @@ function createAtualizacaoForm(hospitalNome, leitoData, hospitalId, leitoNumero)
                     </div>
                 </div>
                 
-                <!-- Campos editáveis -->
-                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px;">
+                <!-- Campos editáveis - SEM COMPLEXIDADE = 3 COLUNAS PERFEITAS -->
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px;">
                     <div>
                         <label style="font-size: 10px; color: rgba(255,255,255,0.6); text-transform: uppercase; font-weight: 600; display: block; margin-bottom: 4px;">PPS</label>
                         <select id="pps" style="width: 100%; padding: 10px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: #ffffff;">
@@ -507,14 +511,7 @@ function createAtualizacaoForm(hospitalNome, leitoData, hospitalId, leitoNumero)
                             <option value="elegivel" ${leitoData && leitoData.spict === 'elegivel' ? 'selected' : ''}>Elegível</option>
                         </select>
                     </div>
-                    <div>
-                        <label style="font-size: 10px; color: rgba(255,255,255,0.6); text-transform: uppercase; font-weight: 600; display: block; margin-bottom: 4px;">COMPLEXIDADE</label>
-                        <select id="complexidade" style="width: 100%; padding: 10px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: #ffffff;">
-                            ${COMPLEXIDADE_OPTIONS.map(opt => 
-                                `<option value="${opt}" ${leitoData && leitoData.complexidade === opt ? 'selected' : ''}>${opt}</option>`
-                            ).join('')}
-                        </select>
-                    </div>
+                    <!-- *** COMPLEXIDADE REMOVIDA - LAYOUT PERFEITO COM 3 COLUNAS *** -->
                     <div>
                         <label style="font-size: 10px; color: rgba(255,255,255,0.6); text-transform: uppercase; font-weight: 600; display: block; margin-bottom: 4px;">PREV ALTA</label>
                         <select id="prevAlta" style="width: 100%; padding: 10px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: #ffffff;">
@@ -574,16 +571,16 @@ function createAtualizacaoForm(hospitalNome, leitoData, hospitalId, leitoNumero)
                 ` : ''}
             </div>
             
-            <!-- Botões -->
+            <!-- Botões - ALTA SEM "DAR" -->
             <div style="display: flex; justify-content: space-between; padding: 20px; border-top: 1px solid rgba(255,255,255,0.1);">
                 <button class="btn-cancelar" style="padding: 12px 30px; background: rgba(255,255,255,0.1); color: #ffffff; border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; font-weight: 600; text-transform: uppercase; cursor: pointer;">CANCELAR</button>
                 <div style="display: flex; gap: 12px;">
                     <button class="btn-salvar" style="padding: 12px 30px; background: #3b82f6; color: #ffffff; border: none; border-radius: 8px; font-weight: 600; text-transform: uppercase; cursor: pointer;">SALVAR</button>
-                    <button class="btn-alta" style="padding: 12px 30px; background: #ef4444; color: #ffffff; border: none; border-radius: 8px; font-weight: 600; text-transform: uppercase; cursor: pointer;">DAR ALTA</button>
+                    <button class="btn-alta" style="padding: 12px 30px; background: #ef4444; color: #ffffff; border: none; border-radius: 8px; font-weight: 600; text-transform: uppercase; cursor: pointer;">ALTA</button>
                 </div>
             </div>
         </div>
     `;
 }
 
-logSuccess('Cards.js carregado - API real integrada + Campo complexidade');
+logSuccess('Cards.js carregado - Campo Complexidade REMOVIDO + Iniciais + Tipo ENF/APTO');

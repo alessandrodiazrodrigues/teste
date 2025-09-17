@@ -305,9 +305,10 @@ function calcularKPIsExecutivos(hospitaisComDados) {
         hospital.leitos.forEach(leito => {
             totalLeitos++;
             
-            // CORREÇÃO: Verificar status correto
-            if (leito.status === 'ocupado' || leito.status === 'Ocupado') {
+            // CORREÇÃO: Verificar status correto conforme API
+            if (leito.status === 'Em uso' || leito.status === 'ocupado' || leito.status === 'Ocupado') {
                 leitosOcupados++;
+                logInfo(`Leito ocupado encontrado: ${hospitalId} - Status: ${leito.status}`);
                 
                 // Verificar se tem alta prevista
                 if (leito.paciente && leito.paciente.prevAlta && leito.paciente.prevAlta !== 'Não definido') {

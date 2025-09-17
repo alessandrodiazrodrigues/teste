@@ -840,12 +840,12 @@ function getExecutiveCSS() {
             }
             
             .hospital-nome {
-                color: white;
+                color: white !important;
                 font-weight: 500;
             }
             
             .hospital-pct {
-                color: #22c55e;
+                color: white !important;
                 font-weight: 700;
             }
             

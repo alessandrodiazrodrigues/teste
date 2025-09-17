@@ -74,18 +74,24 @@ window.loadHospitalData = async function() {
         
         // *** DEBUG: LOG DOS DADOS RECEBIDOS ***
         console.log('🔍 [DEBUG] Dados brutos da API:', rawData);
+        console.log('🔍 [DEBUG] Total de registros recebidos:', rawData.length);
+        
+        // *** DEBUG: CONTAR REGISTROS POR HOSPITAL ***
+        const contadorHospitais = {};
+        rawData.forEach(reg => {
+            contadorHospitais[reg.hospital] = (contadorHospitais[reg.hospital] || 0) + 1;
+        });
+        console.log('🔍 [DEBUG] Registros por hospital:', contadorHospitais);
         
         // *** PROCESSAR E AGRUPAR DADOS POR HOSPITAL ***
         const hospitalsData = {};
         
-        // Inicializar todos os hospitais ativos
-        Object.keys(CONFIG.HOSPITAIS).forEach(hospitalId => {
-            if (CONFIG.HOSPITAIS[hospitalId].ativo) {
-                hospitalsData[hospitalId] = {
-                    nome: CONFIG.HOSPITAIS[hospitalId].nome,
-                    leitos: []
-                };
-            }
+        // Inicializar TODOS os hospitais (H1, H2, H3, H4)
+        ['H1', 'H2', 'H3', 'H4'].forEach(hospitalId => {
+            hospitalsData[hospitalId] = {
+                nome: CONFIG.HOSPITAIS[hospitalId]?.nome || hospitalId,
+                leitos: []
+            };
         });
         
         // Processar cada registro da planilha

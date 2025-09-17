@@ -67,17 +67,19 @@ window.renderDashboardExecutivo = function() {
         return hospital && hospital.leitos && hospital.leitos.length > 0;
     });
     
+    logInfo(`Hospitais com dados encontrados: ${hospitaisComDados.length}`);
+    
     if (hospitaisComDados.length === 0) {
-        container.innerHTML = `
-            <div style="text-align: center; padding: 50px; color: white; background: #1a1f2e; border-radius: 12px;">
-                <h3 style="color: #f59e0b; margin-bottom: 15px;">Nenhum dado executivo disponível</h3>
-                <p style="color: #9ca3af; margin-bottom: 20px;">Não foi possível consolidar dados de nenhum hospital configurado.</p>
-                <p style="color: #6b7280; font-size: 14px;">Hospitais configurados: ${Object.values(CONFIG.HOSPITAIS).map(h => h.nome).join(', ')}</p>
-                <button onclick="window.forceExecutiveRefresh()" style="background: #22c55e; color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; font-size: 14px; margin-top: 15px;">
-                    Recarregar Dados
-                </button>
-            </div>
-        `;
+        // Forçar carregamento dos dados se não existem
+        logInfo('Forçando carregamento de dados...');
+        if (window.loadHospitalData) {
+            window.loadHospitalData().then(() => {
+                setTimeout(() => window.renderDashboardExecutivo(), 1000);
+            });
+        } else {
+            criarDadosMockExecutivo();
+            setTimeout(() => window.renderDashboardExecutivo(), 500);
+        }
         return;
     }
     
@@ -838,7 +840,7 @@ function getExecutiveCSS() {
             }
             
             .hospital-nome {
-                color: #e2e8f0;
+                color: white;
                 font-weight: 500;
             }
             

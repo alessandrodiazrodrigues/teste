@@ -280,7 +280,7 @@ window.renderDashboardExecutivo = function() {
     aguardarChartJS();
 };
 
-// =================== CALCULAR KPIs CONSOLIDADOS ===================
+// =================== CALCULAR KPIs CONSOLIDADOS - CORREÇÃO CRÍTICA ===================
 function calcularKPIsExecutivos(hospitaisComDados) {
     let totalLeitos = 0;
     let leitosOcupados = 0;
@@ -291,14 +291,22 @@ function calcularKPIsExecutivos(hospitaisComDados) {
     let ppsCount = 0;
     let spctCasos = 0;
     
+    logInfo(`Calculando KPIs para ${hospitaisComDados.length} hospitais`);
+    
     hospitaisComDados.forEach(hospitalId => {
         const hospital = window.hospitalData[hospitalId];
-        if (!hospital || !hospital.leitos) return;
+        if (!hospital || !hospital.leitos) {
+            logInfo(`Hospital ${hospitalId} sem dados de leitos`);
+            return;
+        }
+        
+        logInfo(`Hospital ${hospitalId}: ${hospital.leitos.length} leitos`);
         
         hospital.leitos.forEach(leito => {
             totalLeitos++;
             
-            if (leito.status === 'ocupado') {
+            // CORREÇÃO: Verificar status correto
+            if (leito.status === 'ocupado' || leito.status === 'Ocupado') {
                 leitosOcupados++;
                 
                 // Verificar se tem alta prevista
@@ -325,7 +333,10 @@ function calcularKPIsExecutivos(hospitaisComDados) {
                 }
                 
                 // SPCT Casos
-                if (leito.paciente && leito.paciente.linhas && leito.paciente.linhas.includes('Cuidados Paliativos')) {
+                if (leito.paciente && leito.paciente.linhas && 
+                    (leito.paciente.linhas.includes('Cuidados Paliativos') || 
+                     leito.paciente.linhas.includes('UTI') || 
+                     leito.paciente.linhas.includes('Complexo'))) {
                     spctCasos++;
                 }
             }
@@ -335,7 +346,7 @@ function calcularKPIsExecutivos(hospitaisComDados) {
     const leitosVagos = totalLeitos - leitosOcupados;
     const ocupacaoGeral = totalLeitos > 0 ? Math.round((leitosOcupados / totalLeitos) * 100) : 0;
     
-    return {
+    const resultado = {
         hospitaisAtivos: hospitaisComDados.length,
         totalLeitos,
         leitosOcupados,
@@ -346,6 +357,10 @@ function calcularKPIsExecutivos(hospitaisComDados) {
         ppsMedio: ppsCount > 0 ? Math.round(ppsTotal / ppsCount) : 0,
         spctCasos
     };
+    
+    logInfo(`KPIs calculados: Total=${totalLeitos}, Ocupados=${leitosOcupados}, Ocupação=${ocupacaoGeral}%`);
+    
+    return resultado;
 }
 
 // =================== CALCULAR KPIs DE UM HOSPITAL (AUXILIAR) ===================

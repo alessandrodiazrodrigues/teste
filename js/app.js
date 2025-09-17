@@ -8,8 +8,8 @@ window.CONFIG = {
     HOSPITAIS: {
         H1: { nome: "Neomater", leitos: 13, ativo: true },
         H2: { nome: "Cruz Azul", leitos: 16, ativo: true },
-        H3: { nome: "Santa Marcelina", leitos: 7, ativo: false }, // *** DESABILITADO INICIALMENTE ***
-        H4: { nome: "Santa Clara", leitos: 13, ativo: false }     // *** DESABILITADO INICIALMENTE ***
+        H3: { nome: "Santa Marcelina", leitos: 7, ativo: true },
+        H4: { nome: "Santa Clara", leitos: 13, ativo: true }
     }
 };
 

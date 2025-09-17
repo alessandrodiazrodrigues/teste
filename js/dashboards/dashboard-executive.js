@@ -311,13 +311,13 @@ function calcularKPIsExecutivos(hospitaisComDados) {
                 logInfo(`Leito ocupado encontrado: ${hospitalId} - Status: ${leito.status}`);
                 
                 // Verificar se tem alta prevista
-                if (leito.paciente && leito.paciente.prevAlta && leito.paciente.prevAlta !== 'Não definido') {
+                if (leito.prevAlta && leito.prevAlta !== 'Não definido' && leito.prevAlta !== 'Sem previsao') {
                     leitosEmAlta++;
                 }
                 
                 // TPH - Correção para evitar NaN
-                if (leito.paciente && leito.paciente.tph) {
-                    const tph = parseFloat(leito.paciente.tph);
+                if (leito.tph) {
+                    const tph = parseFloat(leito.tph);
                     if (!isNaN(tph) && tph > 0) {
                         tphTotal += tph;
                         tphCount++;
@@ -325,8 +325,8 @@ function calcularKPIsExecutivos(hospitaisComDados) {
                 }
                 
                 // PPS
-                if (leito.paciente && leito.paciente.pps) {
-                    const pps = parseFloat(leito.paciente.pps);
+                if (leito.pps) {
+                    const pps = parseFloat(leito.pps);
                     if (!isNaN(pps) && pps > 0) {
                         ppsTotal += pps;
                         ppsCount++;
@@ -334,11 +334,15 @@ function calcularKPIsExecutivos(hospitaisComDados) {
                 }
                 
                 // SPCT Casos
-                if (leito.paciente && leito.paciente.linhas && 
-                    (leito.paciente.linhas.includes('Cuidados Paliativos') || 
-                     leito.paciente.linhas.includes('UTI') || 
-                     leito.paciente.linhas.includes('Complexo'))) {
-                    spctCasos++;
+                if (leito.linhas && leito.linhas.length > 0) {
+                    const linhasStr = Array.isArray(leito.linhas) ? leito.linhas.join(' ') : leito.linhas;
+                    if (linhasStr.includes('Cuidados Paliativos') || 
+                        linhasStr.includes('UTI') || 
+                        linhasStr.includes('Complexo') ||
+                        linhasStr.includes('Pneumologia') ||
+                        linhasStr.includes('Cardiologia')) {
+                        spctCasos++;
+                    }
                 }
             }
         });
@@ -452,8 +456,7 @@ function renderAltasExecutivo(tipo = 'bar') {
         const valores = categorias.map(cat => {
             const count = hospital.leitos.filter(l => 
                 (l.status === 'Em uso' || l.status === 'ocupado' || l.status === 'Ocupado') && 
-                l.paciente && 
-                l.paciente.prevAlta === cat
+                l.prevAlta === cat
             ).length;
             return count;
         });
@@ -533,23 +536,13 @@ function renderConcessoesExecutivo(tipo = 'bar') {
         
         hospital.leitos.forEach(leito => {
             if ((leito.status === 'Em uso' || leito.status === 'ocupado' || leito.status === 'Ocupado') && 
-                leito.paciente && leito.paciente.concessoes) {
+                leito.concessoes && leito.concessoes.length > 0) {
                 
-                // Verificar se concessões é string ou array
-                let concessoesList = [];
-                if (typeof leito.paciente.concessoes === 'string') {
-                    concessoesList = leito.paciente.concessoes.split('|');
-                } else if (Array.isArray(leito.paciente.concessoes)) {
-                    concessoesList = leito.paciente.concessoes;
-                } else {
-                    concessoesList = [leito.paciente.concessoes];
-                }
-                
-                concessoesList.forEach(concessao => {
-                    const nome = concessao ? concessao.trim() : '';
-                    if (nome && nome !== '') {
-                        concessoesMap.set(nome, (concessoesMap.get(nome) || 0) + 1);
-                        logInfo(`Concessão encontrada: ${nome}`);
+                // Concessões já vêm como array
+                leito.concessoes.forEach(concessao => {
+                    if (concessao && concessao.trim() !== '') {
+                        concessoesMap.set(concessao.trim(), (concessoesMap.get(concessao.trim()) || 0) + 1);
+                        logInfo(`Concessão encontrada: ${concessao.trim()}`);
                     }
                 });
             }
@@ -630,23 +623,13 @@ function renderLinhasExecutivo(tipo = 'bar') {
         
         hospital.leitos.forEach(leito => {
             if ((leito.status === 'Em uso' || leito.status === 'ocupado' || leito.status === 'Ocupado') && 
-                leito.paciente && leito.paciente.linhas) {
+                leito.linhas && leito.linhas.length > 0) {
                 
-                // Verificar se linhas é string ou array  
-                let linhasList = [];
-                if (typeof leito.paciente.linhas === 'string') {
-                    linhasList = leito.paciente.linhas.split('|');
-                } else if (Array.isArray(leito.paciente.linhas)) {
-                    linhasList = leito.paciente.linhas;
-                } else {
-                    linhasList = [leito.paciente.linhas];
-                }
-                
-                linhasList.forEach(linha => {
-                    const nome = linha ? linha.trim() : '';
-                    if (nome && nome !== '') {
-                        linhasMap.set(nome, (linhasMap.get(nome) || 0) + 1);
-                        logInfo(`Linha de cuidado encontrada: ${nome}`);
+                // Linhas já vêm como array
+                leito.linhas.forEach(linha => {
+                    if (linha && linha.trim() !== '') {
+                        linhasMap.set(linha.trim(), (linhasMap.get(linha.trim()) || 0) + 1);
+                        logInfo(`Linha de cuidado encontrada: ${linha.trim()}`);
                     }
                 });
             }

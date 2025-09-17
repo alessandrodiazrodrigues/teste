@@ -64,58 +64,12 @@ window.hideButtonLoading = function(button, originalText) {
     button.innerHTML = originalText;
 };
 
-// =================== GERAR DADOS MOCK (FALLBACK) ===================
-function generateMockData() {
-    const mockData = {};
-    
-    Object.keys(CONFIG.HOSPITAIS).forEach(hospitalId => {
-        const hospital = CONFIG.HOSPITAIS[hospitalId];
-        mockData[hospitalId] = {
-            nome: hospital.nome,
-            leitos: []
-        };
-        
-        // Gerar leitos mock
-        for (let i = 1; i <= hospital.leitos; i++) {
-            const isOcupado = Math.random() > 0.3; // 70% de ocupação
-            
-            if (isOcupado) {
-                mockData[hospitalId].leitos.push({
-                    numero: i,
-                    tipo: 'ENF/APTO', // *** CORRIGIDO PARA ENF/APTO ***
-                    status: 'ocupado',
-                    paciente: {
-                        nome: `Paciente ${hospital.nome.substring(0,3)}-${i}`,
-                        matricula: `${hospitalId}${String(i).padStart(6, '0')}`,
-                        idade: 45 + (i * 3) % 40,
-                        pps: `${(Math.floor(Math.random() * 10) + 1) * 10}%`,
-                        spictBr: Math.random() > 0.5 ? 'Elegível' : 'Não elegível',
-                        // *** COMPLEXIDADE REMOVIDA COMPLETAMENTE ***
-                        previsaoAlta: PREVISAO_ALTA_OPTIONS[Math.floor(Math.random() * PREVISAO_ALTA_OPTIONS.length)],
-                        concessoes: CONCESSOES_LIST.slice(0, Math.floor(Math.random() * 3) + 1),
-                        linhasCuidado: LINHAS_CUIDADO_LIST.slice(0, Math.floor(Math.random() * 2) + 1),
-                        admissao: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toLocaleString('pt-BR')
-                    }
-                });
-            } else {
-                mockData[hospitalId].leitos.push({
-                    numero: i,
-                    tipo: 'ENF/APTO', // *** CORRIGIDO PARA ENF/APTO ***
-                    status: 'vago'
-                });
-            }
-        }
-    });
-    
-    return mockData;
-}
-
 // =================== RENDERIZAR CARDS ===================
 window.renderCards = function() {
     const container = document.getElementById('cardsContainer');
     if (!container) return;
     
-    // *** VERIFICAR SE HÁ DADOS ANTES DE RENDERIZAR ***
+    // Verificar se há dados antes de renderizar
     if (!window.hospitalData || Object.keys(window.hospitalData).length === 0) {
         if (window.showLoading) {
             window.showLoading(container, 'Carregando dados dos hospitais...');
@@ -131,7 +85,7 @@ window.renderCards = function() {
         return;
     }
     
-    // *** VERIFICAR SE HOSPITAL ESTÁ ATIVO ***
+    // Verificar se hospital está ativo
     if (CONFIG.HOSPITAIS[window.currentHospital] && !CONFIG.HOSPITAIS[window.currentHospital].ativo) {
         container.innerHTML = '<div style="text-align: center; padding: 50px; color: #666;">Hospital desabilitado</div>';
         return;
@@ -152,8 +106,12 @@ function createCard(leito, hospitalNome) {
     card.style.cssText = 'background: #1a1f2e; border-radius: 12px; padding: 20px; color: #ffffff;';
     
     const isVago = leito.status === 'vago';
-    const tempoInternacao = !isVago && leito.paciente && leito.paciente.admissao ?
-        calcularTempoInternacao(leito.paciente.admissao) : '';
+    
+    // Calcular tempo de internação com validação robusta
+    let tempoInternacao = '';
+    if (!isVago && leito.paciente && leito.paciente.admissao) {
+        tempoInternacao = calcularTempoInternacao(leito.paciente.admissao);
+    }
     
     card.innerHTML = `
         <!-- LINHA 1: Hospital / Leito / Tipo -->
@@ -169,7 +127,7 @@ function createCard(leito, hospitalNome) {
             </div>
             <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 12px;">
                 <div style="font-size: 10px; color: rgba(255,255,255,0.6); text-transform: uppercase; font-weight: 600; margin-bottom: 4px;">TIPO</div>
-                <div style="font-size: 16px; font-weight: 600; color: #ffffff;">${leito.tipo}</div>
+                <div style="font-size: 16px; font-weight: 600; color: #ffffff;">${leito.tipo || 'ENF/APTO'}</div>
             </div>
         </div>
 
@@ -177,15 +135,15 @@ function createCard(leito, hospitalNome) {
         <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 15px;">
             <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 12px;">
                 <div style="font-size: 10px; color: rgba(255,255,255,0.6); text-transform: uppercase; font-weight: 600; margin-bottom: 4px;">INICIAIS</div>
-                <div style="font-size: 16px; font-weight: 600; color: #ffffff;">${isVago ? '—' : getIniciais(leito.paciente.nome)}</div>
+                <div style="font-size: 16px; font-weight: 600; color: #ffffff;">${isVago ? '—' : getIniciais(leito.paciente?.nome)}</div>
             </div>
             <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 12px;">
                 <div style="font-size: 10px; color: rgba(255,255,255,0.6); text-transform: uppercase; font-weight: 600; margin-bottom: 4px;">MATRÍCULA</div>
-                <div style="font-size: 16px; font-weight: 600; color: #ffffff;">${isVago ? '—' : leito.paciente.matricula}</div>
+                <div style="font-size: 16px; font-weight: 600; color: #ffffff;">${isVago ? '—' : (leito.paciente?.matricula || 'N/A')}</div>
             </div>
             <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 12px;">
                 <div style="font-size: 10px; color: rgba(255,255,255,0.6); text-transform: uppercase; font-weight: 600; margin-bottom: 4px;">IDADE</div>
-                <div style="font-size: 16px; font-weight: 600; color: #ffffff;">${isVago ? '—' : leito.paciente.idade + ' anos'}</div>
+                <div style="font-size: 16px; font-weight: 600; color: #ffffff;">${isVago ? '—' : (leito.paciente?.idade ? leito.paciente.idade + ' anos' : 'N/A')}</div>
             </div>
         </div>
 
@@ -193,21 +151,19 @@ function createCard(leito, hospitalNome) {
         <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 15px;">
             <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 12px;">
                 <div style="font-size: 10px; color: rgba(255,255,255,0.6); text-transform: uppercase; font-weight: 600; margin-bottom: 4px;">PPS</div>
-                <div style="font-size: 16px; font-weight: 600; color: #ffffff;">${isVago ? '—' : leito.paciente.pps}</div>
+                <div style="font-size: 16px; font-weight: 600; color: #ffffff;">${isVago ? '—' : (leito.paciente?.pps || 'N/A')}</div>
             </div>
             <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 12px;">
                 <div style="font-size: 10px; color: rgba(255,255,255,0.6); text-transform: uppercase; font-weight: 600; margin-bottom: 4px;">SPICT-BR</div>
-                <div style="font-size: 16px; font-weight: 600; color: #ffffff;">${isVago ? '—' : leito.paciente.spictBr}</div>
+                <div style="font-size: 16px; font-weight: 600; color: #ffffff;">${isVago ? '—' : (leito.paciente?.spictBr || 'N/A')}</div>
             </div>
             <div style="background: #8FD3F4; border: 1px solid #8FD3F4; border-radius: 8px; padding: 12px;">
                 <div style="font-size: 10px; color: rgba(0,0,0,0.7); text-transform: uppercase; font-weight: 600; margin-bottom: 4px;">PREV ALTA</div>
-                <div style="font-size: 16px; font-weight: 700; color: #000000;">${isVago ? '—' : leito.paciente.previsaoAlta}</div>
+                <div style="font-size: 16px; font-weight: 700; color: #000000;">${isVago ? '—' : (leito.paciente?.previsaoAlta || 'N/D')}</div>
             </div>
         </div>
 
-        <!-- *** LINHA 4 DA COMPLEXIDADE REMOVIDA COMPLETAMENTE *** -->
-
-        <!-- LINHA 5: CONCESSÕES PREVISTAS -->
+        <!-- LINHA 4: CONCESSÕES PREVISTAS -->
         <div style="margin-bottom: 15px;">
             <div style="background: #60a5fa; padding: 10px 15px; border-radius: 6px; margin-bottom: 10px;">
                 <div style="font-size: 11px; color: #ffffff; text-transform: uppercase; font-weight: 700;">
@@ -216,13 +172,14 @@ function createCard(leito, hospitalNome) {
             </div>
             <div style="display: flex; flex-wrap: wrap; gap: 6px; padding: 10px; background: rgba(255,255,255,0.03); border-radius: 6px; min-height: 40px;">
                 ${isVago ? '<span style="color: rgba(255,255,255,0.5); font-size: 12px;">—</span>' : 
-                    leito.paciente.concessoes.map(c => 
-                        `<span style="font-size: 11px; background: rgba(96,165,250,0.15); border: 1px solid rgba(96,165,250,0.3); color: #60a5fa; padding: 4px 10px; border-radius: 12px; font-weight: 600;">${c}</span>`
-                    ).join('')}
+                    (leito.paciente?.concessoes && leito.paciente.concessoes.length > 0 ? 
+                        leito.paciente.concessoes.map(c => 
+                            `<span style="font-size: 11px; background: rgba(96,165,250,0.15); border: 1px solid rgba(96,165,250,0.3); color: #60a5fa; padding: 4px 10px; border-radius: 12px; font-weight: 600;">${c}</span>`
+                        ).join('') : '<span style="color: rgba(255,255,255,0.5); font-size: 12px;">Nenhuma</span>')}
             </div>
         </div>
 
-        <!-- LINHA 6: LINHA DE CUIDADOS PROPOSTA -->
+        <!-- LINHA 5: LINHA DE CUIDADOS PROPOSTA -->
         <div style="margin-bottom: 15px;">
             <div style="background: #60a5fa; padding: 10px 15px; border-radius: 6px; margin-bottom: 10px;">
                 <div style="font-size: 11px; color: #ffffff; text-transform: uppercase; font-weight: 700;">
@@ -231,20 +188,21 @@ function createCard(leito, hospitalNome) {
             </div>
             <div style="display: flex; flex-wrap: wrap; gap: 6px; padding: 10px; background: rgba(255,255,255,0.03); border-radius: 6px; min-height: 40px;">
                 ${isVago ? '<span style="color: rgba(255,255,255,0.5); font-size: 12px;">—</span>' : 
-                    leito.paciente.linhasCuidado.map(l => 
-                        `<span style="font-size: 11px; background: rgba(96,165,250,0.15); border: 1px solid rgba(96,165,250,0.3); color: #60a5fa; padding: 4px 10px; border-radius: 12px; font-weight: 600;">${l}</span>`
-                    ).join('')}
+                    (leito.paciente?.linhasCuidado && leito.paciente.linhasCuidado.length > 0 ? 
+                        leito.paciente.linhasCuidado.map(l => 
+                            `<span style="font-size: 11px; background: rgba(96,165,250,0.15); border: 1px solid rgba(96,165,250,0.3); color: #60a5fa; padding: 4px 10px; border-radius: 12px; font-weight: 600;">${l}</span>`
+                        ).join('') : '<span style="color: rgba(255,255,255,0.5); font-size: 12px;">Nenhuma</span>')}
             </div>
         </div>
 
-        <!-- LINHA 7: Admissão / Internado há + Botão -->
+        <!-- LINHA 6: Admissão / Internado há + Botão -->
         <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.1);">
             <div style="display: flex; gap: 40px;">
                 <div>
                     <div style="font-size: 10px; color: rgba(255,255,255,0.6); text-transform: uppercase; font-weight: 600; margin-bottom: 4px;">ADMISSÃO</div>
-                    <div style="font-size: 14px; font-weight: 600; color: #ffffff;">${isVago ? '—' : leito.paciente.admissao}</div>
+                    <div style="font-size: 14px; font-weight: 600; color: #ffffff;">${isVago ? '—' : (leito.paciente?.admissao || 'N/A')}</div>
                 </div>
-                ${!isVago ? `
+                ${!isVago && tempoInternacao ? `
                 <div>
                     <div style="font-size: 10px; color: rgba(255,255,255,0.6); text-transform: uppercase; font-weight: 600; margin-bottom: 4px;">INTERNADO HÁ</div>
                     <div style="font-size: 14px; font-weight: 600; color: #ffffff;">${tempoInternacao}</div>
@@ -262,9 +220,83 @@ function createCard(leito, hospitalNome) {
     return card;
 }
 
+// =================== CORREÇÃO CRÍTICA: calcularTempoInternacao ===================
+function calcularTempoInternacao(admissao) {
+    if (!admissao) return '';
+    
+    try {
+        let dataAdmissao;
+        
+        // Tentar diferentes formatos de data
+        if (typeof admissao === 'string') {
+            if (admissao.includes('/')) {
+                // Formato brasileiro: DD/MM/YYYY HH:MM:SS
+                const [datePart] = admissao.split(' ');
+                const [dia, mes, ano] = datePart.split('/');
+                
+                // Validar partes da data
+                if (!dia || !mes || !ano || dia.length !== 2 || mes.length !== 2 || ano.length !== 4) {
+                    console.warn('Formato de data brasileiro inválido:', admissao);
+                    return 'Data inválida';
+                }
+                
+                dataAdmissao = new Date(parseInt(ano), parseInt(mes) - 1, parseInt(dia));
+            } else if (admissao.includes('-')) {
+                // Formato ISO: YYYY-MM-DD ou similar
+                dataAdmissao = new Date(admissao);
+            } else {
+                // Timestamp numérico em string
+                const timestamp = parseInt(admissao);
+                if (!isNaN(timestamp)) {
+                    dataAdmissao = new Date(timestamp);
+                } else {
+                    dataAdmissao = new Date(admissao);
+                }
+            }
+        } else if (typeof admissao === 'number') {
+            // Timestamp numérico
+            dataAdmissao = new Date(admissao);
+        } else {
+            // Objeto Date ou outro tipo
+            dataAdmissao = new Date(admissao);
+        }
+        
+        // Verificar se data é válida
+        if (!dataAdmissao || isNaN(dataAdmissao.getTime())) {
+            console.warn('Data de admissão inválida após parsing:', { admissao, dataAdmissao });
+            return 'Data inválida';
+        }
+        
+        // Verificar se data não é muito antiga ou futura
+        const agora = new Date();
+        const diffTime = agora - dataAdmissao;
+        
+        // Se data é futura ou muito antiga (mais de 1 ano), considerar inválida
+        if (diffTime < 0) {
+            console.warn('Data de admissão no futuro:', { admissao, dataAdmissao, agora });
+            return 'Data futura';
+        }
+        
+        if (diffTime > (365 * 24 * 60 * 60 * 1000)) {
+            console.warn('Data de admissão muito antiga (>1 ano):', { admissao, dataAdmissao });
+            return 'Data muito antiga';
+        }
+        
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        
+        if (diffDays === 0) return 'Hoje';
+        if (diffDays === 1) return '1 dia';
+        return `${diffDays} dias`;
+        
+    } catch (error) {
+        console.error('Erro ao calcular tempo internação:', error, { admissao });
+        return 'Erro no cálculo';
+    }
+}
+
 // =================== ABRIR FORMULÁRIO COM LOADING ===================
 window.openForm = function(hospitalId, leitoNumero, isVago) {
-    // *** MOSTRAR LOADING IMEDIATAMENTE ***
+    // Mostrar loading imediatamente
     const button = event.target;
     const originalText = button.innerHTML;
     showButtonLoading(button, originalText);
@@ -292,7 +324,7 @@ window.openForm = function(hospitalId, leitoNumero, isVago) {
         addFormEventListeners(modal);
         
         logInfo(`Formulário ${isVago ? 'admissão' : 'atualização'} aberto para leito ${leitoNumero}`);
-    }, 800); // 800ms de delay para simular carregamento
+    }, 800);
 };
 
 // =================== FORMULÁRIO DE ADMISSÃO (INICIAIS EM VEZ DE NOME) ===================
@@ -362,8 +394,6 @@ function createAdmissaoForm(hospitalId, leitoNumero) {
                 </div>
             </div>
             
-            <!-- *** SEM CAMPO COMPLEXIDADE *** -->
-            
             <!-- Concessões -->
             <div style="margin-bottom: 20px;">
                 <div style="background: #60a5fa; padding: 10px 15px; border-radius: 6px; margin-bottom: 10px;">
@@ -409,8 +439,8 @@ function createAdmissaoForm(hospitalId, leitoNumero) {
 
 // =================== FORMULÁRIO DE ATUALIZAÇÃO (SEM COMPLEXIDADE) ===================
 function createAtualizacaoForm(hospitalNome, leitoData, hospitalId, leitoNumero) {
-    const tempoInternacao = leitoData && leitoData.admissao ?
-        calcularTempoInternacao(leitoData.admissao) : '';
+    const tempoInternacao = leitoData && leitoData.paciente && leitoData.paciente.admissao ?
+        calcularTempoInternacao(leitoData.paciente.admissao) : '';
     
     return `
         <div style="background: #1a1f2e; border-radius: 12px; padding: 30px; max-width: 600px; width: 95%; max-height: 90vh; overflow-y: auto; color: #ffffff;">
@@ -437,8 +467,6 @@ function createAtualizacaoForm(hospitalNome, leitoData, hospitalId, leitoNumero)
                     <input type="number" value="${leitoData && leitoData.paciente ? leitoData.paciente.idade : ''}" style="width: 100%; padding: 10px; background: #374151; color: #ffffff; border: 1px solid rgba(255,255,255,0.3); border-radius: 6px;">
                 </div>
             </div>
-            
-            <!-- *** SEM CAMPO COMPLEXIDADE *** -->
             
             <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px;">
                 <div>
@@ -596,37 +624,6 @@ function getIniciais(nomeCompleto) {
         .join(' ');
 }
 
-function calcularTempoInternacao(admissao) {
-    if (!admissao) return '';
-    
-    try {
-        let dataAdmissao;
-        
-        // Tentar diferentes formatos de data
-        if (typeof admissao === 'string') {
-            if (admissao.includes('/')) {
-                // Formato brasileiro: DD/MM/YYYY HH:MM:SS
-                const [datePart] = admissao.split(' ');
-                const [dia, mes, ano] = datePart.split('/');
-                dataAdmissao = new Date(ano, mes - 1, dia);
-            } else {
-                dataAdmissao = new Date(admissao);
-            }
-        } else {
-            dataAdmissao = new Date(admissao);
-        }
-        
-        const agora = new Date();
-        const diffTime = Math.abs(agora - dataAdmissao);
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-        
-        if (diffDays === 1) return '1 dia';
-        return `${diffDays} dias`;
-    } catch (error) {
-        return '';
-    }
-}
-
 // =================== FECHAR MODAL ===================
 window.closeModal = function() {
     const modal = document.querySelector('.modal-overlay');
@@ -740,7 +737,7 @@ select::-webkit-scrollbar-thumb:hover {
         font-size: 12px !important;
     }
     
-    /* *** ALINHAMENTO DOS BOXES MOBILE *** */
+    /* ALINHAMENTO DOS BOXES MOBILE */
     .card-row {
         display: grid !important;
         grid-template-columns: 1fr 1fr 1fr !important;
@@ -769,4 +766,4 @@ document.addEventListener('DOMContentLoaded', function() {
     logInfo('✅ Cards.js carregado com todas as correções aplicadas');
 });
 
-logSuccess('✅ Cards.js COMPLETO: ENF/APTO + Iniciais + Loading + Dropdowns escuros + Sem Complexidade + Botão ALTA');
+logSuccess('✅ Cards.js COMPLETO CORRIGIDO: Fix NaN dias + Validação robusta + ENF/APTO + Iniciais + Loading + Dropdowns escuros + Sem Complexidade + Botão ALTA');

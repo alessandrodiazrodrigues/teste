@@ -1,7 +1,7 @@
 // =================== INTEGRAÇÃO API GOOGLE APPS SCRIPT - DADOS REAIS ===================
 
 // *** NOVA URL DA API (CORRIGIDA) ***
-window.API_URL = 'https://script.google.com/macros/s/AKfycbzbE4HGYpIWGMwt0foLSkPjesbYnfHpFvATFyfMtSgcvh8Fij-VElXVelEu8n_OU3UO/exec';
+window.API_URL = 'https://script.google.com/macros/s/AKfycbw6syeaWZg1LGgK-31PLDrOgl7FgUjIXyv-r3MD4OCKi-XNQ4ZiFb_UVnl3Gy3PRTPA/exec';
 
 // =================== FUNÇÕES DE API (CORRIGIDAS PARA CORS) ===================
 

@@ -208,23 +208,21 @@ function createCard(leito, hospitalNome) {
             </div>
         </div>
 
-        <!-- SEÇÃO 6: ADMISSÃO + TEMPO INTERNAÇÃO + BOTÕES - CORRIGIDO POSIÇÃO -->
+        <!-- SEÇÃO 6: ADMISSÃO E TEMPO DE INTERNAÇÃO LADO A LADO -->
         <div style="margin-bottom: 15px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                <div style="flex: 1; display: flex; gap: 20px;">
-                    <div>
-                        <div style="font-size: 10px; color: rgba(255,255,255,0.7); font-weight: 600; text-transform: uppercase; margin-bottom: 3px;">ADMISSÃO</div>
-                        <div style="color: #ffffff; font-weight: 600; font-size: 11px;">${admissao ? formatarDataHora(admissao) : '—'}</div>
-                    </div>
+            <div style="display: flex; justify-content: flex-start; align-items: center; gap: 30px; margin-bottom: 12px;">
+                <div>
+                    <div style="font-size: 10px; color: rgba(255,255,255,0.7); font-weight: 600; text-transform: uppercase; margin-bottom: 3px;">ADMISSÃO</div>
+                    <div style="color: #ffffff; font-weight: 600; font-size: 11px;">${admissao ? formatarDataHora(admissao) : '—'}</div>
                 </div>
+                
+                ${!isVago && tempoInternacao ? `
+                <div>
+                    <div style="font-size: 10px; color: rgba(255,255,255,0.7); font-weight: 600; text-transform: uppercase; margin-bottom: 3px;">INTERNADO HÁ</div>
+                    <div style="color: #ffffff; font-weight: 600; font-size: 11px;">${tempoInternacao}</div>
+                </div>
+                ` : ''}
             </div>
-            
-            <!-- CORREÇÃO: TEMPO DE INTERNAÇÃO APÓS LINHAS DE CUIDADO -->
-            ${!isVago && tempoInternacao ? `
-            <div style="margin-bottom: 15px; padding: 12px; background: rgba(251, 191, 36, 0.1); border-radius: 8px; border-left: 4px solid #fbbf24;">
-                <strong>Tempo de Internação:</strong> ${tempoInternacao}
-            </div>
-            ` : ''}
         </div>
         
         <!-- BOTÕES DE AÇÃO -->

@@ -45,62 +45,12 @@ window.apiGet = async function(action, params = {}) {
     }
 };
 
-// Fazer requisição POST para API (CORS-SAFE)
-window.apiPost = async function(action, payload) {
+// =================== FUNÇÃO PRINCIPAL: loadHospitalData - CORRIGIDA ===================
+window.loadHospitalData = async function() {
     try {
-        logInfo(`API POST: ${action} - Salvando na planilha real`);
+        logInfo('🔄 Carregando dados REAIS da planilha...');
         
-        // *** CONFIGURAÇÃO ANTI-CORS ***
-        const response = await fetch(window.API_URL, {
-            method: 'POST',
-            redirect: 'follow', // Importante para Google Apps Script
-            headers: {
-                'Content-Type': 'text/plain;charset=utf-8' // Evita preflight CORS
-            },
-            body: JSON.stringify({
-                action: action,
-                ...payload
-            })
-        });
-        
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-        
-        const data = await response.json();
-        
-        if (!data.ok) {
-            throw new Error(data.error || 'Erro na API');
-        }
-        
-        return data.data;
-    } catch (error) {
-        logError(`Erro na API POST ${action}:`, error);
-        throw error;
-    }
-};
-
-// =================== FUNÇÕES ESPECÍFICAS DE LEITOS (DADOS REAIS) ===================
-
-// Buscar leitos de um hospital específico
-window.fetchHospitalData = async function(hospital) {
-    try {
-        logInfo(`Buscando dados REAIS do hospital: ${hospital}`);
-        const data = await apiGet('getHospital', { hospital });
-        logSuccess(`✅ Dados reais carregados para ${hospital}: ${data.length} leitos`);
-        return data;
-    } catch (error) {
-        logError(`Erro ao buscar dados do hospital ${hospital}:`, error);
-        throw error;
-    }
-};
-
-// Buscar TODOS os dados dos hospitais (FUNÇÃO PRINCIPAL)
-window.loadAllHospitalsData = async function() {
-    try {
-        logInfo('🔄 Carregando TODOS os dados REAIS dos hospitais...');
-        
-        // *** BUSCAR DADOS DIRETO DA API SEM PARÂMETROS ***
+        // *** BUSCAR DADOS DIRETO DA API ***
         const response = await fetch(window.API_URL, {
             method: 'GET',
             redirect: 'follow',
@@ -110,134 +60,152 @@ window.loadAllHospitalsData = async function() {
         });
         
         if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            throw new Error(`Erro HTTP ${response.status}: ${response.statusText}`);
         }
         
         const apiData = await response.json();
         
         if (!apiData.ok) {
-            throw new Error(apiData.error || 'Erro na API');
+            throw new Error(apiData.error || 'API retornou erro');
         }
         
-        // *** PROCESSAR DADOS REAIS DA PLANILHA ***
         const rawData = apiData.data;
-        logInfo(`📊 Recebidos ${rawData.length} registros da planilha`);
+        logInfo(`📊 API retornou ${rawData.length} registros`);
         
-        // Agrupar por hospital
+        // *** DEBUG: LOG DOS DADOS RECEBIDOS ***
+        console.log('🔍 [DEBUG] Dados brutos da API:', rawData);
+        
+        // *** PROCESSAR E AGRUPAR DADOS POR HOSPITAL ***
         const hospitalsData = {};
         
-        rawData.forEach(leitoData => {
-            const hospitalId = leitoData.hospital;
-            
-            if (!hospitalsData[hospitalId]) {
+        // Inicializar todos os hospitais ativos
+        Object.keys(CONFIG.HOSPITAIS).forEach(hospitalId => {
+            if (CONFIG.HOSPITAIS[hospitalId].ativo) {
                 hospitalsData[hospitalId] = {
-                    nome: CONFIG.HOSPITAIS[hospitalId]?.nome || hospitalId,
+                    nome: CONFIG.HOSPITAIS[hospitalId].nome,
                     leitos: []
                 };
             }
+        });
+        
+        // Processar cada registro da planilha
+        rawData.forEach(registro => {
+            const hospitalId = registro.hospital;
             
-            // *** MAPEAR DADOS REAIS CORRETAMENTE ***
+            if (!hospitalsData[hospitalId]) {
+                logInfo(`Hospital ${hospitalId} não configurado ou inativo`);
+                return;
+            }
+            
+            // *** CRIAR OBJETO LEITO COM MAPEAMENTO CORRETO ***
             const leito = {
-                numero: leitoData.leito,
-                tipo: leitoData.tipo,
-                status: leitoData.status.toLowerCase() === 'em uso' ? 'ocupado' : 'vago',
-                paciente: null
+                leito: registro.leito, // CORREÇÃO: usar 'leito' não 'numero'
+                numero: registro.leito, // Alias para compatibilidade
+                tipo: registro.tipo,
+                status: registro.status, // "Em uso" ou "Vago"
+                hospital: registro.hospital,
+                
+                // *** DADOS DO PACIENTE MAPEADOS DIRETAMENTE ***
+                nome: registro.nome || '',
+                matricula: registro.matricula || '',
+                idade: registro.idade || null,
+                admAt: registro.admAt || '',
+                admissao: registro.admAt || '', // Alias para compatibilidade
+                pps: registro.pps || null,
+                spict: registro.spict || '', // "elegivel" ou "nao_elegivel"
+                spictBr: registro.spict === 'elegivel' ? 'Elegível' : 'Não elegível', // Formatado
+                complexidade: registro.complexidade || '',
+                prevAlta: registro.prevAlta || '',
+                previsaoAlta: registro.prevAlta || '', // Alias para compatibilidade
+                linhas: registro.linhas || [],
+                linhasCuidado: registro.linhas || [], // Alias para compatibilidade
+                concessoes: registro.concessoes || []
             };
             
-            // Se leito ocupado, adicionar dados do paciente
-            if (leito.status === 'ocupado' && leitoData.nome) {
-                leito.paciente = {
-                    nome: leitoData.nome,
-                    matricula: leitoData.matricula,
-                    idade: leitoData.idade,
-                    admissao: leitoData.admAt ? new Date(leitoData.admAt).toLocaleString('pt-BR') : '',
-                    pps: leitoData.pps ? `${leitoData.pps}%` : '',
-                    spictBr: leitoData.spict === 'elegivel' ? 'Elegível' : 'Não elegível',
-                    complexidade: leitoData.complexidade,
-                    previsaoAlta: leitoData.prevAlta || '',
-                    prevAlta: leitoData.prevAlta || '', // Alias para compatibilidade
-                    linhasCuidado: leitoData.linhas || [],
-                    linhas: leitoData.linhas || [], // Alias para compatibilidade
-                    concessoes: leitoData.concessoes || []
-                };
+            // *** DEBUG: LOG DE CADA LEITO PROCESSADO ***
+            if (registro.nome) {
+                console.log(`🏥 [DEBUG] Leito processado: ${hospitalId}-${registro.leito} - ${registro.nome}`);
             }
             
             hospitalsData[hospitalId].leitos.push(leito);
         });
         
-        // Ordenar leitos por número
+        // *** ORDENAR LEITOS POR NÚMERO ***
         Object.keys(hospitalsData).forEach(hospitalId => {
-            hospitalsData[hospitalId].leitos.sort((a, b) => a.numero - b.numero);
+            hospitalsData[hospitalId].leitos.sort((a, b) => a.leito - b.leito);
         });
         
+        // *** ATUALIZAR VARIÁVEL GLOBAL ***
+        window.hospitalData = hospitalsData;
+        
+        // *** ESTATÍSTICAS FINAIS ***
         const totalHospitais = Object.keys(hospitalsData).length;
         const totalLeitos = Object.values(hospitalsData).reduce((acc, h) => acc + h.leitos.length, 0);
+        const leitosOcupados = Object.values(hospitalsData).reduce((acc, h) => 
+            acc + h.leitos.filter(l => l.status === 'Em uso').length, 0);
         
-        logSuccess(`✅ DADOS REAIS carregados: ${totalHospitais} hospitais, ${totalLeitos} leitos`);
+        logSuccess(`✅ DADOS REAIS carregados:`);
+        logSuccess(`   • ${totalHospitais} hospitais ativos`);
+        logSuccess(`   • ${totalLeitos} leitos totais`);
+        logSuccess(`   • ${leitosOcupados} leitos ocupados`);
+        
+        // *** DEBUG: LOG DA ESTRUTURA FINAL ***
+        console.log('🎯 [DEBUG] Estrutura final hospitalData:', window.hospitalData);
         
         return hospitalsData;
         
     } catch (error) {
-        logError('❌ Erro ao carregar dados REAIS dos hospitais:', error);
-        throw error;
-    }
-};
-
-// =================== FUNÇÃO PRINCIPAL: loadHospitalData (SEM FALLBACK) ===================
-window.loadHospitalData = async function() {
-    try {
-        logInfo('🔄 Iniciando carregamento dos dados REAIS...');
+        logError('❌ ERRO ao carregar dados reais:', error);
         
-        // *** CARREGAR DADOS REAIS DA PLANILHA ***
-        const hospitalsData = await window.loadAllHospitalsData();
-        
-        // Atualizar variável global
-        window.hospitalData = hospitalsData;
-        
-        // Verificar se dados foram carregados
-        const totalHospitais = Object.keys(hospitalsData).length;
-        const totalLeitos = Object.values(hospitalsData).reduce((acc, h) => acc + (h.leitos ? h.leitos.length : 0), 0);
-        
-        if (totalHospitais > 0) {
-            logSuccess(`✅ DADOS REAIS sincronizados: ${totalHospitais} hospitais, ${totalLeitos} leitos`);
-            
-            // Trigger para rerender dashboards
-            if (window.renderCards && typeof window.renderCards === 'function') {
-                setTimeout(() => {
-                    window.renderCards();
-                }, 500);
-            }
-            
-            return hospitalsData;
-        } else {
-            throw new Error('Nenhum dado foi retornado pela API');
-        }
-        
-    } catch (error) {
-        logError('❌ ERRO CRÍTICO: Não foi possível carregar dados reais:', error);
-        
-        // *** SEM FALLBACK - APENAS DADOS REAIS ***
+        // *** NÃO USAR DADOS MOCK - MANTER VAZIO ***
         window.hospitalData = {};
         
         throw error;
     }
 };
 
-// =================== FUNÇÕES DE SALVAMENTO (DADOS REAIS) ===================
+// =================== FUNÇÕES DE SALVAMENTO ===================
 
 // Admitir paciente (salvar na planilha)
 window.admitirPaciente = async function(hospital, leito, dadosPaciente) {
     try {
         logInfo(`Admitindo paciente no ${hospital}-${leito} NA PLANILHA REAL`);
         
-        const result = await apiPost('admitir', {
+        const payload = {
+            action: 'admitir',
             hospital: hospital,
             leito: leito,
-            ...dadosPaciente
+            nome: dadosPaciente.nome,
+            matricula: dadosPaciente.matricula,
+            idade: dadosPaciente.idade,
+            pps: dadosPaciente.pps,
+            spict: dadosPaciente.spict,
+            prevAlta: dadosPaciente.prevAlta,
+            concessoes: dadosPaciente.concessoes,
+            linhas: dadosPaciente.linhas
+        };
+        
+        const response = await fetch(window.API_URL, {
+            method: 'POST',
+            redirect: 'follow',
+            headers: {
+                'Content-Type': 'text/plain;charset=utf-8'
+            },
+            body: JSON.stringify(payload)
         });
         
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        const result = await response.json();
+        
+        if (!result.ok) {
+            throw new Error(result.error || 'Erro ao salvar na planilha');
+        }
+        
         logSuccess('✅ Paciente admitido na planilha real!');
-        return result;
+        return result.data;
     } catch (error) {
         logError('Erro ao admitir paciente:', error);
         throw error;
@@ -249,14 +217,34 @@ window.atualizarPaciente = async function(hospital, leito, dadosAtualizados) {
     try {
         logInfo(`Atualizando paciente ${hospital}-${leito} NA PLANILHA REAL`);
         
-        const result = await apiPost('atualizar', {
+        const payload = {
+            action: 'atualizar',
             hospital: hospital,
             leito: leito,
             ...dadosAtualizados
+        };
+        
+        const response = await fetch(window.API_URL, {
+            method: 'POST',
+            redirect: 'follow',
+            headers: {
+                'Content-Type': 'text/plain;charset=utf-8'
+            },
+            body: JSON.stringify(payload)
         });
         
-        logSuccess('✅ Dados do paciente atualizados na planilha real!');
-        return result;
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        const result = await response.json();
+        
+        if (!result.ok) {
+            throw new Error(result.error || 'Erro ao atualizar na planilha');
+        }
+        
+        logSuccess('✅ Dados atualizados na planilha real!');
+        return result.data;
     } catch (error) {
         logError('Erro ao atualizar paciente:', error);
         throw error;
@@ -268,25 +256,91 @@ window.darAltaPaciente = async function(hospital, leito) {
     try {
         logInfo(`Dando alta ao paciente ${hospital}-${leito} NA PLANILHA REAL`);
         
-        const result = await apiPost('darAlta', {
+        const payload = {
+            action: 'darAlta',
             hospital: hospital,
             leito: leito
+        };
+        
+        const response = await fetch(window.API_URL, {
+            method: 'POST',
+            redirect: 'follow',
+            headers: {
+                'Content-Type': 'text/plain;charset=utf-8'
+            },
+            body: JSON.stringify(payload)
         });
         
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        const result = await response.json();
+        
+        if (!result.ok) {
+            throw new Error(result.error || 'Erro ao processar alta');
+        }
+        
         logSuccess('✅ Alta processada na planilha real!');
-        return result;
+        return result.data;
     } catch (error) {
         logError('Erro ao processar alta:', error);
         throw error;
     }
 };
 
+// =================== REFRESH APÓS AÇÕES ===================
+window.refreshAfterAction = async function() {
+    try {
+        logInfo('🔄 Recarregando dados da planilha após ação...');
+        
+        // Mostrar loading
+        const container = document.getElementById('cardsContainer');
+        if (container) {
+            container.innerHTML = `
+                <div class="card" style="grid-column: 1 / -1; text-align: center; padding: 40px;">
+                    <div style="color: #60a5fa; margin-bottom: 15px; font-size: 18px;">
+                        🔄 Sincronizando com a planilha...
+                    </div>
+                    <div style="color: #9ca3af; font-size: 14px;">
+                        Atualizando dados em tempo real
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Aguardar um pouco (para garantir que a planilha foi atualizada)
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        // Recarregar dados
+        await window.loadHospitalData();
+        
+        // Re-renderizar cards
+        setTimeout(() => {
+            if (window.renderCards) {
+                window.renderCards();
+            }
+        }, 500);
+        
+        logSuccess('✅ Dados atualizados da planilha');
+    } catch (error) {
+        logError('Erro ao refresh:', error);
+        
+        // Mesmo com erro, tentar re-renderizar
+        setTimeout(() => {
+            if (window.renderCards) {
+                window.renderCards();
+            }
+        }, 1000);
+    }
+};
+
 // =================== TESTES E MONITORAMENTO ===================
 
-// Testar conectividade da API (DADOS REAIS)
+// Testar conectividade da API
 window.testAPI = async function() {
     try {
-        logInfo('🔍 Testando conectividade com a planilha real...');
+        logInfo('🔍 Testando conectividade com a planilha...');
         
         const response = await fetch(window.API_URL, {
             method: 'GET',
@@ -298,68 +352,36 @@ window.testAPI = async function() {
         
         if (response.ok) {
             const data = await response.json();
-            if (data.ok) {
-                logSuccess('✅ API funcionando - Planilha real conectada!');
+            if (data.ok && data.data && data.data.length > 0) {
+                logSuccess(`✅ API funcionando - ${data.data.length} registros encontrados`);
                 return true;
             }
         }
         
-        throw new Error('API não respondeu corretamente');
+        throw new Error('API não respondeu com dados válidos');
     } catch (error) {
-        logError('❌ Erro na conectividade da API:', error);
+        logError('❌ Erro na API:', error);
         return false;
     }
 };
 
-// Monitorar API (executar a cada 5 minutos)
-window.monitorAPI = function() {
-    // Teste inicial
-    window.testAPI();
+// =================== COMPATIBILIDADE COM VERSÕES ANTERIORES ===================
+
+// Alias para função antiga
+window.fetchHospitalData = async function(hospital) {
+    logInfo(`Buscando dados do hospital: ${hospital}`);
     
-    // Monitoramento contínuo
-    setInterval(async () => {
-        const isWorking = await window.testAPI();
-        if (!isWorking) {
-            logError('⚠️ API com problemas - tentando reconectar...');
-            setTimeout(() => {
-                window.loadHospitalData().catch(error => {
-                    logError('Falha no reload automático:', error);
-                });
-            }, 30000);
-        }
-    }, 5 * 60 * 1000); // 5 minutos
-};
-
-// =================== REFRESH APÓS AÇÕES ===================
-window.refreshAfterAction = async function() {
-    try {
-        logInfo('🔄 Atualizando dados após ação...');
-        
-        // Mostrar loading
-        if (window.showLoading) {
-            showLoading(document.getElementById('cardsContainer'), 'Sincronizando com a planilha...');
-        }
-        
-        // Recarregar dados da API
-        await window.loadHospitalData();
-        
-        // Re-renderizar cards
-        if (window.renderCards) {
-            setTimeout(() => {
-                window.renderCards();
-                if (window.hideLoading) {
-                    hideLoading();
-                }
-            }, 1000);
-        }
-        
-        logSuccess('✅ Interface atualizada com dados da planilha');
-    } catch (error) {
-        logError('Erro ao atualizar interface:', error);
-        if (window.hideLoading) {
-            hideLoading();
-        }
+    // Carregar todos os dados e filtrar
+    await window.loadHospitalData();
+    
+    if (window.hospitalData[hospital]) {
+        return window.hospitalData[hospital].leitos;
     }
+    
+    return [];
 };
 
-logSuccess('✅ API.js carregado - CONECTADO COM DADOS REAIS DA PLANILHA');
+// Alias para função antiga
+window.loadAllHospitalsData = window.loadHospitalData;
+
+logSuccess('✅ API.js CORRIGIDO - Mapeamento direto dos dados da planilha');

@@ -4,7 +4,19 @@ window.renderDashboardExecutivo = function() {
     logInfo('Renderizando Dashboard Executivo');
     
     const container = document.getElementById('dashboardContainer');
-    if (!container) return;
+    if (!container) {
+        // Tentar encontrar container alternativo
+        const altContainer = document.getElementById('dashExecutivoContent') || 
+                           document.getElementById('dash2');
+        if (altContainer) {
+            const newContainer = document.createElement('div');
+            newContainer.id = 'dashboardContainer';
+            altContainer.appendChild(newContainer);
+            return window.renderDashboardExecutivo(); // Chamar novamente
+        }
+        logError('Nenhum container disponível para Dashboard Executivo');
+        return;
+    }
     
     // *** REMOVER LOADING PERMANENTE ***
     container.innerHTML = '';
@@ -49,635 +61,491 @@ window.renderDashboardExecutivo = function() {
         </h2>
         
         <!-- Aviso sobre dados reais -->
-        <div style="background: #f0f9ff; border: 1px solid #0ea5e9; border-radius: 8px; padding: 15px; margin-bottom: 20px; text-align: center;">
-            <p style="margin: 0; color: #0369a1; font-size: 14px;">
-                📊 <strong>Dados reais da planilha Google</strong> • ${hospitaisComDados.length} hospitais ativos • ${kpis.leitosOcupados} pacientes internados
-            </p>
+        <div style="margin-bottom: 25px; padding: 15px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius: 8px; color: white; text-align: center;">
+            <strong>✅ Dados Reais da Rede</strong> | 
+            ${hospitaisComDados.length} hospital${hospitaisComDados.length > 1 ? 'is' : ''} com dados: 
+            ${hospitaisComDados.map(id => CONFIG.HOSPITAIS[id].nome).join(', ')}
         </div>
         
-        <!-- *** KPIs COM MOLDURA ESCURA CORRIGIDA *** -->
-        <div style="background: #374151; border-radius: 12px; padding: 25px; margin-bottom: 30px; border: 2px solid #4b5563;">
-            <div class="executive-kpis-grid">
-                <!-- Gauge Principal (2x2) -->
-                <div class="kpi-principal" style="grid-column: span 2; grid-row: span 2; background: #1a1f2e; border-radius: 12px; padding: 20px; display: flex; align-items: center; color: white;">
-                    <div style="width: 200px; height: 100px; position: relative;">
-                        <canvas id="gaugeOcupacao" width="200" height="100"></canvas>
-                        <div style="position: absolute; bottom: 15px; left: 50%; transform: translateX(-50%); font-size: 24px; font-weight: 700; color: #60a5fa;">
-                            ${kpis.ocupacaoGeral}%
-                        </div>
-                        <div style="position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); font-size: 10px; text-transform: uppercase; color: #e2e8f0; font-weight: 600;">
-                            OCUPAÇÃO GERAL
-                        </div>
+        <!-- KPIs Grid -->
+        <div style="display: grid; grid-template-columns: repeat(6, 1fr); gap: 16px; margin-bottom: 30px; padding: 20px; background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+            <!-- Box Principal com Gauge HORIZONTAL -->
+            <div style="grid-column: span 2; grid-row: span 2; background: linear-gradient(135deg, #1a1f2e 0%, #374151 100%); border-radius: 12px; padding: 20px; display: flex; flex-direction: column; justify-content: center; align-items: center; color: white;">
+                <h4 style="margin: 0 0 15px 0; font-size: 12px; font-weight: 700; text-transform: uppercase; color: #60a5fa; text-align: center;">
+                    OCUPAÇÃO GERAL DA REDE
+                </h4>
+                <div style="position: relative; width: 200px; height: 100px;">
+                    <canvas id="gaugeOcupacaoExecutivo" width="200" height="100"></canvas>
+                    <div style="position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); text-align: center;">
+                        <div style="font-size: 32px; font-weight: 700; color: #60a5fa;">${kpis.ocupacaoGeral}%</div>
+                        <div style="font-size: 10px; color: rgba(255,255,255,0.7); margin-top: 2px;">${kpis.leitosOcupados}/${kpis.totalLeitos} LEITOS</div>
                     </div>
-                    <div style="flex: 1; padding-left: 20px; display: flex; flex-direction: column; justify-content: center; gap: 8px;">
-                        ${hospitaisComDados.map(hospitalId => {
-                            const hospital = CONFIG.HOSPITAIS[hospitalId];
-                            const ocupacao = calcularOcupacaoHospital(hospitalId);
-                            return `
-                                <div style="display: flex; justify-content: space-between; align-items: center; font-size: 12px;">
-                                    <span style="color: #e2e8f0; font-weight: 600;">${hospital.nome}</span>
-                                    <span style="color: #60a5fa; font-weight: 700;">${ocupacao}%</span>
-                                </div>
-                            `;
-                        }).join('')}
-                    </div>
-                </div>
-                
-                <!-- KPIs linha 1 -->
-                <div style="background: #1a1f2e; color: white; padding: 15px; border-radius: 12px; text-align: center;">
-                    <div style="font-size: 28px; font-weight: 700; color: #60a5fa;">${hospitaisComDados.length}</div>
-                    <div style="font-size: 10px; font-weight: 600; text-transform: uppercase; color: #e2e8f0;">HOSPITAIS ATIVOS</div>
-                </div>
-                <div style="background: #1a1f2e; color: white; padding: 15px; border-radius: 12px; text-align: center;">
-                    <div style="font-size: 28px; font-weight: 700; color: #60a5fa;">${kpis.totalLeitos}</div>
-                    <div style="font-size: 10px; font-weight: 600; text-transform: uppercase; color: #e2e8f0;">TOTAL DE LEITOS</div>
-                </div>
-                <div style="background: #1a1f2e; color: white; padding: 15px; border-radius: 12px; text-align: center;">
-                    <div style="font-size: 28px; font-weight: 700; color: #60a5fa;">${kpis.leitosOcupados}</div>
-                    <div style="font-size: 10px; font-weight: 600; text-transform: uppercase; color: #e2e8f0;">LEITOS OCUPADOS</div>
-                </div>
-                <div style="background: #1a1f2e; color: white; padding: 15px; border-radius: 12px; text-align: center;">
-                    <div style="font-size: 28px; font-weight: 700; color: #60a5fa;">${kpis.leitosVagos}</div>
-                    <div style="font-size: 10px; font-weight: 600; text-transform: uppercase; color: #e2e8f0;">LEITOS VAGOS</div>
-                </div>
-                
-                <!-- KPIs linha 2 -->
-                <div style="background: #1a1f2e; color: white; padding: 15px; border-radius: 12px; text-align: center;">
-                    <div style="font-size: 28px; font-weight: 700; color: #60a5fa;">${kpis.leitosEmAlta}</div>
-                    <div style="font-size: 10px; font-weight: 600; text-transform: uppercase; color: #e2e8f0;">LEITOS EM ALTA</div>
-                </div>
-                <div style="background: #1a1f2e; color: white; padding: 15px; border-radius: 12px; text-align: center;">
-                    <div style="font-size: 28px; font-weight: 700; color: #60a5fa;">${kpis.tph}d</div>
-                    <div style="font-size: 10px; font-weight: 600; text-transform: uppercase; color: #e2e8f0;">TPH (DIAS)</div>
-                </div>
-                <div style="background: #1a1f2e; color: white; padding: 15px; border-radius: 12px; text-align: center;">
-                    <div style="font-size: 28px; font-weight: 700; color: #60a5fa;">${kpis.ppsMedio}%</div>
-                    <div style="font-size: 10px; font-weight: 600; text-transform: uppercase; color: #e2e8f0;">PPS MÉDIO</div>
-                </div>
-                <div style="background: #1a1f2e; color: white; padding: 15px; border-radius: 12px; text-align: center;">
-                    <div style="font-size: 28px; font-weight: 700; color: #60a5fa;">${kpis.spictElegivel}%</div>
-                    <div style="font-size: 10px; font-weight: 600; text-transform: uppercase; color: #e2e8f0;">SPICT-BR ELEGÍVEL</div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- *** GRÁFICOS COM LARGURA CORRIGIDA (50% MAIS LARGOS) *** -->
-        <div style="display: flex; flex-direction: column; gap: 24px; max-width: 1200px; margin: 0 auto;">
-            <!-- Análise Preditiva de Altas -->
-            <div style="background: #1a1f2e; border-radius: 12px; padding: 20px; color: white;">
-                <h3 style="margin: 0 0 16px 0; font-size: 14px; font-weight: 700; text-transform: uppercase; color: #60a5fa;">
-                    📊 Análise Preditiva de Altas em ${hoje}
-                </h3>
-                <div style="height: 300px; width: 100%;">
-                    <canvas id="chartAltasExecutivo" style="max-height: 300px; width: 100%;"></canvas>
                 </div>
             </div>
             
-            <!-- Análise Preditiva de Concessões -->
-            <div style="background: #1a1f2e; border-radius: 12px; padding: 20px; color: white;">
-                <h3 style="margin: 0 0 16px 0; font-size: 14px; font-weight: 700; text-transform: uppercase; color: #60a5fa;">
-                    🏠 Análise Preditiva de Concessões em ${hoje}
+            <!-- KPIs Grid 2x2 móveis -->
+            <div class="kpi-box-mobile" style="background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%); border-radius: 8px; padding: 20px; text-align: center; border: 1px solid #cbd5e1;">
+                <div style="font-size: 32px; font-weight: 700; color: #dc2626; margin-bottom: 4px;">${kpis.tph}%</div>
+                <div style="font-size: 11px; color: #64748b; text-transform: uppercase; font-weight: 700; letter-spacing: 1px;">TPH</div>
+                <div style="font-size: 9px; color: #94a3b8; margin-top: 2px;">(Taxa Prev. Hoje)</div>
+            </div>
+            
+            <div class="kpi-box-mobile" style="background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%); border-radius: 8px; padding: 20px; text-align: center; border: 1px solid #cbd5e1;">
+                <div style="font-size: 32px; font-weight: 700; color: #1a1f2e; margin-bottom: 4px;">${kpis.ppsMedia}</div>
+                <div style="font-size: 11px; color: #64748b; text-transform: uppercase; font-weight: 700; letter-spacing: 1px;">PPS MÉDIO</div>
+                <div style="font-size: 9px; color: #94a3b8; margin-top: 2px;">(Performance Scale)</div>
+            </div>
+            
+            <div class="kpi-box-mobile" style="background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%); border-radius: 8px; padding: 20px; text-align: center; border: 1px solid #cbd5e1;">
+                <div style="font-size: 32px; font-weight: 700; color: #059669; margin-bottom: 4px;">${kpis.leitosEmAlta}</div>
+                <div style="font-size: 11px; color: #64748b; text-transform: uppercase; font-weight: 700; letter-spacing: 1px;">EM ALTA</div>
+                <div style="font-size: 9px; color: #94a3b8; margin-top: 2px;">(Ouro+2R+3R)</div>
+            </div>
+            
+            <div class="kpi-box-mobile" style="background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%); border-radius: 8px; padding: 20px; text-align: center; border: 1px solid #cbd5e1;">
+                <div style="font-size: 32px; font-weight: 700; color: #7c3aed; margin-bottom: 4px;">${kpis.spictPercent}%</div>
+                <div style="font-size: 11px; color: #64748b; text-transform: uppercase; font-weight: 700; letter-spacing: 1px;">SPICT+</div>
+                <div style="font-size: 9px; color: #94a3b8; margin-top: 2px;">(Cuid. Paliativos)</div>
+            </div>
+        </div>
+        
+        <!-- Gráficos Preditivos -->
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; width: 100%;">
+            <!-- Gráfico de Altas -->
+            <div style="background: linear-gradient(135deg, #1a1f2e 0%, #374151 100%); border-radius: 12px; padding: 20px; color: white;">
+                <h3 style="margin: 0 0 16px 0; font-size: 13px; font-weight: 700; text-transform: uppercase; color: #60a5fa; letter-spacing: 1px;">
+                    📈 ALTAS PREVISTAS EM ${hoje}
                 </h3>
                 <div style="height: 300px; width: 100%;">
-                    <canvas id="chartConcessoesExecutivo" style="max-height: 300px; width: 100%;"></canvas>
+                    <canvas id="graficoAltasExecutivo" style="max-height: 300px; max-width: 100%;"></canvas>
                 </div>
             </div>
             
-            <!-- Análise Preditiva de Linhas de Cuidado -->
-            <div style="background: #1a1f2e; border-radius: 12px; padding: 20px; color: white;">
-                <h3 style="margin: 0 0 16px 0; font-size: 14px; font-weight: 700; text-transform: uppercase; color: #60a5fa;">
-                    🩺 Análise Preditiva de Linha de Cuidados em ${hoje}
+            <!-- Gráfico de Concessões -->
+            <div style="background: linear-gradient(135deg, #1a1f2e 0%, #374151 100%); border-radius: 12px; padding: 20px; color: white;">
+                <h3 style="margin: 0 0 16px 0; font-size: 13px; font-weight: 700; text-transform: uppercase; color: #60a5fa; letter-spacing: 1px;">
+                    🎯 CONCESSÕES SOLICITADAS
                 </h3>
                 <div style="height: 300px; width: 100%;">
-                    <canvas id="chartLinhasExecutivo" style="max-height: 300px; width: 100%;"></canvas>
+                    <canvas id="graficoConcessoesExecutivo" style="max-height: 300px; max-width: 100%;"></canvas>
+                </div>
+            </div>
+            
+            <!-- Gráfico de Linhas de Cuidado -->
+            <div style="background: linear-gradient(135deg, #1a1f2e 0%, #374151 100%); border-radius: 12px; padding: 20px; color: white;">
+                <h3 style="margin: 0 0 16px 0; font-size: 13px; font-weight: 700; text-transform: uppercase; color: #60a5fa; letter-spacing: 1px;">
+                    🏥 LINHAS DE CUIDADO
+                </h3>
+                <div style="height: 300px; width: 100%;">
+                    <canvas id="graficoLinhasExecutivo" style="max-height: 300px; max-width: 100%;"></canvas>
                 </div>
             </div>
         </div>
     `;
     
-    // *** RENDERIZAR GRÁFICOS APÓS DOM ESTAR PRONTO ***
-    setTimeout(() => {
-        renderGaugeHorizontal(kpis.ocupacaoGeral);
-        renderGraficoAltasExecutivo(hospitaisComDados);
-        renderGraficoConcessoesExecutivo(hospitaisComDados);
-        renderGraficoLinhasExecutivo(hospitaisComDados);
-    }, 100);
+    // *** AGUARDAR CHART.JS E RENDERIZAR GRÁFICOS ***
+    const aguardarChartJS = () => {
+        if (typeof Chart === 'undefined') {
+            setTimeout(aguardarChartJS, 100);
+            return;
+        }
+        
+        setTimeout(() => {
+            renderGaugeExecutivo(kpis.ocupacaoGeral);
+            renderGraficosExecutivos(hospitaisComDados);
+            logSuccess('✅ Dashboard Executivo renderizado com gauge horizontal + TPH + KPIs mobile + gráficos corrigidos');
+        }, 200);
+    };
+    
+    aguardarChartJS();
 };
 
-// =================== GAUGE HORIZONTAL (VELOCÍMETRO) ===================
-function renderGaugeHorizontal(ocupacao) {
-    const canvas = document.getElementById('gaugeOcupacao');
-    if (!canvas) return;
-    
-    const ctx = canvas.getContext('2d');
-    
-    // Destruir chart anterior se existir
-    if (window.chartInstances && window.chartInstances.gaugeOcupacao) {
-        window.chartInstances.gaugeOcupacao.destroy();
-    }
-    
-    if (!window.chartInstances) window.chartInstances = {};
-    
-    // *** GAUGE HORIZONTAL COMO VELOCÍMETRO ***
-    window.chartInstances.gaugeOcupacao = new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-            datasets: [{
-                data: [ocupacao, 100 - ocupacao],
-                backgroundColor: [
-                    ocupacao >= 80 ? '#ef4444' : ocupacao >= 60 ? '#f59e0b' : '#16a34a',
-                    'rgba(255, 255, 255, 0.1)'
-                ],
-                borderWidth: 0,
-                cutout: '70%'
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            circumference: Math.PI, // *** MEIA ROSCA ***
-            rotation: Math.PI, // *** COMEÇAR NA HORIZONTAL ***
-            plugins: {
-                legend: { display: false },
-                tooltip: { enabled: false }
-            }
-        }
-    });
-}
-
-// =================== CALCULAR KPIs EXECUTIVOS CORRIGIDOS ===================
-function calcularKPIsExecutivos(hospitaisComDados = []) {
+// =================== CALCULAR KPIs EXECUTIVOS ===================
+function calcularKPIsExecutivos(hospitaisComDados) {
     let totalLeitos = 0;
     let leitosOcupados = 0;
-    let leitosVagos = 0;
     let leitosEmAlta = 0;
-    let somaTempoInternacao = 0;
-    let pacientesComTempo = 0;
-    let somaPPS = 0;
-    let pacientesComPPS = 0;
+    let ppsTotal = 0;
+    let ppsCont = 0;
     let spictElegivel = 0;
-    let totalPacientes = 0;
+    let spictTotal = 0;
     
     hospitaisComDados.forEach(hospitalId => {
         const hospital = window.hospitalData[hospitalId];
-        if (!hospital || !hospital.leitos) return;
-        
-        hospital.leitos.forEach(leito => {
-            totalLeitos++;
-            
-            if (leito.status === 'ocupado' && leito.paciente) {
-                leitosOcupados++;
-                totalPacientes++;
-                
-                // Verificar previsão de alta
-                if (leito.paciente.previsaoAlta && 
-                    (leito.paciente.previsaoAlta.includes('Hoje') || leito.paciente.previsaoAlta.includes('24h'))) {
-                    leitosEmAlta++;
-                }
-                
-                // Calcular tempo de internação para TPH
-                if (leito.paciente.admissao) {
-                    const admissaoDate = new Date(leito.paciente.admissao);
-                    const hoje = new Date();
-                    const diasInternado = Math.floor((hoje - admissaoDate) / (1000 * 60 * 60 * 24));
-                    somaTempoInternacao += diasInternado;
-                    pacientesComTempo++;
-                }
-                
-                // PPS médio
-                if (leito.paciente.pps) {
-                    const ppsNumerico = parseInt(leito.paciente.pps.replace('%', ''));
-                    if (!isNaN(ppsNumerico)) {
-                        somaPPS += ppsNumerico;
-                        pacientesComPPS++;
+        if (hospital && hospital.leitos) {
+            hospital.leitos.forEach(leito => {
+                totalLeitos++;
+                if (leito.status === 'ocupado') {
+                    leitosOcupados++;
+                    if (leito.paciente) {
+                        // Contar previsões de alta
+                        if (leito.paciente.prevAlta && 
+                            ['Hoje Ouro', '24h 2R', '48h 3R'].includes(leito.paciente.prevAlta)) {
+                            leitosEmAlta++;
+                        }
+                        
+                        // PPS médio
+                        if (leito.paciente.pps && !isNaN(leito.paciente.pps)) {
+                            ppsTotal += parseInt(leito.paciente.pps);
+                            ppsCont++;
+                        }
+                        
+                        // SPICT
+                        if (leito.paciente.spict) {
+                            spictTotal++;
+                            if (leito.paciente.spict === 'Sim') {
+                                spictElegivel++;
+                            }
+                        }
                     }
                 }
-                
-                // SPICT-BR elegível
-                if (leito.paciente.spictBr === 'Elegível') {
-                    spictElegivel++;
-                }
-            } else {
-                leitosVagos++;
-            }
-        });
+            });
+        }
     });
     
     const ocupacaoGeral = totalLeitos > 0 ? Math.round((leitosOcupados / totalLeitos) * 100) : 0;
-    const tph = pacientesComTempo > 0 ? (somaTempoInternacao / pacientesComTempo).toFixed(1) : '0.0';
-    const ppsMedio = pacientesComPPS > 0 ? Math.round(somaPPS / pacientesComPPS) : 0;
-    const spictPercentual = totalPacientes > 0 ? Math.round((spictElegivel / totalPacientes) * 100) : 0;
+    const ppsMedia = ppsCont > 0 ? Math.round(ppsTotal / ppsCont) : 0;
+    const tph = leitosOcupados > 0 ? (leitosEmAlta / leitosOcupados * 100).toFixed(1) : "0.0";
+    const spictPercent = spictTotal > 0 ? Math.round((spictElegivel / spictTotal) * 100) : 0;
     
     return {
-        ocupacaoGeral,
         totalLeitos,
         leitosOcupados,
-        leitosVagos,
         leitosEmAlta,
-        tph, // *** TPH CORRIGIDO ***
-        ppsMedio,
-        spictElegivel: spictPercentual
+        ocupacaoGeral,
+        ppsMedia,
+        tph: parseFloat(tph),
+        spictPercent
     };
 }
 
-// =================== CALCULAR OCUPAÇÃO DE UM HOSPITAL ===================
-function calcularOcupacaoHospital(hospitalId) {
-    const hospital = window.hospitalData[hospitalId];
-    if (!hospital || !hospital.leitos) return 0;
+// =================== RENDERIZAR GAUGE EXECUTIVO HORIZONTAL ===================
+function renderGaugeExecutivo(ocupacao) {
+    const canvas = document.getElementById('gaugeOcupacaoExecutivo');
+    if (!canvas || typeof Chart === 'undefined') return;
     
-    const ocupados = hospital.leitos.filter(l => l.status === 'ocupado').length;
-    const total = hospital.leitos.length;
-    
-    return total > 0 ? Math.round((ocupados / total) * 100) : 0;
-}
-
-// =================== GRÁFICO DE ALTAS COM BARRAS DIVIDIDAS (OURO/2R/3R) ===================
-function renderGraficoAltasExecutivo(hospitaisComDados) {
-    const ctx = document.getElementById('chartAltasExecutivo');
-    if (!ctx) return;
-    
-    const dados = calcularDadosAltasExecutivo(hospitaisComDados);
-    
-    if (window.chartInstances && window.chartInstances.altasExecutivo) {
-        window.chartInstances.altasExecutivo.destroy();
+    // Destruir gráfico anterior se existir
+    if (window.chartInstances && window.chartInstances.gaugeExecutivo) {
+        window.chartInstances.gaugeExecutivo.destroy();
     }
     
     if (!window.chartInstances) window.chartInstances = {};
     
-    window.chartInstances.altasExecutivo = new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: ['Hoje', '24h', '48h', '72h', '96h'], // *** EIXO X HORIZONTAL ***
-            datasets: [
-                {
-                    label: 'OURO',
-                    data: dados.ouro,
-                    backgroundColor: '#fbbf24',
-                    stack: 'timeline'
-                },
-                {
-                    label: '2R',
-                    data: dados.r2,
-                    backgroundColor: '#3b82f6',
-                    stack: 'timeline'
-                },
-                {
-                    label: '3R',
-                    data: dados.r3,
-                    backgroundColor: '#8b5cf6',
-                    stack: 'timeline'
-                }
-            ]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    // *** LEGENDAS EMBAIXO + JUSTIFICADAS À ESQUERDA + TEXTO BRANCO ***
-                    display: true,
-                    position: 'bottom',
-                    align: 'start',
-                    labels: {
-                        color: '#ffffff',
-                        padding: 8,
-                        font: { size: 11, weight: 600 },
-                        usePointStyle: true,
-                        boxWidth: 12,
-                        boxHeight: 12
-                    }
-                }
+    try {
+        const ctx = canvas.getContext('2d');
+        window.chartInstances.gaugeExecutivo = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                datasets: [{
+                    data: [ocupacao, 100 - ocupacao],
+                    backgroundColor: [
+                        ocupacao >= 85 ? '#ef4444' : 
+                        ocupacao >= 70 ? '#f59e0b' : 
+                        ocupacao >= 50 ? '#10b981' : '#6b7280',
+                        'rgba(255,255,255,0.1)'
+                    ],
+                    borderWidth: 0,
+                    cutout: '75%'
+                }]
             },
-            scales: {
-                x: {
-                    stacked: true,
-                    ticks: {
-                        color: '#ffffff',
-                        font: { size: 11 },
-                        maxRotation: 0, // *** SEMPRE HORIZONTAL ***
-                        minRotation: 0
-                    },
-                    grid: {
-                        color: 'rgba(255, 255, 255, 0.05)'
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: { 
+                        enabled: true,
+                        backgroundColor: 'rgba(0,0,0,0.9)',
+                        titleColor: '#ffffff',
+                        bodyColor: '#ffffff',
+                        callbacks: {
+                            label: function() {
+                                return `Taxa de Ocupação: ${ocupacao}%`;
+                            }
+                        }
                     }
                 },
-                y: {
-                    stacked: true,
-                    beginAtZero: true,
-                    ticks: {
-                        stepSize: 1, // *** NÚMEROS INTEIROS ***
-                        color: '#ffffff',
-                        font: { size: 11 }
-                    },
-                    grid: {
-                        color: 'rgba(255, 255, 255, 0.05)'
-                    }
-                }
+                rotation: -90,     // *** HORIZONTAL: meia rosca ***
+                circumference: 180 // *** HORIZONTAL: 180 graus ***
             }
-        }
-    });
-}
-
-// =================== GRÁFICO DE CONCESSÕES ===================
-function renderGraficoConcessoesExecutivo(hospitaisComDados) {
-    const ctx = document.getElementById('chartConcessoesExecutivo');
-    if (!ctx) return;
-    
-    const dados = calcularDadosConcessoesExecutivo(hospitaisComDados);
-    
-    if (window.chartInstances && window.chartInstances.concessoesExecutivo) {
-        window.chartInstances.concessoesExecutivo.destroy();
+        });
+    } catch (error) {
+        console.warn('Erro ao renderizar gauge executivo:', error);
     }
-    
-    if (!window.chartInstances) window.chartInstances = {};
-    
-    window.chartInstances.concessoesExecutivo = new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: ['Hoje', '24h', '48h', '72h', '96h'], // *** EIXO X HORIZONTAL ***
-            datasets: dados.concessoes.map(item => ({
-                label: item.nome,
-                data: item.dados,
-                backgroundColor: getCorConcessao(item.nome)
-            }))
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    // *** LEGENDAS EMBAIXO + JUSTIFICADAS À ESQUERDA + TEXTO BRANCO ***
-                    display: true,
-                    position: 'bottom',
-                    align: 'start',
-                    labels: {
-                        color: '#ffffff',
-                        padding: 8,
-                        font: { size: 11, weight: 600 },
-                        usePointStyle: true,
-                        boxWidth: 12,
-                        boxHeight: 12
-                    }
-                }
-            },
-            scales: {
-                x: {
-                    ticks: {
-                        color: '#ffffff',
-                        font: { size: 11 },
-                        maxRotation: 0, // *** SEMPRE HORIZONTAL ***
-                        minRotation: 0
-                    },
-                    grid: {
-                        color: 'rgba(255, 255, 255, 0.05)'
-                    }
-                },
-                y: {
-                    beginAtZero: true,
-                    ticks: {
-                        stepSize: 1, // *** NÚMEROS INTEIROS ***
-                        color: '#ffffff',
-                        font: { size: 11 }
-                    },
-                    grid: {
-                        color: 'rgba(255, 255, 255, 0.05)'
-                    }
-                }
-            }
-        }
-    });
 }
 
-// =================== GRÁFICO DE LINHAS DE CUIDADO ===================
-function renderGraficoLinhasExecutivo(hospitaisComDados) {
-    const ctx = document.getElementById('chartLinhasExecutivo');
-    if (!ctx) return;
+// =================== RENDERIZAR GRÁFICOS EXECUTIVOS ===================
+function renderGraficosExecutivos(hospitaisComDados) {
+    const dadosConsolidados = consolidarDadosRede(hospitaisComDados);
     
-    const dados = calcularDadosLinhasExecutivo(hospitaisComDados);
-    
-    if (window.chartInstances && window.chartInstances.linhasExecutivo) {
-        window.chartInstances.linhasExecutivo.destroy();
-    }
-    
-    if (!window.chartInstances) window.chartInstances = {};
-    
-    window.chartInstances.linhasExecutivo = new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: ['Hoje', '24h', '48h', '72h', '96h'], // *** EIXO X HORIZONTAL ***
-            datasets: dados.linhas.map(item => ({
-                label: item.nome,
-                data: item.dados,
-                backgroundColor: getCorLinhaCuidado(item.nome)
-            }))
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    // *** LEGENDAS EMBAIXO + JUSTIFICADAS À ESQUERDA + TEXTO BRANCO ***
-                    display: true,
-                    position: 'bottom',
-                    align: 'start',
-                    labels: {
-                        color: '#ffffff',
-                        padding: 8,
-                        font: { size: 11, weight: 600 },
-                        usePointStyle: true,
-                        boxWidth: 12,
-                        boxHeight: 12
-                    }
-                }
-            },
-            scales: {
-                x: {
-                    ticks: {
-                        color: '#ffffff',
-                        font: { size: 11 },
-                        maxRotation: 0, // *** SEMPRE HORIZONTAL ***
-                        minRotation: 0
-                    },
-                    grid: {
-                        color: 'rgba(255, 255, 255, 0.05)'
-                    }
-                },
-                y: {
-                    beginAtZero: true,
-                    ticks: {
-                        stepSize: 1, // *** NÚMEROS INTEIROS ***
-                        color: '#ffffff',
-                        font: { size: 11 }
-                    },
-                    grid: {
-                        color: 'rgba(255, 255, 255, 0.05)'
-                    }
-                }
-            }
-        }
-    });
+    // Renderizar os 3 gráficos preditivos
+    renderGraficoExecutivo('graficoAltasExecutivo', dadosConsolidados.altas, 'Altas Previstas', '#60a5fa');
+    renderGraficoExecutivo('graficoConcessoesExecutivo', dadosConsolidados.concessoes, 'Concessões', '#34d399');
+    renderGraficoExecutivo('graficoLinhasExecutivo', dadosConsolidados.linhas, 'Linhas de Cuidado', '#fbbf24');
 }
 
-// =================== FUNÇÕES AUXILIARES PARA DADOS ===================
-function calcularDadosAltasExecutivo(hospitaisComDados) {
-    // Dados baseados nos hospitais ativos - com barras divididas para HOJE e 24h
-    const totalAltas = hospitaisComDados.reduce((total, hospitalId) => {
+// =================== CONSOLIDAR DADOS DA REDE ===================
+function consolidarDadosRede(hospitaisComDados) {
+    const dados = {
+        altas: {},
+        concessoes: {},
+        linhas: {}
+    };
+    
+    // Agregar dados de todos os hospitais
+    hospitaisComDados.forEach(hospitalId => {
         const hospital = window.hospitalData[hospitalId];
-        if (!hospital || !hospital.leitos) return total;
-        
-        return total + hospital.leitos.filter(l => 
-            l.status === 'ocupado' && 
-            l.paciente && 
-            l.paciente.previsaoAlta && 
-            (l.paciente.previsaoAlta.includes('Hoje') || l.paciente.previsaoAlta.includes('24h'))
-        ).length;
-    }, 0);
+        if (hospital && hospital.leitos) {
+            hospital.leitos.forEach(leito => {
+                if (leito.status === 'ocupado' && leito.paciente) {
+                    // *** ALTAS PREVISTAS ***
+                    const prevAlta = leito.paciente.prevAlta;
+                    if (prevAlta) {
+                        dados.altas[prevAlta] = (dados.altas[prevAlta] || 0) + 1;
+                    }
+                    
+                    // *** CONCESSÕES SOLICITADAS ***
+                    if (leito.paciente.concessoes) {
+                        const concessoesList = typeof leito.paciente.concessoes === 'string' ? 
+                            leito.paciente.concessoes.split('|') : 
+                            Array.isArray(leito.paciente.concessoes) ? leito.paciente.concessoes : [];
+                        
+                        concessoesList.forEach(concessao => {
+                            if (concessao && concessao.trim()) {
+                                const key = concessao.trim();
+                                dados.concessoes[key] = (dados.concessoes[key] || 0) + 1;
+                            }
+                        });
+                    }
+                    
+                    // *** LINHAS DE CUIDADO ***
+                    if (leito.paciente.linhas) {
+                        const linhasList = typeof leito.paciente.linhas === 'string' ? 
+                            leito.paciente.linhas.split('|') : 
+                            Array.isArray(leito.paciente.linhas) ? leito.paciente.linhas : [];
+                        
+                        linhasList.forEach(linha => {
+                            if (linha && linha.trim()) {
+                                const key = linha.trim();
+                                dados.linhas[key] = (dados.linhas[key] || 0) + 1;
+                            }
+                        });
+                    }
+                }
+            });
+        }
+    });
     
-    return {
-        // HOJE e 24h têm barras compostas por OURO, 2R e 3R
-        ouro: [Math.max(1, Math.floor(totalAltas * 0.4)), Math.max(1, Math.floor(totalAltas * 0.3)), 0, 0, 0],
-        r2: [Math.max(1, Math.floor(totalAltas * 0.4)), Math.max(1, Math.floor(totalAltas * 0.5)), Math.max(0, Math.floor(totalAltas * 0.3)), 0, 0],
-        r3: [Math.max(0, Math.floor(totalAltas * 0.2)), Math.max(0, Math.floor(totalAltas * 0.2)), Math.max(1, Math.floor(totalAltas * 0.7)), Math.max(0, Math.floor(totalAltas * 0.5)), 0]
-    };
+    return dados;
 }
 
-function calcularDadosConcessoesExecutivo(hospitaisComDados) {
-    // Dados baseados nos hospitais ativos
-    const concessoesPrincipais = [
-        'Transição Domiciliar',
-        'Fisioterapia',
-        'Oxigenoterapia',
-        'Curativos'
-    ];
+// =================== RENDERIZAR GRÁFICO EXECUTIVO INDIVIDUAL ===================
+function renderGraficoExecutivo(canvasId, dados, titulo, corPrincipal) {
+    const canvas = document.getElementById(canvasId);
+    if (!canvas || typeof Chart === 'undefined') return;
     
-    return {
-        periodos: ['Hoje', '24h', '48h', '72h', '96h'],
-        concessoes: concessoesPrincipais.map(nome => ({
-            nome,
-            dados: [
-                Math.floor(Math.random() * 3) + 1,
-                Math.floor(Math.random() * 4) + 1,
-                Math.floor(Math.random() * 2),
-                Math.floor(Math.random() * 1),
-                0
-            ]
-        }))
-    };
-}
-
-function calcularDadosLinhasExecutivo(hospitaisComDados) {
-    // Dados baseados nas principais linhas de cuidado
-    const linhasPrincipais = [
-        'Assiste',
-        'APS',
-        'Oncologia',
-        'Cardiologia'
-    ];
+    // Destruir gráfico anterior se existir
+    if (window.chartInstances && window.chartInstances[canvasId]) {
+        window.chartInstances[canvasId].destroy();
+    }
     
-    return {
-        periodos: ['Hoje', '24h', '48h', '72h', '96h'],
-        linhas: linhasPrincipais.map(nome => ({
-            nome,
-            dados: [
-                Math.floor(Math.random() * 2) + 1,
-                Math.floor(Math.random() * 3) + 1,
-                Math.floor(Math.random() * 2),
-                Math.floor(Math.random() * 1),
-                0
-            ]
-        }))
-    };
+    if (!window.chartInstances) window.chartInstances = {};
+    
+    const labels = Object.keys(dados);
+    const values = Object.values(dados);
+    
+    // Se não há dados, mostrar mensagem
+    if (labels.length === 0 || values.every(v => v === 0)) {
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.font = '14px Arial';
+        ctx.fillStyle = '#9ca3af';
+        ctx.textAlign = 'center';
+        ctx.fillText('Sem dados disponíveis', canvas.width / 2, canvas.height / 2);
+        return;
+    }
+    
+    // Pegar apenas os top 10 itens para não sobrecarregar o gráfico
+    const dadosOrdenados = labels
+        .map((label, index) => ({ label, value: values[index] }))
+        .sort((a, b) => b.value - a.value)
+        .slice(0, 10);
+    
+    const labelsTop = dadosOrdenados.map(d => d.label);
+    const valuesTop = dadosOrdenados.map(d => d.value);
+    
+    try {
+        const ctx = canvas.getContext('2d');
+        window.chartInstances[canvasId] = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labelsTop,
+                datasets: [{
+                    label: titulo,
+                    data: valuesTop,
+                    backgroundColor: labelsTop.map((_, index) => {
+                        // Gradiente de cores baseado na cor principal
+                        const colors = [
+                            corPrincipal,
+                            corPrincipal + 'CC',
+                            corPrincipal + '99',
+                            corPrincipal + '66',
+                            '#6b7280',
+                            '#6b7280CC',
+                            '#6b7280AA',
+                            '#6b728088',
+                            '#6b728066',
+                            '#6b728044'
+                        ];
+                        return colors[index] || '#6b7280';
+                    }),
+                    borderColor: '#ffffff',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                indexAxis: 'y', // *** BARRAS HORIZONTAIS ***
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'left', // *** LEGENDAS À ESQUERDA ***
+                        labels: {
+                            color: '#ffffff',
+                            font: { size: 11 },
+                            boxWidth: 12
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0,0,0,0.9)',
+                        titleColor: '#ffffff',
+                        bodyColor: '#ffffff',
+                        borderColor: corPrincipal,
+                        borderWidth: 1,
+                        callbacks: {
+                            label: function(context) {
+                                return `${context.dataset.label}: ${context.parsed.x} pacientes`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        grid: { 
+                            color: 'rgba(255,255,255,0.1)',
+                            drawBorder: false
+                        },
+                        ticks: { 
+                            color: '#ffffff',
+                            font: { size: 11 },
+                            stepSize: 1, // *** EIXOS SEMPRE INTEIROS ***
+                            callback: function(value) {
+                                return Number.isInteger(value) ? value : '';
+                            }
+                        }
+                    },
+                    y: {
+                        grid: { 
+                            color: 'rgba(255,255,255,0.05)',
+                            drawBorder: false
+                        },
+                        ticks: { 
+                            color: '#ffffff',
+                            font: { size: 10 },
+                            maxTicksLimit: 8,
+                            callback: function(value, index) {
+                                const label = this.getLabelForValue(value);
+                                return label.length > 20 ? label.substring(0, 17) + '...' : label;
+                            }
+                        }
+                    }
+                },
+                layout: {
+                    padding: {
+                        left: 10,
+                        right: 10,
+                        top: 10,
+                        bottom: 10
+                    }
+                }
+            }
+        });
+    } catch (error) {
+        console.warn(`Erro ao renderizar gráfico executivo ${canvasId}:`, error);
+    }
 }
 
-// =================== CORES PANTONE ===================
-function getCorConcessao(nome) {
-    const cores = {
-        'Transição Domiciliar': '#007A53',
-        'Aplicação domiciliar de medicamentos': '#582C83',
-        'Fisioterapia': '#009639',
-        'Fonoaudiologia': '#FF671F',
-        'Aspiração': '#2E1A47',
-        'Banho': '#8FD3F4',
-        'Curativos': '#00BFB3',
-        'Oxigenoterapia': '#64A70B',
-        'Recarga de O₂': '#00AEEF',
-        'Orientação Nutricional – com dispositivo': '#FFC72C',
-        'Orientação Nutricional – sem dispositivo': '#F4E285',
-        'Clister': '#E8927C',
-        'PICC': '#E03C31'
-    };
-    return cores[nome] || '#6b7280';
-}
-
-function getCorLinhaCuidado(nome) {
-    const cores = {
-        'Assiste': '#ED0A72',
-        'APS': '#007A33',
-        'Cuidados Paliativos': '#00B5A2',
-        'ICO (Insuficiência Coronariana)': '#A6192E',
-        'Oncologia': '#6A1B9A',
-        'Pediatria': '#5A646B',
-        'Programa Autoimune – Gastroenterologia': '#5C5EBE',
-        'Programa Autoimune – Neuro-desmielinizante': '#00AEEF',
-        'Programa Autoimune – Neuro-muscular': '#00263A',
-        'Programa Autoimune – Reumatologia': '#582D40',
-        'Vida Mais Leve Care': '#FFB81C',
-        'Crônicos – Cardiologia': '#C8102E',
-        'Crônicos – Endocrinologia': '#582C83',
-        'Crônicos – Geriatria': '#FF6F1D',
-        'Crônicos – Melhor Cuidado': '#556F44',
-        'Crônicos – Neurologia': '#0072CE',
-        'Crônicos – Pneumologia': '#E35205',
-        'Crônicos – Pós-bariátrica': '#003C57',
-        'Crônicos – Reumatologia': '#5A0020'
-    };
-    return cores[nome] || '#6b7280';
-}
-
-// =================== CSS CORRIGIDO PARA KPIs MOBILE ===================
+// =================== CSS ESPECÍFICO PARA DASHBOARD EXECUTIVO ===================
 const executiveCSS = `
 <style>
-.executive-kpis-grid {
-    display: grid;
-    grid-template-columns: repeat(6, 1fr);
-    grid-template-rows: repeat(2, 120px);
-    gap: 16px;
-}
-
-/* *** RESPONSIVIDADE MOBILE CORRIGIDA: 2 POR LINHA *** */
+/* =================== DASHBOARD EXECUTIVO RESPONSIVO =================== */
 @media (max-width: 768px) {
-    .executive-kpis-grid {
-        grid-template-columns: repeat(2, 1fr);
-        grid-template-rows: auto auto auto auto auto;
-        gap: 12px;
+    /* KPIs em 2x2 no mobile */
+    .kpi-box-mobile {
+        padding: 15px 10px !important;
     }
     
-    .kpi-principal {
-        grid-column: span 2 !important;
-        grid-row: span 1 !important;
-        height: auto !important;
-        flex-direction: column !important;
-        text-align: center !important;
+    .kpi-box-mobile > div:first-child {
+        font-size: 24px !important;
     }
     
-    .kpi-principal > div:first-child {
-        margin-bottom: 15px !important;
+    /* Gráficos sempre verticais no mobile */
+    [style*="grid-template-columns: repeat(3, 1fr)"] {
+        display: grid !important;
+        grid-template-columns: 1fr !important;
+        gap: 20px !important;
     }
     
-    .kpi-principal > div:last-child {
-        padding-left: 0 !important;
-        width: 100% !important;
+    /* Gauge ocupação ajustado */
+    #gaugeOcupacaoExecutivo {
+        max-width: 180px !important;
+        max-height: 90px !important;
     }
 }
 
-/* *** LARGURA DOS GRÁFICOS NO DESKTOP: MAIS COMPACTOS *** */
-@media (min-width: 769px) {
-    .executive-charts > div {
-        max-width: 100% !important;
-        margin-left: auto !important;
-        margin-right: auto !important;
+@media (max-width: 480px) {
+    /* KPIs ainda menores */
+    .kpi-box-mobile {
+        padding: 12px 8px !important;
+    }
+    
+    .kpi-box-mobile > div:first-child {
+        font-size: 20px !important;
+        margin-bottom: 2px !important;
+    }
+    
+    .kpi-box-mobile > div:nth-child(2) {
+        font-size: 9px !important;
+    }
+    
+    .kpi-box-mobile > div:nth-child(3) {
+        font-size: 8px !important;
     }
 }
+
+/* =================== GAUGE HORIZONTAL FORÇADO =================== */
+#gaugeOcupacaoExecutivo {
+    transform: rotate(0deg) !important; /* Garantir horizontalidade */
+}
+
+/* =================== GRÁFICOS EXECUTIVOS =================== */
+.executivo-grafico {
+    min-height: 300px;
+    width: 100%;
+}
+
+.executivo-grafico canvas {
+    max-width: 100% !important;
+    height: auto !important;
+}
+
+/* =================== BARRAS HORIZONTAIS OURO/2R/3R =================== */
+.alta-ouro { background-color: #fbbf24 !important; }
+.alta-2r { background-color: #3b82f6 !important; }  
+.alta-3r { background-color: #8b5cf6 !important; }
+.alta-outros { background-color: #6b7280 !important; }
 </style>
 `;
 

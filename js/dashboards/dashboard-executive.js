@@ -441,6 +441,8 @@ function renderAltasExecutivo(tipo = 'bar') {
     const categorias = ['Hoje Ouro', '24h 2R', '48h 3R', '72h', '96h', 'Não definido'];
     const dadosConsolidados = [];
     
+    logInfo('Renderizando gráfico de altas...');
+    
     // Para cada hospital ativo
     Object.keys(window.hospitalData).forEach(hospitalId => {
         const hospital = window.hospitalData[hospitalId];
@@ -448,12 +450,16 @@ function renderAltasExecutivo(tipo = 'bar') {
         
         const hospitalNome = CONFIG.HOSPITAIS[hospitalId]?.nome || hospitalId;
         const valores = categorias.map(cat => {
-            return hospital.leitos.filter(l => 
-                l.status === 'ocupado' && 
+            const count = hospital.leitos.filter(l => 
+                (l.status === 'Em uso' || l.status === 'ocupado' || l.status === 'Ocupado') && 
                 l.paciente && 
                 l.paciente.prevAlta === cat
             ).length;
+            return count;
         });
+        
+        const totalAltas = valores.reduce((a, b) => a + b, 0);
+        logInfo(`${hospitalNome}: ${totalAltas} altas previstas`);
         
         dadosConsolidados.push({
             label: hospitalNome,
@@ -463,6 +469,8 @@ function renderAltasExecutivo(tipo = 'bar') {
             borderWidth: 1
         });
     });
+    
+    logInfo(`Dados consolidados de altas:`, dadosConsolidados);
     
     const ctx = canvas.getContext('2d');
     window.chartInstances[chartKey] = new Chart(ctx, {
@@ -517,17 +525,31 @@ function renderConcessoesExecutivo(tipo = 'bar') {
     // Consolidar dados de concessões
     const concessoesMap = new Map();
     
+    logInfo('Renderizando gráfico de concessões...');
+    
     Object.keys(window.hospitalData).forEach(hospitalId => {
         const hospital = window.hospitalData[hospitalId];
         if (!hospital || !hospital.leitos) return;
         
         hospital.leitos.forEach(leito => {
-            if (leito.status === 'ocupado' && leito.paciente && leito.paciente.concessoes) {
-                const concessoes = leito.paciente.concessoes.split('|');
-                concessoes.forEach(concessao => {
-                    const nome = concessao.trim();
-                    if (nome) {
+            if ((leito.status === 'Em uso' || leito.status === 'ocupado' || leito.status === 'Ocupado') && 
+                leito.paciente && leito.paciente.concessoes) {
+                
+                // Verificar se concessões é string ou array
+                let concessoesList = [];
+                if (typeof leito.paciente.concessoes === 'string') {
+                    concessoesList = leito.paciente.concessoes.split('|');
+                } else if (Array.isArray(leito.paciente.concessoes)) {
+                    concessoesList = leito.paciente.concessoes;
+                } else {
+                    concessoesList = [leito.paciente.concessoes];
+                }
+                
+                concessoesList.forEach(concessao => {
+                    const nome = concessao ? concessao.trim() : '';
+                    if (nome && nome !== '') {
                         concessoesMap.set(nome, (concessoesMap.get(nome) || 0) + 1);
+                        logInfo(`Concessão encontrada: ${nome}`);
                     }
                 });
             }
@@ -537,6 +559,9 @@ function renderConcessoesExecutivo(tipo = 'bar') {
     const labels = Array.from(concessoesMap.keys()).slice(0, 10); // Top 10
     const valores = labels.map(label => concessoesMap.get(label));
     const cores = labels.map(label => window.CHART_COLORS?.concessoes?.[label] || getRandomColor());
+    
+    logInfo(`Concessões encontradas: ${labels.length}`);
+    logInfo(`Total valores: ${valores.reduce((a, b) => a + b, 0)}`);
     
     const ctx = canvas.getContext('2d');
     window.chartInstances[chartKey] = new Chart(ctx, {
@@ -597,17 +622,31 @@ function renderLinhasExecutivo(tipo = 'bar') {
     // Consolidar dados de linhas de cuidado
     const linhasMap = new Map();
     
+    logInfo('Renderizando gráfico de linhas de cuidado...');
+    
     Object.keys(window.hospitalData).forEach(hospitalId => {
         const hospital = window.hospitalData[hospitalId];
         if (!hospital || !hospital.leitos) return;
         
         hospital.leitos.forEach(leito => {
-            if (leito.status === 'ocupado' && leito.paciente && leito.paciente.linhas) {
-                const linhas = leito.paciente.linhas.split('|');
-                linhas.forEach(linha => {
-                    const nome = linha.trim();
-                    if (nome) {
+            if ((leito.status === 'Em uso' || leito.status === 'ocupado' || leito.status === 'Ocupado') && 
+                leito.paciente && leito.paciente.linhas) {
+                
+                // Verificar se linhas é string ou array  
+                let linhasList = [];
+                if (typeof leito.paciente.linhas === 'string') {
+                    linhasList = leito.paciente.linhas.split('|');
+                } else if (Array.isArray(leito.paciente.linhas)) {
+                    linhasList = leito.paciente.linhas;
+                } else {
+                    linhasList = [leito.paciente.linhas];
+                }
+                
+                linhasList.forEach(linha => {
+                    const nome = linha ? linha.trim() : '';
+                    if (nome && nome !== '') {
                         linhasMap.set(nome, (linhasMap.get(nome) || 0) + 1);
+                        logInfo(`Linha de cuidado encontrada: ${nome}`);
                     }
                 });
             }
@@ -617,6 +656,9 @@ function renderLinhasExecutivo(tipo = 'bar') {
     const labels = Array.from(linhasMap.keys()).slice(0, 10); // Top 10
     const valores = labels.map(label => linhasMap.get(label));
     const cores = labels.map(label => window.CHART_COLORS?.linhasCuidado?.[label] || getRandomColor());
+    
+    logInfo(`Linhas de cuidado encontradas: ${labels.length}`);
+    logInfo(`Total valores: ${valores.reduce((a, b) => a + b, 0)}`);
     
     const ctx = canvas.getContext('2d');
     window.chartInstances[chartKey] = new Chart(ctx, {

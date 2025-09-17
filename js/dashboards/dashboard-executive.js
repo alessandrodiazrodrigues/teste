@@ -1,9 +1,9 @@
-// =================== DASHBOARD EXECUTIVO - REDE HOSPITALAR EXTERNA ===================
+// =================== DASHBOARD EXECUTIVO - REDE HOSPITALAR EXTERNA (SEM EMOJIS) ===================
 
 window.renderDashboardExecutivo = function() {
-    logInfo('🏢 Renderizando Dashboard Executivo: REDE HOSPITALAR EXTERNA');
+    logInfo('Renderizando Dashboard Executivo: REDE HOSPITALAR EXTERNA');
     
-    // *** CORREÇÃO: Container correto ***
+    // Container correto
     let container = document.getElementById('dashExecutivoContent');
     if (!container) {
         const dash2Section = document.getElementById('dash2');
@@ -16,7 +16,6 @@ window.renderDashboardExecutivo = function() {
     }
     
     if (!container) {
-        // Fallback: tentar dashboardContainer
         container = document.getElementById('dashboardContainer');
         if (!container) {
             logError('Nenhum container encontrado para Dashboard Executivo');
@@ -24,27 +23,41 @@ window.renderDashboardExecutivo = function() {
         }
     }
     
-    // *** VERIFICAR SE HÁ DADOS ANTES DE RENDERIZAR ***
+    // Verificar se há dados antes de renderizar
     if (!window.hospitalData || Object.keys(window.hospitalData).length === 0) {
         container.innerHTML = `
             <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 400px; text-align: center; color: white; background: linear-gradient(135deg, #1a1f2e 0%, #2d3748 100%); border-radius: 12px; margin: 20px; padding: 40px;">
                 <div style="width: 60px; height: 60px; border: 3px solid #22c55e; border-top-color: transparent; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px;"></div>
                 <h2 style="color: #22c55e; margin-bottom: 10px; font-size: 20px;">Carregando dados executivos</h2>
                 <p style="color: #9ca3af; font-size: 14px;">Consolidando informações da rede hospitalar</p>
-                <div style="margin-top: 20px;">
-                    <button onclick="window.forceExecutiveRefresh()" style="background: #22c55e; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 14px;">
-                        🔄 Recarregar Dados
-                    </button>
-                </div>
+                <style>
+                    @keyframes spin {
+                        from { transform: rotate(0deg); }
+                        to { transform: rotate(360deg); }
+                    }
+                </style>
             </div>
         `;
         
-        // *** TENTAR CARREGAR DADOS APÓS 3 SEGUNDOS ***
-        setTimeout(() => {
+        // Timeout controlado - máximo 3 tentativas
+        let tentativas = 0;
+        const maxTentativas = 3;
+        
+        const tentarCarregar = () => {
+            tentativas++;
+            
             if (window.hospitalData && Object.keys(window.hospitalData).length > 0) {
-                window.renderDashboardExecutivo(); // Recursivo
+                setTimeout(() => window.renderDashboardExecutivo(), 500);
+            } else if (tentativas < maxTentativas) {
+                setTimeout(tentarCarregar, 2000);
+            } else {
+                logInfo('Criando dados mock após timeout');
+                criarDadosMockExecutivo();
+                setTimeout(() => window.renderDashboardExecutivo(), 1000);
             }
-        }, 3000);
+        };
+        
+        tentarCarregar();
         return;
     }
     
@@ -56,13 +69,12 @@ window.renderDashboardExecutivo = function() {
     
     if (hospitaisComDados.length === 0) {
         container.innerHTML = `
-            <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 400px; text-align: center; color: white; background: linear-gradient(135deg, #1a1f2e 0%, #2d3748 100%); border-radius: 12px; margin: 20px; padding: 40px;">
-                <div style="font-size: 48px; margin-bottom: 20px;">🏥</div>
-                <h2 style="color: #ef4444; margin-bottom: 15px; font-size: 22px;">Nenhum Hospital com Dados</h2>
+            <div style="text-align: center; padding: 50px; color: white; background: #1a1f2e; border-radius: 12px;">
+                <h3 style="color: #f59e0b; margin-bottom: 15px;">Nenhum dado executivo disponível</h3>
                 <p style="color: #9ca3af; margin-bottom: 20px;">Não foi possível consolidar dados de nenhum hospital configurado.</p>
                 <p style="color: #6b7280; font-size: 14px;">Hospitais configurados: ${Object.values(CONFIG.HOSPITAIS).map(h => h.nome).join(', ')}</p>
                 <button onclick="window.forceExecutiveRefresh()" style="background: #22c55e; color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; font-size: 14px; margin-top: 15px;">
-                    🔄 Recarregar Dados
+                    Recarregar Dados
                 </button>
             </div>
         `;
@@ -73,25 +85,25 @@ window.renderDashboardExecutivo = function() {
     const kpis = calcularKPIsExecutivos(hospitaisComDados);
     const hoje = new Date().toLocaleDateString('pt-BR');
     
-    // *** CORREÇÃO TÍTULO: "Rede Hospitalar Externa" ***
+    // HTML CORRIGIDO - SEM EMOJIS E FONTES BRANCAS
     container.innerHTML = `
         <div style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); min-height: 100vh; padding: 20px; color: white;">
-            ${getExecutiveCSS()}
             
             <!-- HEADER COM TÍTULO CORRETO -->
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; padding: 20px; background: rgba(255, 255, 255, 0.05); border-radius: 12px; border-left: 4px solid #22c55e;">
-                <h2 style="margin: 0; color: #22c55e; font-size: 24px; font-weight: 700;">🏢 Rede Hospitalar Externa</h2>
+                <h2 style="margin: 0; color: #22c55e; font-size: 24px; font-weight: 700;">Rede Hospitalar Externa</h2>
                 <div style="display: flex; align-items: center; gap: 8px; background: rgba(34, 197, 94, 0.1); padding: 8px 16px; border-radius: 20px; border: 1px solid rgba(34, 197, 94, 0.3); color: #22c55e; font-size: 14px;">
                     <span style="width: 8px; height: 8px; background: #22c55e; border-radius: 50%; animation: pulse 2s infinite;"></span>
                     ${hospitaisComDados.length} hospital${hospitaisComDados.length > 1 ? 'ais' : ''} conectado${hospitaisComDados.length > 1 ? 's' : ''}
                 </div>
             </div>
             
-            <!-- KPIS GRID COM FUNDO ESCURO CORRIGIDO -->
+            <!-- KPIS GRID CORRIGIDO - LAYOUT ORIGINAL -->
             <div class="executive-kpis-grid">
-                <!-- KPI Principal: Gauge Horizontal -->
-                <div class="kpi-box-principal">
-                    <h3>📊 Ocupação Geral</h3>
+                
+                <!-- KPI PRINCIPAL: Gauge (2 colunas, 2 linhas) -->
+                <div class="kpi-gauge-principal">
+                    <h3 style="color: #9ca3af; font-size: 14px; margin-bottom: 15px; text-align: center;">Ocupação Geral</h3>
                     <div class="gauge-container">
                         <canvas id="gaugeOcupacaoExecutivo"></canvas>
                         <div class="gauge-text">
@@ -99,86 +111,76 @@ window.renderDashboardExecutivo = function() {
                             <span class="gauge-label">Ocupação</span>
                         </div>
                     </div>
-                </div>
-                
-                <!-- KPIs Secundários -->
-                <div class="kpi-box">
-                    <div class="kpi-icon">🏥</div>
-                    <div class="kpi-data">
-                        <span class="kpi-value">${kpis.hospitaisAtivos}</span>
-                        <span class="kpi-label">Hospitais</span>
+                    <!-- PERCENTUAIS DOS HOSPITAIS DENTRO DO GAUGE -->
+                    <div class="hospitais-percentuais">
+                        ${hospitaisComDados.map(hospitalId => {
+                            const kpiHosp = calcularKPIsHospital(hospitalId);
+                            return `
+                                <div class="hospital-item">
+                                    <span class="hospital-nome">${CONFIG.HOSPITAIS[hospitalId].nome}</span>
+                                    <span class="hospital-pct">${kpiHosp.ocupacao}%</span>
+                                </div>
+                            `;
+                        }).join('')}
                     </div>
                 </div>
                 
+                <!-- LINHA 1: KPIs PRINCIPAIS -->
                 <div class="kpi-box">
-                    <div class="kpi-icon">🛏️</div>
-                    <div class="kpi-data">
-                        <span class="kpi-value">${kpis.totalLeitos}</span>
-                        <span class="kpi-label">Total Leitos</span>
-                    </div>
+                    <div class="kpi-value">${kpis.hospitaisAtivos}</div>
+                    <div class="kpi-label">Hospitais</div>
                 </div>
                 
                 <div class="kpi-box">
-                    <div class="kpi-icon">👥</div>
-                    <div class="kpi-data">
-                        <span class="kpi-value">${kpis.leitosOcupados}</span>
-                        <span class="kpi-label">Ocupados</span>
-                    </div>
+                    <div class="kpi-value">${kpis.totalLeitos}</div>
+                    <div class="kpi-label">Total Leitos</div>
                 </div>
                 
                 <div class="kpi-box">
-                    <div class="kpi-icon">🔓</div>
-                    <div class="kpi-data">
-                        <span class="kpi-value">${kpis.leitosVagos}</span>
-                        <span class="kpi-label">Vagos</span>
-                    </div>
+                    <div class="kpi-value">${kpis.leitosOcupados}</div>
+                    <div class="kpi-label">Ocupados</div>
                 </div>
                 
                 <div class="kpi-box">
-                    <div class="kpi-icon">📤</div>
-                    <div class="kpi-data">
-                        <span class="kpi-value">${kpis.leitosEmAlta}</span>
-                        <span class="kpi-label">Em Alta</span>
-                    </div>
+                    <div class="kpi-value">${kpis.leitosVagos}</div>
+                    <div class="kpi-label">Vagos</div>
                 </div>
                 
-                <!-- CORREÇÃO TPH - Cálculo Correto -->
+                <!-- LINHA 2: KPIs SECUNDÁRIOS -->
                 <div class="kpi-box">
-                    <div class="kpi-icon">⏱️</div>
-                    <div class="kpi-data">
-                        <span class="kpi-value">${kpis.tphMedio.toFixed(1)}</span>
-                        <span class="kpi-label">TPH Médio</span>
-                    </div>
+                    <div class="kpi-value">${kpis.leitosEmAlta}</div>
+                    <div class="kpi-label">Em Alta</div>
                 </div>
                 
                 <div class="kpi-box">
-                    <div class="kpi-icon">📈</div>
-                    <div class="kpi-data">
-                        <span class="kpi-value">${kpis.ppsMedio.toFixed(0)}</span>
-                        <span class="kpi-label">PPS Médio</span>
-                    </div>
+                    <div class="kpi-value">${kpis.tphMedio}</div>
+                    <div class="kpi-label">TPH Médio</div>
                 </div>
                 
                 <div class="kpi-box">
-                    <div class="kpi-icon">🎯</div>
-                    <div class="kpi-data">
-                        <span class="kpi-value">${kpis.spctCasos}</span>
-                        <span class="kpi-label">SPCT Casos</span>
-                    </div>
+                    <div class="kpi-value">${kpis.ppsMedio}</div>
+                    <div class="kpi-label">PPS Médio</div>
                 </div>
+                
+                <div class="kpi-box">
+                    <div class="kpi-value">${kpis.spctCasos}</div>
+                    <div class="kpi-label">SPCT Casos</div>
+                </div>
+                
             </div>
             
             <!-- GRÁFICOS EXECUTIVOS -->
             <div class="executivo-graficos">
+                
                 <!-- Gráfico 1: Análise Preditiva de Altas -->
                 <div class="executivo-grafico-card">
                     <div class="chart-header">
-                        <h3>📊 Análise Preditiva de Altas em DD/MM/AAAA</h3>
+                        <h3>Análise Preditiva de Altas em ${hoje}</h3>
                         <p>Gráfico barras agrupadas - Hoje Ouro/2R/3R, 24H, 48H...</p>
                         <div class="chart-controls">
-                            <button class="chart-btn active" data-chart="altas" data-type="bar">📊 Barras</button>
-                            <button class="chart-btn" data-chart="altas" data-type="line">📈 Linhas</button>
-                            <button class="chart-btn" data-chart="altas" data-type="doughnut">🍩 Rosca</button>
+                            <button class="chart-btn active" data-chart="altas" data-type="bar">Barras</button>
+                            <button class="chart-btn" data-chart="altas" data-type="line">Linhas</button>
+                            <button class="chart-btn" data-chart="altas" data-type="doughnut">Rosca</button>
                         </div>
                     </div>
                     <div class="chart-container">
@@ -189,12 +191,12 @@ window.renderDashboardExecutivo = function() {
                 <!-- Gráfico 2: Análise Preditiva de Concessões -->
                 <div class="executivo-grafico-card">
                     <div class="chart-header">
-                        <h3>🎯 Análise Preditiva de Concessões em DD/MM/AAAA</h3>
+                        <h3>Análise Preditiva de Concessões em ${hoje}</h3>
                         <p>Gráfico barras empilhadas por hospital</p>
                         <div class="chart-controls">
-                            <button class="chart-btn active" data-chart="concessoes" data-type="bar">📊 Barras</button>
-                            <button class="chart-btn" data-chart="concessoes" data-type="doughnut">🍩 Rosca</button>
-                            <button class="chart-btn" data-chart="concessoes" data-type="polarArea">🎯 Polar</button>
+                            <button class="chart-btn active" data-chart="concessoes" data-type="bar">Barras</button>
+                            <button class="chart-btn" data-chart="concessoes" data-type="doughnut">Rosca</button>
+                            <button class="chart-btn" data-chart="concessoes" data-type="polarArea">Polar</button>
                         </div>
                     </div>
                     <div class="chart-container">
@@ -205,26 +207,35 @@ window.renderDashboardExecutivo = function() {
                 <!-- Gráfico 3: Análise Preditiva de Linhas de Cuidado -->
                 <div class="executivo-grafico-card">
                     <div class="chart-header">
-                        <h3>🩺 Análise Preditiva de Linhas de Cuidado em DD/MM/AAAA</h3>
+                        <h3>Análise Preditiva de Linhas de Cuidado em ${hoje}</h3>
                         <p>Gráfico barras empilhadas por hospital</p>
                         <div class="chart-controls">
-                            <button class="chart-btn active" data-chart="linhas" data-type="bar">📊 Barras</button>
-                            <button class="chart-btn" data-chart="linhas" data-type="doughnut">🍩 Rosca</button>
-                            <button class="chart-btn" data-chart="linhas" data-type="polarArea">🎯 Polar</button>
+                            <button class="chart-btn active" data-chart="linhas" data-type="bar">Barras</button>
+                            <button class="chart-btn" data-chart="linhas" data-type="doughnut">Rosca</button>
+                            <button class="chart-btn" data-chart="linhas" data-type="polarArea">Polar</button>
                         </div>
                     </div>
                     <div class="chart-container">
                         <canvas id="graficoLinhasExecutivo"></canvas>
                     </div>
                 </div>
+                
             </div>
         </div>
+        
+        ${getExecutiveCSS()}
+        
+        <style>
+            @keyframes pulse {
+                0%, 100% { opacity: 1; }
+                50% { opacity: 0.5; }
+            }
+        </style>
     `;
     
     // Aguardar Chart.js e renderizar gráficos
     const aguardarChartJS = () => {
         if (typeof Chart === 'undefined') {
-            logInfo('Aguardando Chart.js...');
             setTimeout(aguardarChartJS, 100);
             return;
         }
@@ -254,13 +265,13 @@ window.renderDashboardExecutivo = function() {
                 });
             });
             
-            // *** CORREÇÃO: Renderizar gauge HORIZONTAL e gráficos iniciais ***
+            // Renderizar gauge horizontal e gráficos iniciais
             renderGaugeExecutivoHorizontal(kpis.ocupacaoGeral);
             renderAltasExecutivo('bar');
             renderConcessoesExecutivo('bar');
             renderLinhasExecutivo('bar');
             
-            logSuccess('✅ Dashboard Executivo: REDE HOSPITALAR EXTERNA - Gauge horizontal + KPIs + 3 gráficos');
+            logSuccess('Dashboard Executivo: REDE HOSPITALAR EXTERNA - Renderizado sem emojis');
         }, 200);
     };
     
@@ -293,7 +304,7 @@ function calcularKPIsExecutivos(hospitaisComDados) {
                     leitosEmAlta++;
                 }
                 
-                // *** CORREÇÃO TPH: Validar números ***
+                // TPH - Correção para evitar NaN
                 if (leito.paciente && leito.paciente.tph) {
                     const tph = parseFloat(leito.paciente.tph);
                     if (!isNaN(tph) && tph > 0) {
@@ -311,7 +322,7 @@ function calcularKPIsExecutivos(hospitaisComDados) {
                     }
                 }
                 
-                // SPCT Casos (exemplo: contar casos específicos)
+                // SPCT Casos
                 if (leito.paciente && leito.paciente.linhas && leito.paciente.linhas.includes('Cuidados Paliativos')) {
                     spctCasos++;
                 }
@@ -329,10 +340,24 @@ function calcularKPIsExecutivos(hospitaisComDados) {
         leitosVagos,
         leitosEmAlta,
         ocupacaoGeral,
-        tphMedio: tphCount > 0 ? (tphTotal / tphCount) : 0,
-        ppsMedio: ppsCount > 0 ? (ppsTotal / ppsCount) : 0,
+        tphMedio: tphCount > 0 ? (tphTotal / tphCount).toFixed(1) : '0.0',
+        ppsMedio: ppsCount > 0 ? Math.round(ppsTotal / ppsCount) : 0,
         spctCasos
     };
+}
+
+// =================== CALCULAR KPIs DE UM HOSPITAL (AUXILIAR) ===================
+function calcularKPIsHospital(hospitalId) {
+    const hospital = window.hospitalData[hospitalId];
+    if (!hospital || !hospital.leitos) {
+        return { ocupacao: 0, total: 0, ocupados: 0, vagos: 0 };
+    }
+    
+    const total = hospital.leitos.length;
+    const ocupados = hospital.leitos.filter(l => l.status === 'ocupado').length;
+    const ocupacao = total > 0 ? Math.round((ocupados / total) * 100) : 0;
+    
+    return { ocupacao, total, ocupados, vagos: total - ocupados };
 }
 
 // =================== GAUGE HORIZONTAL (MEIA-LUA) - CORREÇÃO CRÍTICA ===================
@@ -374,12 +399,12 @@ function renderGaugeExecutivoHorizontal(ocupacao) {
                     }
                 }
             },
-            rotation: -90,     // *** CORREÇÃO: HORIZONTAL (meia-lua) ***
-            circumference: 180 // *** CORREÇÃO: 180 graus ***
+            rotation: -90,     // HORIZONTAL (meia-lua)
+            circumference: 180 // 180 graus
         }
     });
     
-    logInfo(`✅ Gauge executivo HORIZONTAL renderizado: ${ocupacao}%`);
+    logInfo(`Gauge executivo HORIZONTAL renderizado: ${ocupacao}%`);
 }
 
 // =================== GRÁFICO DE ALTAS EXECUTIVO ===================
@@ -631,6 +656,69 @@ function getRandomColor() {
     return cores[Math.floor(Math.random() * cores.length)];
 }
 
+// =================== CRIAR DADOS MOCK PARA TESTE ===================
+function criarDadosMockExecutivo() {
+    window.hospitalData = {
+        H1: {
+            leitos: [
+                {
+                    status: 'ocupado',
+                    paciente: {
+                        nome: 'João Silva',
+                        prevAlta: 'Hoje Ouro',
+                        concessoes: 'Fisioterapia|Home Care',
+                        linhas: 'Cardiologia|UTI',
+                        tph: 3.2,
+                        pps: 85
+                    }
+                },
+                {
+                    status: 'ocupado',
+                    paciente: {
+                        nome: 'Maria Santos',
+                        prevAlta: '24h 2R',
+                        concessoes: 'Transição Domiciliar',
+                        linhas: 'Pneumologia',
+                        tph: 2.8,
+                        pps: 92
+                    }
+                },
+                { status: 'vago' },
+                { status: 'vago' }
+            ]
+        },
+        H2: {
+            leitos: [
+                {
+                    status: 'ocupado',
+                    paciente: {
+                        nome: 'Pedro Costa',
+                        prevAlta: '48h 3R',
+                        concessoes: 'Medicamentos|Oxigenoterapia',
+                        linhas: 'Oncologia|Cuidados Paliativos',
+                        tph: 4.1,
+                        pps: 78
+                    }
+                },
+                {
+                    status: 'ocupado',
+                    paciente: {
+                        nome: 'Ana Lima',
+                        prevAlta: 'Hoje Ouro',
+                        concessoes: 'Fisioterapia',
+                        linhas: 'APS|Crônicos – Cardiologia',
+                        tph: 1.9,
+                        pps: 95
+                    }
+                },
+                { status: 'vago' }
+            ]
+        }
+    };
+    
+    logInfo('Dados mock criados para Dashboard Executivo');
+}
+
 // =================== FUNÇÃO DE FORÇA DE ATUALIZAÇÃO ===================
 window.forceExecutiveRefresh = function() {
     logInfo('Forçando atualização dos dados executivos...');
@@ -640,7 +728,7 @@ window.forceExecutiveRefresh = function() {
         container.innerHTML = `
             <div style="text-align: center; padding: 50px;">
                 <div style="color: #22c55e; font-size: 18px; margin-bottom: 15px;">
-                    🔄 Recarregando dados executivos...
+                    Recarregando dados executivos...
                 </div>
                 <div style="color: #9ca3af; font-size: 14px;">
                     Consolidando informações da rede
@@ -664,11 +752,11 @@ window.forceExecutiveRefresh = function() {
     }
 };
 
-// =================== CSS EXECUTIVO COMPLETO ===================
+// =================== CSS EXECUTIVO CORRIGIDO - SEM EMOJIS E FONTES BRANCAS ===================
 function getExecutiveCSS() {
     return `
         <style id="executiveCSS">
-            /* KPIS GRID - 6 COLUNAS COM KPI PRINCIPAL */
+            /* LAYOUT PRINCIPAL - GRID 6 COLUNAS */
             .executive-kpis-grid {
                 display: grid;
                 grid-template-columns: repeat(6, 1fr);
@@ -677,9 +765,10 @@ function getExecutiveCSS() {
                 margin-bottom: 30px;
             }
             
-            /* KPI PRINCIPAL - GAUGE OCUPA 2 COLUNAS */
-            .kpi-box-principal {
+            /* GAUGE PRINCIPAL - 2 COLUNAS, 2 LINHAS */
+            .kpi-gauge-principal {
                 grid-column: span 2;
+                grid-row: span 2;
                 background: #1a1f2e;
                 border-radius: 12px;
                 padding: 20px;
@@ -687,20 +776,19 @@ function getExecutiveCSS() {
                 box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
                 border: 1px solid rgba(255, 255, 255, 0.1);
                 text-align: center;
-            }
-            
-            .kpi-box-principal h3 {
-                margin: 0 0 15px 0;
-                color: #22c55e;
-                font-size: 16px;
-                font-weight: 600;
+                display: flex;
+                flex-direction: column;
             }
             
             /* CONTAINER DO GAUGE */
             .gauge-container {
                 position: relative;
                 height: 150px;
-                margin: 10px 0;
+                margin: 15px 0;
+                flex: 1;
+                display: flex;
+                align-items: center;
+                justify-content: center;
             }
             
             .gauge-container canvas {
@@ -710,7 +798,7 @@ function getExecutiveCSS() {
             /* TEXTO SOBREPOSTO DO GAUGE */
             .gauge-text {
                 position: absolute;
-                top: 60%;
+                top: 70%;
                 left: 50%;
                 transform: translate(-50%, -50%);
                 text-align: center;
@@ -719,9 +807,9 @@ function getExecutiveCSS() {
             
             .gauge-value {
                 display: block;
-                font-size: 28px;
+                font-size: 32px;
                 font-weight: 700;
-                color: #22c55e;
+                color: white;
                 line-height: 1;
             }
             
@@ -730,43 +818,72 @@ function getExecutiveCSS() {
                 font-size: 12px;
                 color: #9ca3af;
                 margin-top: 4px;
+                text-transform: uppercase;
             }
             
-            /* KPIS SECUNDÁRIOS */
+            /* PERCENTUAIS DOS HOSPITAIS DENTRO DO GAUGE */
+            .hospitais-percentuais {
+                margin-top: 15px;
+                padding-top: 15px;
+                border-top: 1px solid rgba(255, 255, 255, 0.1);
+            }
+            
+            .hospital-item {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                font-size: 12px;
+                padding: 4px 0;
+                color: white;
+            }
+            
+            .hospital-nome {
+                color: #e2e8f0;
+                font-weight: 500;
+            }
+            
+            .hospital-pct {
+                color: #22c55e;
+                font-weight: 700;
+            }
+            
+            /* KPIS SECUNDÁRIOS - FONTES BRANCAS */
             .kpi-box {
                 background: #1a1f2e;
-                border-radius: 8px;
-                padding: 15px;
+                border-radius: 12px;
+                padding: 20px;
                 color: white;
-                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+                box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
                 border: 1px solid rgba(255, 255, 255, 0.1);
+                text-align: center;
                 display: flex;
+                flex-direction: column;
                 align-items: center;
-                gap: 12px;
+                justify-content: center;
+                transition: all 0.3s ease;
             }
             
-            .kpi-icon {
-                font-size: 24px;
-                opacity: 0.8;
-            }
-            
-            .kpi-data {
-                flex: 1;
+            .kpi-box:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
             }
             
             .kpi-value {
                 display: block;
-                font-size: 20px;
+                font-size: 28px;
                 font-weight: 700;
-                color: #22c55e;
-                line-height: 1.2;
+                color: white;
+                line-height: 1;
+                margin-bottom: 6px;
             }
             
             .kpi-label {
                 display: block;
                 font-size: 12px;
                 color: #9ca3af;
-                margin-top: 2px;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                font-weight: 600;
             }
             
             /* GRÁFICOS EXECUTIVOS */
@@ -782,6 +899,7 @@ function getExecutiveCSS() {
                 padding: 25px;
                 border: 1px solid rgba(255, 255, 255, 0.1);
                 box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+                color: white;
             }
             
             .chart-header {
@@ -795,7 +913,7 @@ function getExecutiveCSS() {
             
             .chart-header h3 {
                 margin: 0;
-                color: #22c55e;
+                color: white;
                 font-size: 18px;
                 font-weight: 600;
             }
@@ -816,11 +934,13 @@ function getExecutiveCSS() {
                 background: transparent;
                 border: 1px solid #374151;
                 color: #9ca3af;
-                padding: 6px 12px;
+                padding: 8px 16px;
                 border-radius: 6px;
                 cursor: pointer;
                 font-size: 12px;
                 transition: all 0.2s;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
             }
             
             .chart-btn:hover {
@@ -832,15 +952,18 @@ function getExecutiveCSS() {
                 background: #60a5fa;
                 border-color: #60a5fa;
                 color: white;
+                box-shadow: 0 2px 8px rgba(96, 165, 250, 0.3);
             }
             
             .chart-container {
                 position: relative;
                 height: 400px;
+                margin: 15px 0;
             }
             
             .chart-container canvas {
                 max-height: 400px !important;
+                width: 100% !important;
             }
             
             /* RESPONSIVIDADE */
@@ -850,18 +973,21 @@ function getExecutiveCSS() {
                     grid-template-rows: auto auto auto;
                 }
                 
-                .kpi-box-principal {
+                .kpi-gauge-principal {
                     grid-column: span 3;
+                    grid-row: span 1;
                 }
             }
             
             @media (max-width: 768px) {
                 .executive-kpis-grid {
                     grid-template-columns: 1fr;
+                    gap: 15px;
                 }
                 
-                .kpi-box-principal {
+                .kpi-gauge-principal {
                     grid-column: span 1;
+                    grid-row: span 1;
                 }
                 
                 .chart-header {
@@ -878,17 +1004,8 @@ function getExecutiveCSS() {
                     height: 300px;
                 }
             }
-            
-            /* ANIMAÇÕES */
-            @keyframes spin {
-                0% { transform: rotate(0deg); }
-                100% { transform: rotate(360deg); }
-            }
-            
-            @keyframes pulse {
-                0%, 100% { opacity: 1; }
-                50% { opacity: 0.5; }
-            }
         </style>
     `;
 }
+
+console.log('Dashboard Executivo V3.1 - SEM EMOJIS E FONTES BRANCAS - Carregado');

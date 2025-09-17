@@ -50,10 +50,8 @@ window.showButtonLoading = function(button, originalText) {
     button.style.opacity = '0.7';
     button.style.cursor = 'not-allowed';
     button.innerHTML = `
-        <div style="display: flex; align-items: center; justify-content: center; gap: 8px;">
-            <div style="width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-top: 2px solid #ffffff; border-radius: 50%; animation: spin 1s linear infinite;"></div>
-            Carregando...
-        </div>
+        <div class="loading-spinner" style="width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-top: 2px solid #ffffff; border-radius: 50%; animation: spin 1s linear infinite; display: inline-block; margin-right: 8px;"></div>
+        ${originalText}
     `;
 };
 
@@ -64,30 +62,41 @@ window.hideButtonLoading = function(button, originalText) {
     button.innerHTML = originalText;
 };
 
-// =================== RENDERIZAR CARDS ===================
+// =================== RENDERIZAÇÃO DOS CARDS ===================
 window.renderCards = function() {
     const container = document.getElementById('cardsContainer');
     if (!container) return;
-    
-    // Verificar se há dados antes de renderizar
-    if (!window.hospitalData || Object.keys(window.hospitalData).length === 0) {
-        if (window.showLoading) {
-            window.showLoading(container, 'Carregando dados dos hospitais...');
-        }
-        return;
-    }
-    
+
     container.innerHTML = '';
-    
-    const hospital = window.hospitalData[window.currentHospital];
-    if (!hospital) {
-        container.innerHTML = '<div style="text-align: center; padding: 50px; color: #666;">Hospital não encontrado</div>';
+
+    if (!window.hospitalData || Object.keys(window.hospitalData).length === 0) {
+        container.innerHTML = `
+            <div style="text-align: center; padding: 50px; color: #666;">
+                <div style="font-size: 18px; color: #60a5fa; margin-bottom: 15px;">
+                    🔄 Carregando dados dos hospitais...
+                </div>
+                <div style="font-size: 14px; color: #9ca3af;">
+                    Sincronizando com a API Google Apps Script
+                </div>
+            </div>
+        `;
         return;
     }
+
+    const selectedHospital = document.querySelector('.hospital-btn.active')?.dataset.hospital || 'H1';
+    const hospital = window.hospitalData[selectedHospital];
     
-    // Verificar se hospital está ativo
-    if (CONFIG.HOSPITAIS[window.currentHospital] && !CONFIG.HOSPITAIS[window.currentHospital].ativo) {
-        container.innerHTML = '<div style="text-align: center; padding: 50px; color: #666;">Hospital desabilitado</div>';
+    if (!hospital) {
+        const hospitalNome = CONFIG.HOSPITAIS[selectedHospital]?.nome || 'Hospital';
+        container.innerHTML = `
+            <div style="text-align: center; padding: 50px; color: #666;">
+                <h3 style="color: #1a1f2e; margin-bottom: 15px;">📋 ${hospitalNome}</h3>
+                <div style="background: #f8f9fa; border-radius: 8px; padding: 30px; max-width: 500px; margin: 0 auto;">
+                    <p style="margin-bottom: 15px;">Aguardando dados da planilha Google...</p>
+                    <p style="color: #28a745;"><em>✅ API conectada e funcionando</em></p>
+                </div>
+            </div>
+        `;
         return;
     }
     
@@ -135,83 +144,37 @@ function createCard(leito, hospitalNome) {
         <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 15px;">
             <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 12px;">
                 <div style="font-size: 10px; color: rgba(255,255,255,0.6); text-transform: uppercase; font-weight: 600; margin-bottom: 4px;">INICIAIS</div>
-                <div style="font-size: 16px; font-weight: 600; color: #ffffff;">${isVago ? '—' : getIniciais(leito.paciente?.nome)}</div>
+                <div style="font-size: 16px; font-weight: 600; color: #ffffff;">${isVago ? '-' : getIniciais(leito.paciente?.nome) || '-'}</div>
             </div>
             <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 12px;">
                 <div style="font-size: 10px; color: rgba(255,255,255,0.6); text-transform: uppercase; font-weight: 600; margin-bottom: 4px;">MATRÍCULA</div>
-                <div style="font-size: 16px; font-weight: 600; color: #ffffff;">${isVago ? '—' : (leito.paciente?.matricula || 'N/A')}</div>
+                <div style="font-size: 16px; font-weight: 600; color: #ffffff;">${isVago ? '-' : leito.paciente?.matricula || '-'}</div>
             </div>
             <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 12px;">
                 <div style="font-size: 10px; color: rgba(255,255,255,0.6); text-transform: uppercase; font-weight: 600; margin-bottom: 4px;">IDADE</div>
-                <div style="font-size: 16px; font-weight: 600; color: #ffffff;">${isVago ? '—' : (leito.paciente?.idade ? leito.paciente.idade + ' anos' : 'N/A')}</div>
+                <div style="font-size: 16px; font-weight: 600; color: #ffffff;">${isVago ? '-' : leito.paciente?.idade || '-'}</div>
             </div>
         </div>
 
-        <!-- LINHA 3: PPS / SPICT-BR / Previsão de Alta (SEM COMPLEXIDADE) -->
-        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 15px;">
+        <!-- LINHA 3: PPS / SPICT / Tempo Internação -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 20px;">
             <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 12px;">
                 <div style="font-size: 10px; color: rgba(255,255,255,0.6); text-transform: uppercase; font-weight: 600; margin-bottom: 4px;">PPS</div>
-                <div style="font-size: 16px; font-weight: 600; color: #ffffff;">${isVago ? '—' : (leito.paciente?.pps || 'N/A')}</div>
+                <div style="font-size: 16px; font-weight: 600; color: #ffffff;">${isVago ? '-' : leito.paciente?.pps || '-'}</div>
             </div>
             <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 12px;">
-                <div style="font-size: 10px; color: rgba(255,255,255,0.6); text-transform: uppercase; font-weight: 600; margin-bottom: 4px;">SPICT-BR</div>
-                <div style="font-size: 16px; font-weight: 600; color: #ffffff;">${isVago ? '—' : (leito.paciente?.spictBr || 'N/A')}</div>
+                <div style="font-size: 10px; color: rgba(255,255,255,0.6); text-transform: uppercase; font-weight: 600; margin-bottom: 4px;">SPICT</div>
+                <div style="font-size: 16px; font-weight: 600; color: #ffffff;">${isVago ? '-' : leito.paciente?.spict || '-'}</div>
             </div>
-            <div style="background: #8FD3F4; border: 1px solid #8FD3F4; border-radius: 8px; padding: 12px;">
-                <div style="font-size: 10px; color: rgba(0,0,0,0.7); text-transform: uppercase; font-weight: 600; margin-bottom: 4px;">PREV ALTA</div>
-                <div style="font-size: 16px; font-weight: 700; color: #000000;">${isVago ? '—' : (leito.paciente?.previsaoAlta || 'N/D')}</div>
-            </div>
-        </div>
-
-        <!-- LINHA 4: CONCESSÕES PREVISTAS -->
-        <div style="margin-bottom: 15px;">
-            <div style="background: #60a5fa; padding: 10px 15px; border-radius: 6px; margin-bottom: 10px;">
-                <div style="font-size: 11px; color: #ffffff; text-transform: uppercase; font-weight: 700;">
-                    CONCESSÕES PREVISTAS
-                </div>
-            </div>
-            <div style="display: flex; flex-wrap: wrap; gap: 6px; padding: 10px; background: rgba(255,255,255,0.03); border-radius: 6px; min-height: 40px;">
-                ${isVago ? '<span style="color: rgba(255,255,255,0.5); font-size: 12px;">—</span>' : 
-                    (leito.paciente?.concessoes && leito.paciente.concessoes.length > 0 ? 
-                        leito.paciente.concessoes.map(c => 
-                            `<span style="font-size: 11px; background: rgba(96,165,250,0.15); border: 1px solid rgba(96,165,250,0.3); color: #60a5fa; padding: 4px 10px; border-radius: 12px; font-weight: 600;">${c}</span>`
-                        ).join('') : '<span style="color: rgba(255,255,255,0.5); font-size: 12px;">Nenhuma</span>')}
+            <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 12px;">
+                <div style="font-size: 10px; color: rgba(255,255,255,0.6); text-transform: uppercase; font-weight: 600; margin-bottom: 4px;">TEMPO</div>
+                <div style="font-size: 16px; font-weight: 600; color: #ffffff;">${tempoInternacao || '-'}</div>
             </div>
         </div>
 
-        <!-- LINHA 5: LINHA DE CUIDADOS PROPOSTA -->
-        <div style="margin-bottom: 15px;">
-            <div style="background: #60a5fa; padding: 10px 15px; border-radius: 6px; margin-bottom: 10px;">
-                <div style="font-size: 11px; color: #ffffff; text-transform: uppercase; font-weight: 700;">
-                    LINHA DE CUIDADOS PROPOSTA NA ALTA
-                </div>
-            </div>
-            <div style="display: flex; flex-wrap: wrap; gap: 6px; padding: 10px; background: rgba(255,255,255,0.03); border-radius: 6px; min-height: 40px;">
-                ${isVago ? '<span style="color: rgba(255,255,255,0.5); font-size: 12px;">—</span>' : 
-                    (leito.paciente?.linhasCuidado && leito.paciente.linhasCuidado.length > 0 ? 
-                        leito.paciente.linhasCuidado.map(l => 
-                            `<span style="font-size: 11px; background: rgba(96,165,250,0.15); border: 1px solid rgba(96,165,250,0.3); color: #60a5fa; padding: 4px 10px; border-radius: 12px; font-weight: 600;">${l}</span>`
-                        ).join('') : '<span style="color: rgba(255,255,255,0.5); font-size: 12px;">Nenhuma</span>')}
-            </div>
-        </div>
-
-        <!-- LINHA 6: Admissão / Internado há + Botão -->
-        <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.1);">
-            <div style="display: flex; gap: 40px;">
-                <div>
-                    <div style="font-size: 10px; color: rgba(255,255,255,0.6); text-transform: uppercase; font-weight: 600; margin-bottom: 4px;">ADMISSÃO</div>
-                    <div style="font-size: 14px; font-weight: 600; color: #ffffff;">${isVago ? '—' : (leito.paciente?.admissao || 'N/A')}</div>
-                </div>
-                ${!isVago && tempoInternacao ? `
-                <div>
-                    <div style="font-size: 10px; color: rgba(255,255,255,0.6); text-transform: uppercase; font-weight: 600; margin-bottom: 4px;">INTERNADO HÁ</div>
-                    <div style="font-size: 14px; font-weight: 600; color: #ffffff;">${tempoInternacao}</div>
-                </div>
-                ` : ''}
-            </div>
-            <button 
-                onclick="window.openForm('${window.currentHospital}', ${leito.numero}, ${isVago})" 
-                style="padding: 12px 30px; background: ${isVago ? '#3b82f6' : 'rgba(255,255,255,0.1)'}; color: #ffffff; border: 1px solid ${isVago ? '#3b82f6' : 'rgba(255,255,255,0.2)'}; border-radius: 8px; font-weight: 600; text-transform: uppercase; font-size: 14px; cursor: pointer; transition: all 0.3s;">
+        <!-- BOTÃO DE AÇÃO -->
+        <div style="text-align: center;">
+            <button onclick="openForm('${leito.hospital}', '${leito.numero}', ${isVago})" style="padding: 12px 24px; background: ${isVago ? '#3b82f6' : 'rgba(255,255,255,0.1)'}; color: #ffffff; border: 1px solid ${isVago ? '#3b82f6' : 'rgba(255,255,255,0.2)'}; border-radius: 8px; font-weight: 600; text-transform: uppercase; font-size: 14px; cursor: pointer; transition: all 0.3s;">
                 ${isVago ? 'ADMITIR' : 'ATUALIZAR'}
             </button>
         </div>
@@ -230,17 +193,29 @@ function calcularTempoInternacao(admissao) {
         // Tentar diferentes formatos de data
         if (typeof admissao === 'string') {
             if (admissao.includes('/')) {
-                // Formato brasileiro: DD/MM/YYYY HH:MM:SS
+                // Formato brasileiro: DD/MM/YYYY ou DD/MM/YYYY HH:MM:SS
                 const [datePart] = admissao.split(' ');
                 const [dia, mes, ano] = datePart.split('/');
                 
-                // Validar partes da data
-                if (!dia || !mes || !ano || dia.length !== 2 || mes.length !== 2 || ano.length !== 4) {
-                    console.warn('Formato de data brasileiro inválido:', admissao);
-                    return 'Data inválida';
+                // *** CORREÇÃO: Validação mais flexível ***
+                if (dia && mes && ano) {
+                    const d = parseInt(dia);
+                    const m = parseInt(mes);
+                    const a = parseInt(ano);
+                    
+                    // Verificar se são números válidos
+                    if (!isNaN(d) && !isNaN(m) && !isNaN(a) && 
+                        d >= 1 && d <= 31 && m >= 1 && m <= 12 && a >= 1900) {
+                        dataAdmissao = new Date(a, m - 1, d);
+                    } else {
+                        console.warn('Data brasileira com valores inválidos:', { dia: d, mes: m, ano: a });
+                        return 'Data inválida';
+                    }
+                } else {
+                    console.warn('Formato de data brasileiro incompleto:', admissao);
+                    return 'Data incompleta';
                 }
                 
-                dataAdmissao = new Date(parseInt(ano), parseInt(mes) - 1, parseInt(dia));
             } else if (admissao.includes('-')) {
                 // Formato ISO: YYYY-MM-DD ou similar
                 dataAdmissao = new Date(admissao);
@@ -271,15 +246,16 @@ function calcularTempoInternacao(admissao) {
         const agora = new Date();
         const diffTime = agora - dataAdmissao;
         
-        // Se data é futura ou muito antiga (mais de 1 ano), considerar inválida
+        // Se data é futura
         if (diffTime < 0) {
             console.warn('Data de admissão no futuro:', { admissao, dataAdmissao, agora });
             return 'Data futura';
         }
         
-        if (diffTime > (365 * 24 * 60 * 60 * 1000)) {
-            console.warn('Data de admissão muito antiga (>1 ano):', { admissao, dataAdmissao });
-            return 'Data muito antiga';
+        // Se data muito antiga (mais de 2 anos), considerar suspeita
+        if (diffTime > (2 * 365 * 24 * 60 * 60 * 1000)) {
+            console.warn('Data de admissão muito antiga (>2 anos):', { admissao, dataAdmissao });
+            return 'Data antiga';
         }
         
         const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
@@ -323,18 +299,19 @@ window.openForm = function(hospitalId, leitoNumero, isVago) {
         document.body.appendChild(modal);
         addFormEventListeners(modal);
         
-        logInfo(`Formulário ${isVago ? 'admissão' : 'atualização'} aberto para leito ${leitoNumero}`);
-    }, 800);
+        logInfo(`Formulário ${isVago ? 'admissão' : 'atualização'} aberto para ${hospitalId}-${leitoNumero}`);
+        
+    }, 800); // Delay simulado
 };
 
-// =================== FORMULÁRIO DE ADMISSÃO (INICIAIS EM VEZ DE NOME) ===================
+// =================== FORMULÁRIO DE ADMISSÃO (SEM COMPLEXIDADE) ===================
 function createAdmissaoForm(hospitalId, leitoNumero) {
-    const hospitalNome = CONFIG.HOSPITAIS[hospitalId].nome;
+    const hospitalNome = CONFIG.HOSPITAIS[hospitalId]?.nome || 'Hospital';
     
     return `
         <div style="background: #1a1f2e; border-radius: 12px; padding: 30px; max-width: 600px; width: 95%; max-height: 90vh; overflow-y: auto; color: #ffffff;">
             <h2 style="margin: 0 0 20px 0; text-align: center; color: #60a5fa; font-size: 24px; font-weight: 700; text-transform: uppercase;">
-                ADMISSÃO DE PACIENTE
+                ADMITIR PACIENTE
             </h2>
             
             <div style="text-align: center; margin-bottom: 30px; padding: 15px; background: rgba(96,165,250,0.1); border-radius: 8px;">
@@ -342,67 +319,74 @@ function createAdmissaoForm(hospitalId, leitoNumero) {
             </div>
             
             <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px;">
-                <!-- INICIAIS (não Nome Completo) -->
+                <!-- INICIAIS (máx 3 caracteres) -->
                 <div>
                     <label style="display: block; margin-bottom: 5px; color: #e2e8f0; font-weight: 600;">INICIAIS</label>
-                    <input type="text" placeholder="A D" maxlength="3" style="width: 100%; padding: 10px; background: #374151; color: #ffffff; border: 1px solid rgba(255,255,255,0.3); border-radius: 6px;">
+                    <input type="text" maxlength="3" placeholder="Ex: J S" style="width: 100%; padding: 12px; background: #374151; color: #ffffff; border: 1px solid rgba(255,255,255,0.3); border-radius: 6px; font-size: 14px;">
                 </div>
+                
+                <!-- MATRÍCULA -->
                 <div>
                     <label style="display: block; margin-bottom: 5px; color: #e2e8f0; font-weight: 600;">MATRÍCULA</label>
-                    <input type="text" placeholder="14014124" style="width: 100%; padding: 10px; background: #374151; color: #ffffff; border: 1px solid rgba(255,255,255,0.3); border-radius: 6px;">
+                    <input type="text" placeholder="Ex: 123456" style="width: 100%; padding: 12px; background: #374151; color: #ffffff; border: 1px solid rgba(255,255,255,0.3); border-radius: 6px; font-size: 14px;">
                 </div>
+                
+                <!-- IDADE -->
                 <div>
                     <label style="display: block; margin-bottom: 5px; color: #e2e8f0; font-weight: 600;">IDADE</label>
-                    <input type="number" placeholder="42" style="width: 100%; padding: 10px; background: #374151; color: #ffffff; border: 1px solid rgba(255,255,255,0.3); border-radius: 6px;">
+                    <input type="number" min="0" max="120" placeholder="Ex: 65" style="width: 100%; padding: 12px; background: #374151; color: #ffffff; border: 1px solid rgba(255,255,255,0.3); border-radius: 6px; font-size: 14px;">
                 </div>
             </div>
             
             <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px;">
+                <!-- PPS -->
                 <div>
                     <label style="display: block; margin-bottom: 5px; color: #e2e8f0; font-weight: 600;">PPS</label>
-                    <select style="width: 100%; padding: 10px; background: #374151; color: #ffffff; border: 1px solid rgba(255,255,255,0.3); border-radius: 6px;">
-                        <option>Selecione</option>
-                        <option>10%</option>
-                        <option>20%</option>
-                        <option>30%</option>
-                        <option>40%</option>
-                        <option>50%</option>
-                        <option>60%</option>
-                        <option>70%</option>
-                        <option>80%</option>
-                        <option>90%</option>
-                        <option>100%</option>
+                    <select style="width: 100%; padding: 12px; background: #374151 !important; color: #ffffff !important; border: 1px solid rgba(255,255,255,0.3); border-radius: 6px; font-size: 14px;">
+                        <option value="">Selecionar...</option>
+                        <option value="10">10</option>
+                        <option value="20">20</option>
+                        <option value="30">30</option>
+                        <option value="40">40</option>
+                        <option value="50">50</option>
+                        <option value="60">60</option>
+                        <option value="70">70</option>
+                        <option value="80">80</option>
+                        <option value="90">90</option>
+                        <option value="100">100</option>
                     </select>
                 </div>
+                
+                <!-- SPICT -->
                 <div>
-                    <label style="display: block; margin-bottom: 5px; color: #e2e8f0; font-weight: 600;">SPICT-BR</label>
-                    <select style="width: 100%; padding: 10px; background: #374151; color: #ffffff; border: 1px solid rgba(255,255,255,0.3); border-radius: 6px;">
-                        <option>Não elegível</option>
-                        <option>Elegível</option>
+                    <label style="display: block; margin-bottom: 5px; color: #e2e8f0; font-weight: 600;">SPICT</label>
+                    <select style="width: 100%; padding: 12px; background: #374151 !important; color: #ffffff !important; border: 1px solid rgba(255,255,255,0.3); border-radius: 6px; font-size: 14px;">
+                        <option value="">Selecionar...</option>
+                        <option value="Sim">Sim</option>
+                        <option value="Não">Não</option>
+                        <option value="Em avaliação">Em avaliação</option>
                     </select>
                 </div>
+                
+                <!-- PREVISÃO DE ALTA -->
                 <div>
-                    <label style="display: block; margin-bottom: 5px; color: #e2e8f0; font-weight: 600;">PREV ALTA</label>
-                    <select style="width: 100%; padding: 10px; background: #374151; color: #ffffff; border: 1px solid rgba(255,255,255,0.3); border-radius: 6px;">
-                        <option>Hoje Ouro</option>
-                        <option>24h 2R</option>
-                        <option>48h 3R</option>
-                        <option>72h</option>
-                        <option>96h</option>
-                        <option>Não definido</option>
+                    <label style="display: block; margin-bottom: 5px; color: #e2e8f0; font-weight: 600;">PREVISÃO ALTA</label>
+                    <select style="width: 100%; padding: 12px; background: #374151 !important; color: #ffffff !important; border: 1px solid rgba(255,255,255,0.3); border-radius: 6px; font-size: 14px;">
+                        <option value="">Selecionar...</option>
+                        ${window.PREVISAO_ALTA_OPTIONS.map(opt => `<option value="${opt}">${opt}</option>`).join('')}
                     </select>
                 </div>
             </div>
             
-            <!-- Concessões -->
+            <!-- CONCESSÕES -->
             <div style="margin-bottom: 20px;">
-                <div style="background: #60a5fa; padding: 10px 15px; border-radius: 6px; margin-bottom: 10px;">
+                <div style="background: rgba(96,165,250,0.1); padding: 10px 15px; border-radius: 6px; margin-bottom: 10px;">
                     <div style="font-size: 11px; color: #ffffff; text-transform: uppercase; font-weight: 700;">
-                        CONCESSÕES PREVISTAS
+                        CONCESSÕES SOLICITADAS NA ALTA
                     </div>
                 </div>
                 <div class="concessoes-list" style="max-height: 150px; overflow-y: auto; background: rgba(255,255,255,0.03); border-radius: 6px; padding: 10px;">
-                    ${CONCESSOES_LIST.map(c => `
+                    ${window.CONCESSOES_LIST.map(c => `
                         <label style="display: block; padding: 6px 0; cursor: pointer;">
                             <input type="checkbox" value="${c}" style="margin-right: 8px;">
                             <span style="font-size: 14px;">${c}</span>
@@ -411,15 +395,15 @@ function createAdmissaoForm(hospitalId, leitoNumero) {
                 </div>
             </div>
             
-            <!-- Linhas de Cuidado -->
-            <div style="margin-bottom: 20px;">
-                <div style="background: #60a5fa; padding: 10px 15px; border-radius: 6px; margin-bottom: 10px;">
+            <!-- LINHAS DE CUIDADO -->
+            <div style="margin-bottom: 30px;">
+                <div style="background: rgba(96,165,250,0.1); padding: 10px 15px; border-radius: 6px; margin-bottom: 10px;">
                     <div style="font-size: 11px; color: #ffffff; text-transform: uppercase; font-weight: 700;">
                         LINHA DE CUIDADOS PROPOSTA NA ALTA
                     </div>
                 </div>
                 <div class="linhas-list" style="max-height: 150px; overflow-y: auto; background: rgba(255,255,255,0.03); border-radius: 6px; padding: 10px;">
-                    ${LINHAS_CUIDADO_LIST.map(l => `
+                    ${window.LINHAS_CUIDADO_LIST.map(l => `
                         <label style="display: block; padding: 6px 0; cursor: pointer;">
                             <input type="checkbox" value="${l}" style="margin-right: 8px;">
                             <span style="font-size: 14px;">${l}</span>
@@ -456,105 +440,72 @@ function createAtualizacaoForm(hospitalNome, leitoData, hospitalId, leitoNumero)
                 <!-- INICIAIS (não Nome Completo) -->
                 <div>
                     <label style="display: block; margin-bottom: 5px; color: #e2e8f0; font-weight: 600;">INICIAIS</label>
-                    <input type="text" value="${leitoData && leitoData.paciente ? getIniciais(leitoData.paciente.nome) : ''}" maxlength="3" style="width: 100%; padding: 10px; background: #374151; color: #ffffff; border: 1px solid rgba(255,255,255,0.3); border-radius: 6px;">
+                    <input type="text" value="${leitoData && leitoData.paciente ? getIniciais(leitoData.paciente.nome) || '' : ''}" maxlength="3" style="width: 100%; padding: 12px; background: #374151; color: #ffffff; border: 1px solid rgba(255,255,255,0.3); border-radius: 6px; font-size: 14px;">
                 </div>
+                
                 <div>
                     <label style="display: block; margin-bottom: 5px; color: #e2e8f0; font-weight: 600;">MATRÍCULA</label>
-                    <input type="text" value="${leitoData && leitoData.paciente ? leitoData.paciente.matricula : ''}" style="width: 100%; padding: 10px; background: #374151; color: #ffffff; border: 1px solid rgba(255,255,255,0.3); border-radius: 6px;">
+                    <input type="text" value="${leitoData && leitoData.paciente ? leitoData.paciente.matricula || '' : ''}" disabled style="width: 100%; padding: 12px; background: #1f2937; color: #9ca3af; border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; font-size: 14px;">
                 </div>
+                
                 <div>
                     <label style="display: block; margin-bottom: 5px; color: #e2e8f0; font-weight: 600;">IDADE</label>
-                    <input type="number" value="${leitoData && leitoData.paciente ? leitoData.paciente.idade : ''}" style="width: 100%; padding: 10px; background: #374151; color: #ffffff; border: 1px solid rgba(255,255,255,0.3); border-radius: 6px;">
+                    <input type="number" value="${leitoData && leitoData.paciente ? leitoData.paciente.idade || '' : ''}" min="0" max="120" style="width: 100%; padding: 12px; background: #374151; color: #ffffff; border: 1px solid rgba(255,255,255,0.3); border-radius: 6px; font-size: 14px;">
                 </div>
             </div>
+            
+            <!-- Tempo de internação (apenas exibição) -->
+            ${tempoInternacao ? `
+            <div style="margin-bottom: 20px; padding: 12px; background: rgba(251, 191, 36, 0.1); border-radius: 8px; border-left: 4px solid #fbbf24;">
+                <strong>Tempo de Internação:</strong> ${tempoInternacao}
+            </div>
+            ` : ''}
             
             <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px;">
                 <div>
                     <label style="display: block; margin-bottom: 5px; color: #e2e8f0; font-weight: 600;">PPS</label>
-                    <select style="width: 100%; padding: 10px; background: #374151; color: #ffffff; border: 1px solid rgba(255,255,255,0.3); border-radius: 6px;">
-                        ${['10%', '20%', '30%', '40%', '50%', '60%', '70%', '80%', '90%', '100%'].map(p => `
-                            <option ${leitoData && leitoData.paciente && leitoData.paciente.pps === p ? 'selected' : ''}>${p}</option>
+                    <select style="width: 100%; padding: 12px; background: #374151 !important; color: #ffffff !important; border: 1px solid rgba(255,255,255,0.3); border-radius: 6px; font-size: 14px;">
+                        <option value="">Selecionar...</option>
+                        ${[10, 20, 30, 40, 50, 60, 70, 80, 90, 100].map(val => `
+                            <option value="${val}" ${leitoData && leitoData.paciente && leitoData.paciente.pps == val ? 'selected' : ''}>${val}</option>
                         `).join('')}
                     </select>
                 </div>
+                
                 <div>
-                    <label style="display: block; margin-bottom: 5px; color: #e2e8f0; font-weight: 600;">SPICT-BR</label>
-                    <select style="width: 100%; padding: 10px; background: #374151; color: #ffffff; border: 1px solid rgba(255,255,255,0.3); border-radius: 6px;">
-                        <option ${leitoData && leitoData.paciente && leitoData.paciente.spictBr === 'Não elegível' ? 'selected' : ''}>Não elegível</option>
-                        <option ${leitoData && leitoData.paciente && leitoData.paciente.spictBr === 'Elegível' ? 'selected' : ''}>Elegível</option>
+                    <label style="display: block; margin-bottom: 5px; color: #e2e8f0; font-weight: 600;">SPICT</label>
+                    <select style="width: 100%; padding: 12px; background: #374151 !important; color: #ffffff !important; border: 1px solid rgba(255,255,255,0.3); border-radius: 6px; font-size: 14px;">
+                        <option value="">Selecionar...</option>
+                        ${['Sim', 'Não', 'Em avaliação'].map(val => `
+                            <option value="${val}" ${leitoData && leitoData.paciente && leitoData.paciente.spict === val ? 'selected' : ''}>${val}</option>
+                        `).join('')}
                     </select>
                 </div>
+                
                 <div>
-                    <label style="display: block; margin-bottom: 5px; color: #e2e8f0; font-weight: 600;">PREV ALTA</label>
-                    <select style="width: 100%; padding: 10px; background: #374151; color: #ffffff; border: 1px solid rgba(255,255,255,0.3); border-radius: 6px;">
-                        ${PREVISAO_ALTA_OPTIONS.map(p => `
-                            <option ${leitoData && leitoData.paciente && leitoData.paciente.previsaoAlta === p ? 'selected' : ''}>${p}</option>
+                    <label style="display: block; margin-bottom: 5px; color: #e2e8f0; font-weight: 600;">PREVISÃO ALTA</label>
+                    <select style="width: 100%; padding: 12px; background: #374151 !important; color: #ffffff !important; border: 1px solid rgba(255,255,255,0.3); border-radius: 6px; font-size: 14px;">
+                        <option value="">Selecionar...</option>
+                        ${window.PREVISAO_ALTA_OPTIONS.map(opt => `
+                            <option value="${opt}" ${leitoData && leitoData.paciente && leitoData.paciente.prevAlta === opt ? 'selected' : ''}>${opt}</option>
                         `).join('')}
                     </select>
                 </div>
             </div>
             
-            <!-- Concessões -->
-            <div style="margin-bottom: 20px;">
-                <div style="background: #60a5fa; padding: 10px 15px; border-radius: 6px; margin-bottom: 10px;">
-                    <div style="font-size: 11px; color: #ffffff; text-transform: uppercase; font-weight: 700;">
-                        CONCESSÕES PREVISTAS
-                    </div>
-                </div>
-                <div class="concessoes-list" style="max-height: 150px; overflow-y: auto; background: rgba(255,255,255,0.03); border-radius: 6px; padding: 10px;">
-                    ${CONCESSOES_LIST.map(c => `
-                        <label style="display: block; padding: 6px 0; cursor: pointer;">
-                            <input type="checkbox" value="${c}" ${leitoData && leitoData.paciente && leitoData.paciente.concessoes && leitoData.paciente.concessoes.includes(c) ? 'checked' : ''} style="margin-right: 8px;">
-                            <span style="font-size: 14px;">${c}</span>
-                        </label>
-                    `).join('')}
-                </div>
-            </div>
-            
-            <!-- Linhas de Cuidado -->
-            <div style="margin-bottom: 20px;">
-                <div style="background: #60a5fa; padding: 10px 15px; border-radius: 6px; margin-bottom: 10px;">
-                    <div style="font-size: 11px; color: #ffffff; text-transform: uppercase; font-weight: 700;">
-                        LINHA DE CUIDADOS PROPOSTA NA ALTA
-                    </div>
-                </div>
-                <div class="linhas-list" style="max-height: 150px; overflow-y: auto; background: rgba(255,255,255,0.03); border-radius: 6px; padding: 10px;">
-                    ${LINHAS_CUIDADO_LIST.map(l => `
-                        <label style="display: block; padding: 6px 0; cursor: pointer;">
-                            <input type="checkbox" value="${l}" ${leitoData && leitoData.paciente && leitoData.paciente.linhasCuidado && leitoData.paciente.linhasCuidado.includes(l) ? 'checked' : ''} style="margin-right: 8px;">
-                            <span style="font-size: 14px;">${l}</span>
-                        </label>
-                    `).join('')}
-                </div>
-            </div>
-            
-            <!-- Informações de internação -->
-            ${leitoData && leitoData.paciente && leitoData.paciente.admissao ? `
-            <div style="display: flex; gap: 40px; padding: 15px; background: rgba(255,255,255,0.03); border-radius: 6px; margin-bottom: 20px;">
-                <div>
-                    <span style="font-size: 12px; color: rgba(255,255,255,0.6);">Admissão:</span>
-                    <strong style="margin-left: 8px;">${leitoData.paciente.admissao}</strong>
-                </div>
-                <div>
-                    <span style="font-size: 12px; color: rgba(255,255,255,0.6);">Internado há:</span>
-                    <strong style="margin-left: 8px;">${tempoInternacao}</strong>
-                </div>
-            </div>
-            ` : ''}
-            
-            <!-- Botões - ALTA SEM "DAR" -->
-            <div style="display: flex; justify-content: space-between; padding: 20px; border-top: 1px solid rgba(255,255,255,0.1);">
-                <button class="btn-cancelar" style="padding: 12px 30px; background: rgba(255,255,255,0.1); color: #ffffff; border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; font-weight: 600; text-transform: uppercase; cursor: pointer;">CANCELAR</button>
+            <!-- Botões -->
+            <div style="display: flex; justify-content: space-between; gap: 12px; padding: 20px; border-top: 1px solid rgba(255,255,255,0.1);">
+                <button class="btn-alta" style="padding: 12px 30px; background: #ef4444; color: #ffffff; border: none; border-radius: 8px; font-weight: 600; text-transform: uppercase; cursor: pointer;">ALTA</button>
                 <div style="display: flex; gap: 12px;">
+                    <button class="btn-cancelar" style="padding: 12px 30px; background: rgba(255,255,255,0.1); color: #ffffff; border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; font-weight: 600; text-transform: uppercase; cursor: pointer;">CANCELAR</button>
                     <button class="btn-salvar" style="padding: 12px 30px; background: #3b82f6; color: #ffffff; border: none; border-radius: 8px; font-weight: 600; text-transform: uppercase; cursor: pointer;">SALVAR</button>
-                    <button class="btn-alta" style="padding: 12px 30px; background: #ef4444; color: #ffffff; border: none; border-radius: 8px; font-weight: 600; text-transform: uppercase; cursor: pointer;">ALTA</button>
                 </div>
             </div>
         </div>
     `;
 }
 
-// =================== EVENT LISTENERS DOS FORMULÁRIOS COM LOADING ===================
+// =================== EVENT LISTENERS DOS FORMULÁRIOS ===================
 function addFormEventListeners(modal) {
     // Botão Cancelar
     const btnCancelar = modal.querySelector('.btn-cancelar');
@@ -571,7 +522,7 @@ function addFormEventListeners(modal) {
             const originalText = this.innerHTML;
             showButtonLoading(this, originalText);
             
-            // Simular salvamento
+            // Simular processo de salvamento
             setTimeout(() => {
                 hideButtonLoading(this, originalText);
                 alert('✅ Dados salvos com sucesso!');

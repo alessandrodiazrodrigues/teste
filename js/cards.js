@@ -726,6 +726,12 @@ function coletarDadosFormulario(modal, tipo) {
         const concessoesSelecionadas = Array.from(modal.querySelectorAll('#updConcessoes input[type="checkbox"]:checked')).map(i => i.value);
         const linhasSelecionadas = Array.from(modal.querySelectorAll('#updLinhas input[type="checkbox"]:checked')).map(i => i.value);
         
+        // DEBUG: Log para verificar seletores
+        logInfo(`DEBUG - Concessões encontradas: ${modal.querySelectorAll('#updConcessoes input[type="checkbox"]').length}`);
+        logInfo(`DEBUG - Concessões marcadas: ${modal.querySelectorAll('#updConcessoes input[type="checkbox"]:checked').length}`);
+        logInfo(`DEBUG - Linhas encontradas: ${modal.querySelectorAll('#updLinhas input[type="checkbox"]').length}`);
+        logInfo(`DEBUG - Linhas marcadas: ${modal.querySelectorAll('#updLinhas input[type="checkbox"]:checked').length}`);
+        
         // CORREÇÃO: Enviar como string separada por vírgula (formato que Apps Script espera)
         dados.concessoes = concessoesSelecionadas.length > 0 ? concessoesSelecionadas.join(',') : '';
         dados.linhas = linhasSelecionadas.length > 0 ? linhasSelecionadas.join(',') : '';

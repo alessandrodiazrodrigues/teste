@@ -1,3 +1,5 @@
+// =================== APP.JS - ARQUIVO PRINCIPAL CORRIGIDO ===================
+
 // =================== CONFIGURAÇÕES GLOBAIS ===================
 window.CONFIG = {
     AUTH_PASSWORD: '170284',
@@ -20,6 +22,7 @@ window.isAuthenticated = false;
 window.refreshTimer = null;
 window.timerInterval = null;
 window.isLoading = false; // *** NOVO: CONTROLE DE LOADING ***
+window.loadingOverlay = null; // *** NOVO: OVERLAY GLOBAL ***
 
 // =================== FUNÇÕES DE LOG (GLOBAIS) ===================
 window.logInfo = function(msg) {
@@ -34,58 +37,78 @@ window.logError = function(msg, error = null) {
     console.error(`❌ [ERROR] ${msg}`, error || '');
 };
 
-// =================== MOSTRAR/ESCONDER LOADING ===================
+// =================== SISTEMA DE LOADING MELHORADO COM BLOQUEIO ===================
 window.showLoading = function(container = null, message = 'Carregando dados...') {
     window.isLoading = true;
     
-    const loadingHTML = `
-        <div class="loading-container" style="
+    // *** CRIAR OVERLAY GLOBAL QUE BLOQUEIA TODA A INTERFACE ***
+    if (!window.loadingOverlay) {
+        window.loadingOverlay = document.createElement('div');
+        window.loadingOverlay.id = 'globalLoadingOverlay';
+        window.loadingOverlay.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(26, 31, 46, 0.98);
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 50px;
-            min-height: 300px;
-            background: rgba(26, 31, 46, 0.95);
-            border-radius: 12px;
+            z-index: 99999;
+            backdrop-filter: blur(4px);
             color: white;
             text-align: center;
+            animation: fadeIn 0.3s ease-in;
+        `;
+        document.body.appendChild(window.loadingOverlay);
+    }
+    
+    // *** CONTEÚDO DO LOADING ***
+    const loadingHTML = `
+        <div class="loading-content" style="
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            max-width: 400px;
+            padding: 40px;
+            background: rgba(26, 31, 46, 0.95);
+            border-radius: 16px;
+            border: 1px solid rgba(96, 165, 250, 0.3);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
         ">
             <div class="spinner" style="
-                width: 40px;
-                height: 40px;
+                width: 60px;
+                height: 60px;
                 border: 4px solid rgba(255, 255, 255, 0.1);
                 border-left-color: #60a5fa;
                 border-radius: 50%;
                 animation: spin 1s linear infinite;
-                margin-bottom: 20px;
+                margin-bottom: 24px;
             "></div>
-            <h3 style="margin: 0 0 10px 0; font-size: 18px; color: #60a5fa;">${message}</h3>
+            <h3 style="margin: 0 0 12px 0; font-size: 20px; color: #60a5fa; font-weight: 700;">
+                ${message}
+            </h3>
             <p style="margin: 0; color: rgba(255, 255, 255, 0.7); font-size: 14px;">
-                Por favor, aguarde...
+                ⚡ Sistema bloqueado durante carregamento
             </p>
+            <div style="margin-top: 16px; font-size: 12px; color: rgba(255, 255, 255, 0.5);">
+                Por favor, aguarde...
+            </div>
         </div>
     `;
     
-    if (container) {
-        container.innerHTML = loadingHTML;
-    } else {
-        // Aplicar em todos os containers principais
-        const containers = [
-            'cardsContainer',
-            'dashExecutivoContent', 
-            'dashHospitalarContent'
-        ];
-        
-        containers.forEach(containerId => {
-            const element = document.getElementById(containerId);
-            if (element) {
-                element.innerHTML = loadingHTML;
-            }
-        });
-    }
+    window.loadingOverlay.innerHTML = loadingHTML;
+    window.loadingOverlay.style.display = 'flex';
     
-    // Adicionar CSS da animação se não existir
+    // *** BLOQUEAR TODOS OS CLIQUES E INTERAÇÕES ***
+    document.body.style.overflow = 'hidden';
+    document.body.style.pointerEvents = 'none';
+    window.loadingOverlay.style.pointerEvents = 'all';
+    
+    // *** ADICIONAR CSS DA ANIMAÇÃO SE NÃO EXISTIR ***
     if (!document.getElementById('loadingStyles')) {
         const style = document.createElement('style');
         style.id = 'loadingStyles';
@@ -94,21 +117,43 @@ window.showLoading = function(container = null, message = 'Carregando dados...')
                 0% { transform: rotate(0deg); }
                 100% { transform: rotate(360deg); }
             }
-            .loading-container {
-                animation: fadeIn 0.3s ease-in;
-            }
             @keyframes fadeIn {
-                from { opacity: 0; transform: translateY(10px); }
-                to { opacity: 1; transform: translateY(0); }
+                from { opacity: 0; transform: translateY(20px) scale(0.95); }
+                to { opacity: 1; transform: translateY(0) scale(1); }
+            }
+            .loading-content {
+                animation: fadeIn 0.4s ease-out;
             }
         `;
         document.head.appendChild(style);
     }
+    
+    logInfo(`Loading ativado: ${message}`);
 };
 
 window.hideLoading = function() {
+    if (!window.isLoading) return;
+    
     window.isLoading = false;
-    // Loading será removido quando o conteúdo for renderizado
+    
+    // *** REMOVER OVERLAY E DESBLOQUEAR INTERFACE ***
+    if (window.loadingOverlay) {
+        // Animação de saída
+        window.loadingOverlay.style.animation = 'fadeOut 0.3s ease-out';
+        window.loadingOverlay.style.opacity = '0';
+        
+        setTimeout(() => {
+            if (window.loadingOverlay && window.loadingOverlay.parentNode) {
+                window.loadingOverlay.style.display = 'none';
+            }
+            
+            // *** DESBLOQUEAR INTERFACE ***
+            document.body.style.overflow = '';
+            document.body.style.pointerEvents = '';
+        }, 300);
+    }
+    
+    logSuccess('Loading removido - Interface desbloqueada');
 };
 
 // =================== VERIFICAÇÃO DE AUTENTICAÇÃO ===================
@@ -155,7 +200,7 @@ window.authenticate = function() {
         document.getElementById('mainContent').classList.remove('hidden');
         document.getElementById('mainFooter').classList.remove('hidden');
         
-        // Inicializar sistema
+        // *** INICIALIZAR SISTEMA COM LOADING TOTAL ***
         window.initSystem();
         logSuccess('Autenticação bem-sucedida');
     } else {
@@ -168,122 +213,82 @@ window.authenticate = function() {
     }
 };
 
-// =================== INICIALIZAÇÃO DO SISTEMA (CORRIGIDA) ===================
+// =================== INICIALIZAÇÃO DO SISTEMA (CORRIGIDA COM BLOQUEIO) ===================
 window.initSystem = async function() {
-    logInfo('Inicializando sistema...');
-    
-    // *** MOSTRAR LOADING IMEDIATAMENTE ***
-    showLoading(null, 'Inicializando sistema...');
+    logInfo('Inicializando sistema Archipelago Dashboard V3.0...');
     
     try {
-        // Testar API
+        // *** FASE 1: LOADING INICIAL ***
+        showLoading(null, 'Inicializando sistema...');
+        await delay(800);
+        
+        // *** FASE 2: TESTAR API ***
         if (window.testAPI) {
+            showLoading(null, 'Testando conexão com API...');
             await window.testAPI();
+            await delay(500);
         }
         
-        // *** CARREGAR DADOS DOS HOSPITAIS ANTES DE RENDERIZAR ***
+        // *** FASE 3: CARREGAR DADOS DOS HOSPITAIS ***
         if (window.loadHospitalData) {
             showLoading(null, 'Carregando dados dos hospitais...');
             await window.loadHospitalData();
+            await delay(800);
         }
         
-        // Iniciar timer
+        // *** FASE 4: INICIALIZAR COMPONENTES ***
+        showLoading(null, 'Inicializando componentes...');
+        
+        // Iniciar timer de atualização
         window.startTimer();
+        await delay(300);
         
-        // *** RENDERIZAR VIEW INICIAL COM NEOMATER AUTOMATICAMENTE ***
+        // *** FASE 5: RENDERIZAR VIEW INICIAL ***
+        showLoading(null, 'Preparando interface...');
         window.setActiveTab('leitos');
+        await delay(500);
         
-        // *** AGUARDAR UM POUCO E FORÇAR RENDERIZAÇÃO DO NEOMATER ***
-        setTimeout(() => {
-            if (window.renderCards) {
-                showLoading(document.getElementById('cardsContainer'), 'Carregando leitos do Neomater...');
-                setTimeout(() => {
-                    window.renderCards();
-                    hideLoading();
-                }, 500);
-            }
-        }, 1000);
+        // *** FASE 6: CARREGAR NEOMATER AUTOMATICAMENTE ***
+        if (window.renderCards) {
+            showLoading(null, 'Carregando leitos do Neomater...');
+            await delay(600);
+            window.renderCards();
+            await delay(400);
+        }
         
-        logSuccess('Sistema inicializado com Neomater carregado');
+        // *** FINALIZAR: REMOVER LOADING E LIBERAR SISTEMA ***
+        hideLoading();
+        logSuccess('✅ Sistema inicializado com sucesso! Neomater carregado.');
         
     } catch (error) {
         logError('Erro na inicialização:', error);
         hideLoading();
-        alert('Erro ao inicializar o sistema. Tente recarregar a página.');
-    }
-};
-
-// =================== TIMER DE ATUALIZAÇÃO ===================
-window.startTimer = function() {
-    let timeLeft = CONFIG.REFRESH_INTERVAL / 1000; // converter para segundos
-    
-    // Limpar timer anterior se existir
-    if (window.timerInterval) {
-        clearInterval(window.timerInterval);
-    }
-    
-    window.timerInterval = setInterval(function() {
-        const minutes = Math.floor(timeLeft / 60);
-        const seconds = timeLeft % 60;
+        alert('Erro ao inicializar o sistema. Verifique a conexão e tente recarregar a página.');
         
-        const timerElement = document.getElementById('updateTimer');
-        if (timerElement) {
-            timerElement.textContent = 
-                `Próxima atualização em: ${minutes}:${seconds.toString().padStart(2, '0')}`;
-        }
-        
-        timeLeft--;
-        
-        if (timeLeft < 0) {
-            window.updateData();
-            timeLeft = CONFIG.REFRESH_INTERVAL / 1000;
-        }
-    }, 1000);
-};
-
-// =================== REFRESH DE DADOS (CORRIGIDO) ===================
-window.updateData = async function() {
-    logInfo('Atualizando dados...');
-    
-    try {
-        // *** MOSTRAR LOADING DURANTE ATUALIZAÇÃO ***
-        if (window.currentView === 'leitos') {
-            showLoading(document.getElementById('cardsContainer'), 'Atualizando dados...');
-        } else if (window.currentView === 'dash1') {
-            showLoading(document.getElementById('dashHospitalarContent'), 'Atualizando gráficos...');
-        } else if (window.currentView === 'dash2') {
-            showLoading(document.getElementById('dashExecutivoContent'), 'Atualizando análises...');
-        }
-        
-        // Recarregar dados dos hospitais (API real)
-        if (window.loadHospitalData) {
-            await window.loadHospitalData();
-        }
-        
-        // Re-renderizar view atual com delay para mostrar loading
+        // Tentar inicialização básica mesmo com erro
         setTimeout(() => {
-            if (window.currentView === 'leitos' && window.renderCards) {
+            window.setActiveTab('leitos');
+            if (window.renderCards) {
                 window.renderCards();
-            } else if (window.currentView === 'dash1' && window.renderDashboardHospitalar) {
-                window.renderDashboardHospitalar();
-            } else if (window.currentView === 'dash2' && window.renderDashboardExecutivo) {
-                window.renderDashboardExecutivo();
             }
-            hideLoading();
-        }, 800);
-        
-        logSuccess('Dados atualizados');
-        
-    } catch (error) {
-        logError('Erro na atualização:', error);
-        hideLoading();
+        }, 2000);
     }
 };
+
+// =================== FUNÇÃO AUXILIAR PARA DELAYS ===================
+function delay(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
 
 // =================== NAVEGAÇÃO ENTRE TABS (CORRIGIDO COM LOADING) ===================
 window.setActiveTab = function(tab) {
-    logInfo(`Mudando para tab: ${tab}`);
+    // *** VERIFICAR SE JÁ ESTÁ EM LOADING PARA EVITAR CONFLITOS ***
+    if (window.isLoading) {
+        logInfo('Sistema em carregamento - aguarde...');
+        return;
+    }
     
+    logInfo(`Mudando para tab: ${tab}`);
     window.currentView = tab;
     
     // Esconder todas as seções
@@ -322,41 +327,50 @@ window.setActiveTab = function(tab) {
         document.body.classList.remove('menu-open');
     }
     
-    // *** RENDERIZAR CONTEÚDO COM LOADING ***
+    // *** RENDERIZAR CONTEÚDO COM LOADING ESPECÍFICO ***
     setTimeout(() => {
         if (tab === 'leitos' && window.renderCards) {
             // Se não há dados, mostrar loading e carregar
             if (!window.hospitalData || Object.keys(window.hospitalData).length === 0) {
-                showLoading(document.getElementById('cardsContainer'), 'Carregando dados dos hospitais...');
+                showLoading(null, 'Carregando dados dos hospitais...');
                 if (window.loadHospitalData) {
                     window.loadHospitalData().then(() => {
                         setTimeout(() => {
                             window.renderCards();
                             hideLoading();
                         }, 500);
+                    }).catch((error) => {
+                        logError('Erro ao carregar dados:', error);
+                        hideLoading();
                     });
                 }
             } else {
                 window.renderCards();
             }
         } else if (tab === 'dash1' && window.renderDashboardHospitalar) {
-            showLoading(document.getElementById('dash1'), 'Carregando Dashboard Hospitalar...');
+            showLoading(null, 'Carregando Dashboard Hospitalar...');
             setTimeout(() => {
                 window.renderDashboardHospitalar();
                 hideLoading();
-            }, 800);
+            }, 1000);
         } else if (tab === 'dash2' && window.renderDashboardExecutivo) {
-            showLoading(document.getElementById('dash2'), 'Carregando Dashboard Executivo...');
+            showLoading(null, 'Carregando Dashboard Executivo...');
             setTimeout(() => {
                 window.renderDashboardExecutivo();
                 hideLoading();
-            }, 800);
+            }, 1000);
         }
     }, 100);
 };
 
 // =================== MENU LATERAL ===================
 window.toggleMenu = function() {
+    // *** NÃO PERMITIR ABERTURA DO MENU DURANTE LOADING ***
+    if (window.isLoading) {
+        logInfo('Menu bloqueado durante carregamento');
+        return;
+    }
+    
     const menu = document.getElementById('sideMenu');
     const overlay = document.getElementById('menuOverlay');
     
@@ -371,8 +385,52 @@ window.toggleMenu = function() {
     }
 };
 
+// =================== ATUALIZAÇÃO DE DADOS (CORRIGIDO COM LOADING) ===================
+window.updateData = async function() {
+    if (window.isLoading) {
+        logInfo('Atualização bloqueada - sistema já está carregando');
+        return;
+    }
+    
+    logInfo('Iniciando atualização manual de dados...');
+    
+    try {
+        showLoading(null, 'Atualizando dados...');
+        
+        // Carregar dados dos hospitais
+        if (window.loadHospitalData) {
+            await window.loadHospitalData();
+        }
+        
+        await delay(800);
+        
+        // Re-renderizar view atual
+        if (window.currentView === 'leitos' && window.renderCards) {
+            window.renderCards();
+        } else if (window.currentView === 'dash1' && window.renderDashboardHospitalar) {
+            window.renderDashboardHospitalar();
+        } else if (window.currentView === 'dash2' && window.renderDashboardExecutivo) {
+            window.renderDashboardExecutivo();
+        }
+        
+        hideLoading();
+        logSuccess('Dados atualizados com sucesso');
+        
+    } catch (error) {
+        logError('Erro na atualização:', error);
+        hideLoading();
+        alert('Erro ao atualizar dados. Verifique a conexão com a internet.');
+    }
+};
+
 // =================== SELEÇÃO DE HOSPITAL (CORRIGIDO COM LOADING) ===================
 window.selectHospital = function(hospitalId) {
+    // *** BLOQUEAR SELEÇÃO DURANTE LOADING ***
+    if (window.isLoading) {
+        logInfo('Seleção de hospital bloqueada durante carregamento');
+        return;
+    }
+    
     // *** VERIFICAR SE HOSPITAL ESTÁ ATIVO ***
     if (!CONFIG.HOSPITAIS[hospitalId] || !CONFIG.HOSPITAIS[hospitalId].ativo) {
         logInfo(`Hospital ${hospitalId} está desabilitado`);
@@ -393,23 +451,25 @@ window.selectHospital = function(hospitalId) {
     
     // *** RE-RENDERIZAR CARDS COM LOADING ***
     if (window.renderCards) {
-        showLoading(document.getElementById('cardsContainer'), `Carregando leitos do ${CONFIG.HOSPITAIS[hospitalId].nome}...`);
+        showLoading(null, `Carregando leitos do ${CONFIG.HOSPITAIS[hospitalId].nome}...`);
         setTimeout(() => {
             window.renderCards();
             hideLoading();
-        }, 500);
+        }, 800);
     }
     
-    logInfo(`Hospital selecionado: ${CONFIG.HOSPITAIS[hospitalId].nome}`);
+    logSuccess(`Hospital selecionado: ${CONFIG.HOSPITAIS[hospitalId].nome}`);
 };
 
 // =================== FUNÇÕES DE CONFIGURAÇÃO ===================
 window.openConfig = function() {
+    if (window.isLoading) return;
     logInfo('Abrindo configurações');
     alert('Configurações em desenvolvimento');
 };
 
 window.openQRGenerator = function() {
+    if (window.isLoading) return;
     if (window.openQRCodes) {
         window.openQRCodes();
     } else {
@@ -420,6 +480,7 @@ window.openQRGenerator = function() {
 
 // =================== MODAL FUNCTIONS ===================
 window.closeModal = function() {
+    if (window.isLoading) return;
     const modal = document.getElementById('patientModal');
     if (modal) {
         modal.classList.add('hidden');
@@ -427,12 +488,14 @@ window.closeModal = function() {
 };
 
 window.savePatient = function() {
+    if (window.isLoading) return;
     // Implementar salvamento de paciente
     logInfo('Salvando paciente...');
     alert('Funcionalidade em desenvolvimento');
 };
 
 window.darAlta = function() {
+    if (window.isLoading) return;
     if (confirm('Confirma a alta do paciente?')) {
         logInfo('Processando alta...');
         alert('Alta processada com sucesso!');
@@ -442,7 +505,7 @@ window.darAlta = function() {
 
 // =================== INICIALIZAÇÃO DO APP (CORRIGIDA) ===================
 window.initApp = async function() {
-    logInfo('Archipelago Dashboard V3.0 - Iniciando...');
+    logInfo('🏥 Archipelago Dashboard V3.0 - Iniciando aplicação...');
     
     // Verificar autenticação
     if (window.checkAuthentication()) {
@@ -452,7 +515,7 @@ window.initApp = async function() {
         document.getElementById('mainContent').classList.remove('hidden');
         document.getElementById('mainFooter').classList.remove('hidden');
         
-        // *** INICIALIZAR SISTEMA COM LOADING ***
+        // *** INICIALIZAR SISTEMA COM LOADING COMPLETO ***
         await window.initSystem();
     } else {
         // Mostrar tela de autenticação
@@ -469,7 +532,7 @@ window.initApp = async function() {
         }
     }
     
-    logSuccess('App inicializado');
+    logSuccess('🚀 App inicializado e pronto para uso');
 };
 
 // =================== GERENCIAR CORES (Para integração com Admin) ===================
@@ -521,4 +584,40 @@ window.toggleHospital = function(hospitalId, ativo) {
     return false;
 };
 
-logSuccess('App.js carregado - Sistema configurado com carregamento automático e loading');
+// =================== TIMER DE ATUALIZAÇÃO ===================
+window.startTimer = function() {
+    let countdown = 240; // 4 minutos em segundos
+    
+    const updateTimer = () => {
+        const minutes = Math.floor(countdown / 60);
+        const seconds = countdown % 60;
+        const timerElement = document.getElementById('updateTimer');
+        
+        if (timerElement) {
+            timerElement.textContent = `Próxima atualização em: ${minutes}:${seconds.toString().padStart(2, '0')}`;
+        }
+        
+        if (countdown <= 0) {
+            // Auto-atualizar dados
+            if (!window.isLoading) {
+                window.updateData();
+            }
+            countdown = 240; // Reset para 4 minutos
+        } else {
+            countdown--;
+        }
+    };
+    
+    // Limpar timer existente
+    if (window.timerInterval) {
+        clearInterval(window.timerInterval);
+    }
+    
+    // Iniciar novo timer
+    window.timerInterval = setInterval(updateTimer, 1000);
+    updateTimer(); // Executar imediatamente
+    
+    logInfo('Timer de atualização iniciado (4 minutos)');
+};
+
+logSuccess('📋 App.js carregado - Sistema com loading bloqueante implementado');

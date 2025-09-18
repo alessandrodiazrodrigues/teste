@@ -1,7 +1,7 @@
 // =================== INTEGRAÇÃO API GOOGLE APPS SCRIPT - 100% FUNCIONAL COM CORS FIX ===================
 
 // *** URL NOVA DA API CORRIGIDA ***
-window.API_URL = 'https://script.google.com/macros/s/AKfycbwwkSI04CLz9PKj6KAyCvxlbi3vY38seq03qFzsmtFJhnl36zW266MEwS5uGUDXMrzU/exec';
+window.API_URL = 'https://script.google.com/macros/s/AKfycbwjX8z08OzhrBJJsGuYsr8rYp_Xu_4IgehgxyV3Dye-lPXCz8q8fEAx75cFDn5mepGz/exec';
 
 // =================== VARIÁVEIS GLOBAIS ===================
 window.hospitalData = {};

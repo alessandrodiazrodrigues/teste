@@ -294,19 +294,45 @@ function createCard(leito, hospitalNome) {
     return card;
 }
 
-// =================== CORREÇÃO CRÍTICA: PROCESSAR ARRAYS DA API ===================
+// =================== CORREÇÃO CRÍTICA: PROCESSAR ARRAYS DA API (MELHORADA) ===================
 function processarArrayDaAPI(valor) {
-    // Se for array, retornar como está
+    logDebug(`🔍 processarArrayDaAPI recebeu:`, valor, typeof valor);
+    
+    // Se for array, processar e filtrar
     if (Array.isArray(valor)) {
-        return valor.filter(item => item && item.trim() !== '');
+        const resultado = valor
+            .filter(item => item && typeof item === 'string' && item.trim() !== '')
+            .map(item => item.trim());
+        logDebug(`✅ Array processado:`, resultado);
+        return resultado;
     }
     
-    // Se for string separada por vírgula (vinda do Google Apps Script)
+    // Se for string separada por vírgula ou ponto-e-vírgula
     if (typeof valor === 'string' && valor.length > 0) {
-        return valor.split(',').map(item => item.trim()).filter(item => item.length > 0);
+        // CORREÇÃO: Suportar múltiplos separadores
+        let separadores = [',', ';', '|'];
+        let resultado = [];
+        
+        for (let sep of separadores) {
+            if (valor.includes(sep)) {
+                resultado = valor.split(sep)
+                    .map(item => item.trim())
+                    .filter(item => item.length > 0);
+                break;
+            }
+        }
+        
+        // Se nenhum separador foi encontrado, tratar como item único
+        if (resultado.length === 0 && valor.trim().length > 0) {
+            resultado = [valor.trim()];
+        }
+        
+        logDebug(`✅ String processada:`, resultado);
+        return resultado;
     }
     
-    // Se for vazio/null
+    // Se for vazio/null/undefined
+    logDebug(`❌ Valor vazio ou inválido:`, valor);
     return [];
 }
 
@@ -362,6 +388,11 @@ function openAtualizacaoModal(leitoNumero, dadosLeito) {
     document.body.appendChild(modal);
     
     setupModalEventListeners(modal, 'atualizacao');
+    
+    // *** CORREÇÃO CRÍTICA: FORÇAR PRE-MARCAÇÃO APÓS RENDERIZAÇÃO ***
+    setTimeout(() => {
+        forcarPreMarcacaoCheckboxes(modal, dadosLeito);
+    }, 100);
 }
 
 function createModalOverlay() {
@@ -474,9 +505,18 @@ function createAtualizacaoForm(hospitalNome, leitoNumero, dadosLeito) {
     const tempoInternacao = dadosLeito?.admAt ? calcularTempoInternacao(dadosLeito.admAt) : '';
     const iniciais = dadosLeito?.nome ? getIniciais(dadosLeito.nome) : '';
     
-    // CORREÇÃO CRÍTICA: Processar arrays para pre-marcação de checkboxes
+    // *** CORREÇÃO CRÍTICA: PROCESSAR ARRAYS PARA PRE-MARCAÇÃO DE CHECKBOXES ***
     const concessoesAtuais = processarArrayDaAPI(dadosLeito?.concessoes || []);
     const linhasAtuais = processarArrayDaAPI(dadosLeito?.linhas || []);
+    
+    // *** DEBUG APRIMORADO ***
+    logDebug(`🔍 DADOS RECEBIDOS:`, {
+        dadosLeito,
+        concessoesOriginais: dadosLeito?.concessoes,
+        linhasOriginais: dadosLeito?.linhas,
+        concessoesProcessadas: concessoesAtuais,
+        linhasProcessadas: linhasAtuais
+    });
     
     return `
         <div style="background: #1a1f2e; border-radius: 12px; padding: 30px; max-width: 700px; width: 95%; max-height: 90vh; overflow-y: auto; color: #ffffff;">
@@ -528,7 +568,7 @@ function createAtualizacaoForm(hospitalNome, leitoNumero, dadosLeito) {
                 </div>
             </div>
             
-            <!-- Concessões -->
+            <!-- *** CORREÇÃO CRÍTICA: CONCESSÕES COM MARCAÇÃO MANUAL *** -->
             <div style="margin-bottom: 20px;">
                 <div style="background: rgba(96,165,250,0.1); padding: 10px 15px; border-radius: 6px; margin-bottom: 10px;">
                     <div style="font-size: 11px; color: #ffffff; text-transform: uppercase; font-weight: 700;">
@@ -536,16 +576,20 @@ function createAtualizacaoForm(hospitalNome, leitoNumero, dadosLeito) {
                     </div>
                 </div>
                 <div id="updConcessoes" style="max-height: 150px; overflow-y: auto; background: rgba(255,255,255,0.03); border-radius: 6px; padding: 10px; display: grid; grid-template-columns: 1fr; gap: 6px;">
-                    ${window.CONCESSOES_LIST.map(c => `
-                        <label style="display: flex; align-items: center; padding: 4px 0; cursor: pointer; font-size: 12px;">
-                            <input type="checkbox" value="${c}" ${concessoesAtuais.includes(c) ? 'checked' : ''} style="margin-right: 8px; accent-color: #60a5fa;">
-                            <span>${c}</span>
-                        </label>
-                    `).join('')}
+                    ${window.CONCESSOES_LIST.map(c => {
+                        const isChecked = concessoesAtuais.includes(c);
+                        logDebug(`🔍 Concessão "${c}": ${isChecked ? 'MARCADA' : 'desmarcada'}`);
+                        return `
+                            <label style="display: flex; align-items: center; padding: 4px 0; cursor: pointer; font-size: 12px;">
+                                <input type="checkbox" value="${c}" ${isChecked ? 'checked' : ''} data-original="${isChecked}" style="margin-right: 8px; accent-color: #60a5fa;">
+                                <span>${c}</span>
+                            </label>
+                        `;
+                    }).join('')}
                 </div>
             </div>
             
-            <!-- Linhas de Cuidado -->
+            <!-- *** CORREÇÃO CRÍTICA: LINHAS DE CUIDADO COM MARCAÇÃO MANUAL *** -->
             <div style="margin-bottom: 20px;">
                 <div style="background: rgba(96,165,250,0.1); padding: 10px 15px; border-radius: 6px; margin-bottom: 10px;">
                     <div style="font-size: 11px; color: #ffffff; text-transform: uppercase; font-weight: 700;">
@@ -553,12 +597,16 @@ function createAtualizacaoForm(hospitalNome, leitoNumero, dadosLeito) {
                     </div>
                 </div>
                 <div id="updLinhas" style="max-height: 150px; overflow-y: auto; background: rgba(255,255,255,0.03); border-radius: 6px; padding: 10px; display: grid; grid-template-columns: 1fr; gap: 6px;">
-                    ${window.LINHAS_CUIDADO_LIST.map(l => `
-                        <label style="display: flex; align-items: center; padding: 4px 0; cursor: pointer; font-size: 12px;">
-                            <input type="checkbox" value="${l}" ${linhasAtuais.includes(l) ? 'checked' : ''} style="margin-right: 8px; accent-color: #60a5fa;">
-                            <span>${l}</span>
-                        </label>
-                    `).join('')}
+                    ${window.LINHAS_CUIDADO_LIST.map(l => {
+                        const isChecked = linhasAtuais.includes(l);
+                        logDebug(`🔍 Linha "${l}": ${isChecked ? 'MARCADA' : 'desmarcada'}`);
+                        return `
+                            <label style="display: flex; align-items: center; padding: 4px 0; cursor: pointer; font-size: 12px;">
+                                <input type="checkbox" value="${l}" ${isChecked ? 'checked' : ''} data-original="${isChecked}" style="margin-right: 8px; accent-color: #60a5fa;">
+                                <span>${l}</span>
+                            </label>
+                        `;
+                    }).join('')}
                 </div>
             </div>
             
@@ -579,6 +627,41 @@ function createAtualizacaoForm(hospitalNome, leitoNumero, dadosLeito) {
             </div>
         </div>
     `;
+}
+
+// *** NOVA FUNÇÃO: FORÇAR PRE-MARCAÇÃO DOS CHECKBOXES ***
+function forcarPreMarcacaoCheckboxes(modal, dadosLeito) {
+    logDebug(`🔧 Forçando pré-marcação de checkboxes...`);
+    
+    const concessoesAtuais = processarArrayDaAPI(dadosLeito?.concessoes || []);
+    const linhasAtuais = processarArrayDaAPI(dadosLeito?.linhas || []);
+    
+    logDebug(`📋 Concessões para marcar:`, concessoesAtuais);
+    logDebug(`📋 Linhas para marcar:`, linhasAtuais);
+    
+    // *** FORÇAR MARCAÇÃO DAS CONCESSÕES ***
+    const concessoesCheckboxes = modal.querySelectorAll('#updConcessoes input[type="checkbox"]');
+    concessoesCheckboxes.forEach(checkbox => {
+        const shouldBeChecked = concessoesAtuais.includes(checkbox.value);
+        if (shouldBeChecked && !checkbox.checked) {
+            checkbox.checked = true;
+            checkbox.setAttribute('checked', 'checked');
+            logDebug(`✅ Concessão "${checkbox.value}" marcada manualmente`);
+        }
+    });
+    
+    // *** FORÇAR MARCAÇÃO DAS LINHAS DE CUIDADO ***
+    const linhasCheckboxes = modal.querySelectorAll('#updLinhas input[type="checkbox"]');
+    linhasCheckboxes.forEach(checkbox => {
+        const shouldBeChecked = linhasAtuais.includes(checkbox.value);
+        if (shouldBeChecked && !checkbox.checked) {
+            checkbox.checked = true;
+            checkbox.setAttribute('checked', 'checked');
+            logDebug(`✅ Linha "${checkbox.value}" marcada manualmente`);
+        }
+    });
+    
+    logDebug(`🔧 Pré-marcação concluída`);
 }
 
 // =================== CORREÇÃO CRÍTICA: EVENT LISTENERS DOS MODAIS ===================
@@ -687,7 +770,7 @@ function closeModal(modal) {
     }
 }
 
-// =================== CORREÇÃO FINAL: FUNÇÕES DE COLETA DE DADOS ===================
+// *** CORREÇÃO FINAL: FUNÇÃO DE COLETA DE DADOS COMPLETAMENTE REESCRITA ***
 function coletarDadosFormulario(modal, tipo) {
     const dados = {
         hospital: window.currentHospital,
@@ -703,17 +786,12 @@ function coletarDadosFormulario(modal, tipo) {
         dados.complexidade = modal.querySelector('#admComplexidade')?.value || 'I';
         dados.prevAlta = modal.querySelector('#admPrevAlta')?.value || 'SP';
         
-        // CORREÇÃO FINAL: Coletar checkboxes corretamente (RESOLVENDO O BUG DAS LINHAS)
-        const concessoesSelecionadas = Array.from(modal.querySelectorAll('#admConcessoes input[type="checkbox"]:checked')).map(i => i.value);
-        const linhasSelecionadas = Array.from(modal.querySelectorAll('#admLinhas input[type="checkbox"]:checked')).map(i => i.value);
+        // *** COLETA ROBUSTA DE CHECKBOXES ***
+        const concessoesSelecionadas = coletarCheckboxesSelecionados(modal, '#admConcessoes');
+        const linhasSelecionadas = coletarCheckboxesSelecionados(modal, '#admLinhas');
         
-        // CORREÇÃO: Enviar como string separada por vírgula (formato que Apps Script espera)
         dados.concessoes = concessoesSelecionadas.length > 0 ? concessoesSelecionadas.join(',') : '';
         dados.linhas = linhasSelecionadas.length > 0 ? linhasSelecionadas.join(',') : '';
-        
-        // LOG para debug
-        logInfo(`Concessões coletadas: ${dados.concessoes}`);
-        logInfo(`Linhas coletadas: ${dados.linhas}`);
         
     } else {
         dados.idade = parseInt(modal.querySelector('#updIdade')?.value) || null;
@@ -722,56 +800,50 @@ function coletarDadosFormulario(modal, tipo) {
         dados.complexidade = modal.querySelector('#updComplexidade')?.value || 'I';
         dados.prevAlta = modal.querySelector('#updPrevAlta')?.value || 'SP';
         
-        // CORREÇÃO ROBUSTA: Usar métodos alternativos para detectar checkboxes marcados
-        const concessoesCheckboxes = modal.querySelectorAll('#updConcessoes input[type="checkbox"]');
-        const linhasCheckboxes = modal.querySelectorAll('#updLinhas input[type="checkbox"]');
+        // *** COLETA ROBUSTA DE CHECKBOXES ***
+        const concessoesSelecionadas = coletarCheckboxesSelecionados(modal, '#updConcessoes');
+        const linhasSelecionadas = coletarCheckboxesSelecionados(modal, '#updLinhas');
         
-        const concessoesSelecionadas = [];
-        const linhasSelecionadas = [];
-        
-        // Verificar concessões com múltiplos métodos
-        concessoesCheckboxes.forEach(checkbox => {
-            if (checkbox.checked || checkbox.hasAttribute('checked')) {
-                concessoesSelecionadas.push(checkbox.value);
-            }
-        });
-        
-        // CORREÇÃO ESPECÍFICA PARA LINHAS: Usar múltiplos métodos de detecção
-        linhasCheckboxes.forEach(checkbox => {
-            // Método 1: propriedade checked
-            if (checkbox.checked) {
-                linhasSelecionadas.push(checkbox.value);
-            }
-            // Método 2: atributo checked (fallback)
-            else if (checkbox.hasAttribute('checked')) {
-                linhasSelecionadas.push(checkbox.value);
-            }
-            // Método 3: verificar se o elemento pai tem classe ativa (último recurso)
-            else if (checkbox.parentElement && checkbox.parentElement.classList.contains('active')) {
-                linhasSelecionadas.push(checkbox.value);
-            }
-        });
-        
-        // DEBUG: Log para verificar seletores
-        logInfo(`DEBUG - Concessões encontradas: ${concessoesCheckboxes.length}`);
-        logInfo(`DEBUG - Concessões marcadas: ${concessoesSelecionadas.length}`);
-        logInfo(`DEBUG - Linhas encontradas: ${linhasCheckboxes.length}`);
-        logInfo(`DEBUG - Linhas marcadas: ${linhasSelecionadas.length}`);
-        logInfo(`DEBUG - Linhas marcadas (valores): ${JSON.stringify(linhasSelecionadas)}`);
-        
-        // CORREÇÃO: Enviar como string separada por vírgula (formato que Apps Script espera)
         dados.concessoes = concessoesSelecionadas.length > 0 ? concessoesSelecionadas.join(',') : '';
         dados.linhas = linhasSelecionadas.length > 0 ? linhasSelecionadas.join(',') : '';
-        
-        // LOG para debug
-        logInfo(`Concessões atualizadas: ${dados.concessoes}`);
-        logInfo(`Linhas atualizadas: ${dados.linhas}`);
     }
     
-    // LOG dos dados finais para debug
-    logInfo(`Dados coletados para ${tipo}:`, dados);
+    // *** LOG FINAL DETALHADO ***
+    logDebug(`📋 Dados coletados para ${tipo}:`, dados);
+    logDebug(`📋 Concessões: ${dados.concessoes || 'nenhuma'}`);
+    logDebug(`📋 Linhas: ${dados.linhas || 'nenhuma'}`);
     
     return dados;
+}
+
+// *** NOVA FUNÇÃO: COLETA ROBUSTA DE CHECKBOXES ***
+function coletarCheckboxesSelecionados(modal, seletor) {
+    const checkboxes = modal.querySelectorAll(`${seletor} input[type="checkbox"]`);
+    const selecionados = [];
+    
+    logDebug(`🔍 Coletando checkboxes de: ${seletor}`);
+    logDebug(`🔍 Total de checkboxes encontrados: ${checkboxes.length}`);
+    
+    checkboxes.forEach((checkbox, index) => {
+        const isChecked = checkbox.checked;
+        const hasCheckedAttr = checkbox.hasAttribute('checked');
+        const dataOriginal = checkbox.dataset.original === 'true';
+        
+        logDebug(`🔍 Checkbox ${index + 1}: "${checkbox.value}"`, {
+            checked: isChecked,
+            hasAttribute: hasCheckedAttr,
+            dataOriginal: dataOriginal,
+            finalStatus: isChecked ? 'SELECIONADO' : 'não selecionado'
+        });
+        
+        if (isChecked) {
+            selecionados.push(checkbox.value);
+        }
+    });
+    
+    logDebug(`✅ Total selecionados: ${selecionados.length}`, selecionados);
+    
+    return selecionados;
 }
 
 // =================== FUNÇÕES AUXILIARES MANTIDAS ===================
@@ -923,7 +995,7 @@ function formatarDataHora(dataISO) {
     }
 }
 
-// =================== FUNÇÕES DE LOG ===================
+// =================== FUNÇÕES DE LOG (EXPANDIDAS) ===================
 function logInfo(message, data = null) {
     console.log(`🔵 [CARDS] ${message}`, data || '');
 }
@@ -934,6 +1006,10 @@ function logError(message, error = null) {
 
 function logSuccess(message) {
     console.log(`🟢 [CARDS SUCCESS] ${message}`);
+}
+
+function logDebug(message, data = null) {
+    console.log(`🟡 [CARDS DEBUG] ${message}`, data || '');
 }
 
 // =================== CSS PARA ANIMAÇÕES E RESPONSIVIDADE ===================
@@ -1008,11 +1084,30 @@ if (!document.getElementById('cardsAnimations')) {
             box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.2) !important;
         }
 
-        /* Checkboxes */
+        /* *** CORREÇÃO CRÍTICA: CHECKBOXES COM ESTILO MELHORADO *** */
         input[type="checkbox"] {
             width: 16px;
             height: 16px;
             accent-color: #60a5fa;
+            cursor: pointer;
+        }
+        
+        /* Garantir que checkboxes marcados mantenham estado */
+        input[type="checkbox"]:checked {
+            background-color: #60a5fa !important;
+            border-color: #60a5fa !important;
+        }
+        
+        /* Labels com hover para melhor UX */
+        label:has(input[type="checkbox"]) {
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            border-radius: 4px;
+            padding: 4px !important;
+        }
+        
+        label:has(input[type="checkbox"]):hover {
+            background-color: rgba(96, 165, 250, 0.1);
         }
 
         /* Responsividade mobile para modais */
@@ -1032,6 +1127,21 @@ if (!document.getElementById('cardsAnimations')) {
             .modal-overlay div[id$="Concessoes"], 
             .modal-overlay div[id$="Linhas"] {
                 grid-template-columns: 1fr !important;
+                max-height: 120px !important;
+            }
+            
+            /* *** CORREÇÃO MOBILE: CHECKBOXES MAIORES NO MOBILE *** */
+            @media (max-width: 768px) {
+                input[type="checkbox"] {
+                    width: 18px !important;
+                    height: 18px !important;
+                    margin-right: 10px !important;
+                }
+                
+                label:has(input[type="checkbox"]) {
+                    padding: 8px !important;
+                    font-size: 13px !important;
+                }
             }
         }
     `;
@@ -1040,7 +1150,7 @@ if (!document.getElementById('cardsAnimations')) {
 
 // =================== INICIALIZAÇÃO ===================
 document.addEventListener('DOMContentLoaded', function() {
-    logInfo('✅ Cards.js FINAL carregado - Mapeamento hospitais + botão cancelar + checkboxes funcionando');
+    logSuccess('✅ Cards.js FINAL carregado - CHECKBOXES CORRIGIDOS + Pré-marcação funcionando');
     
     // Verificar dependências
     if (typeof window.CONFIG === 'undefined') {
@@ -1058,4 +1168,4 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-logSuccess('🏥 CARDS.JS FINAL - Todas as correções aplicadas!');
+logSuccess('🏥 CARDS.JS FINAL - CORREÇÃO COMPLETA DOS CHECKBOXES IMPLEMENTADA!');

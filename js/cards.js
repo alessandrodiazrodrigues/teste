@@ -1,10 +1,11 @@
-// =================== CARDS.JS - VERSÃO FINAL COM CORREÇÕES COMPLETAS ===================
+// =================== CARDS.JS - VERSÃO 3.0 CORRIGIDA ===================
+// =================== CORREÇÃO DO PROCESSAMENTO DE SEPARADORES PIPE ===================
 
 // =================== VARIÁVEIS GLOBAIS ===================  
 window.selectedLeito = null;
 window.currentHospital = 'H1';
 
-// =================== CORREÇÃO CRÍTICA: MAPEAMENTO DE HOSPITAIS ===================
+// =================== MAPEAMENTO DE HOSPITAIS ===================
 window.HOSPITAL_MAPPING = {
     H1: 'Neomater',
     H2: 'Cruz Azul', 
@@ -12,14 +13,14 @@ window.HOSPITAL_MAPPING = {
     H4: 'Santa Clara'
 };
 
-// =================== FUNÇÃO CRÍTICA CORRIGIDA: SELECT HOSPITAL ===================
+// =================== FUNÇÃO: SELECT HOSPITAL ===================
 window.selectHospital = function(hospitalId) {
     logInfo(`Selecionando hospital: ${hospitalId} (${window.HOSPITAL_MAPPING[hospitalId]})`);
     
-    // CORREÇÃO: Definir currentHospital ANTES de qualquer operação
+    // Definir currentHospital ANTES de qualquer operação
     window.currentHospital = hospitalId;
     
-    // CORREÇÃO: Atualizar botões visuais corretamente
+    // Atualizar botões visuais
     document.querySelectorAll('.hospital-btn').forEach(btn => {
         btn.classList.remove('active');
         if (btn.dataset.hospital === hospitalId) {
@@ -27,7 +28,7 @@ window.selectHospital = function(hospitalId) {
         }
     });
     
-    // CORREÇÃO: Renderizar cards com hospital correto
+    // Renderizar cards com hospital correto
     window.renderCards();
     
     logSuccess(`Hospital selecionado: ${window.HOSPITAL_MAPPING[hospitalId]}`);
@@ -78,7 +79,81 @@ window.PREVISAO_ALTA_OPTIONS = [
     'Hoje Ouro', '24h Ouro', '24h 2R', '48h 3R', '72h', '96h', 'Sem previsao'
 ];
 
-// =================== FUNÇÃO PRINCIPAL DE RENDERIZAÇÃO CORRIGIDA ===================
+// =================== CORREÇÃO CRÍTICA: FUNÇÃO PROCESSAR ARRAYS DA API ===================
+function processarArrayDaAPI(valor) {
+    logDebug(`🔍 processarArrayDaAPI recebeu:`, valor, `(tipo: ${typeof valor})`);
+    
+    // Se for array, processar cada elemento
+    if (Array.isArray(valor)) {
+        let resultado = [];
+        
+        valor.forEach(item => {
+            if (typeof item === 'string' && item.trim() !== '') {
+                // CORREÇÃO CRÍTICA: Verificar se item contém separadores
+                if (item.includes('|')) {
+                    // Split por pipe e adicionar todos os subitens
+                    const subitems = item.split('|')
+                        .map(s => s.trim())
+                        .filter(s => s.length > 0);
+                    resultado.push(...subitems);
+                    logDebug(`📋 Processado pipe em: "${item}" → [${subitems.join(', ')}]`);
+                } else if (item.includes(',')) {
+                    // Split por vírgula
+                    const subitems = item.split(',')
+                        .map(s => s.trim())
+                        .filter(s => s.length > 0);
+                    resultado.push(...subitems);
+                    logDebug(`📋 Processado vírgula em: "${item}" → [${subitems.join(', ')}]`);
+                } else if (item.includes(';')) {
+                    // Split por ponto-e-vírgula
+                    const subitems = item.split(';')
+                        .map(s => s.trim())
+                        .filter(s => s.length > 0);
+                    resultado.push(...subitems);
+                    logDebug(`📋 Processado ponto-e-vírgula em: "${item}" → [${subitems.join(', ')}]`);
+                } else {
+                    // Item simples sem separadores
+                    resultado.push(item.trim());
+                }
+            }
+        });
+        
+        logDebug(`✅ Array processado:`, resultado);
+        return resultado;
+    }
+    
+    // Se for string, processar separadores
+    if (typeof valor === 'string' && valor.length > 0) {
+        let resultado = [];
+        
+        // CORREÇÃO: Suporte completo a múltiplos separadores
+        if (valor.includes('|')) {
+            resultado = valor.split('|');
+            logDebug(`📋 String com pipe processada: "${valor}"`);
+        } else if (valor.includes(',')) {
+            resultado = valor.split(',');
+            logDebug(`📋 String com vírgula processada: "${valor}"`);
+        } else if (valor.includes(';')) {
+            resultado = valor.split(';');
+            logDebug(`📋 String com ponto-e-vírgula processada: "${valor}"`);
+        } else {
+            resultado = [valor];
+            logDebug(`📋 String simples processada: "${valor}"`);
+        }
+        
+        resultado = resultado
+            .map(item => item.trim())
+            .filter(item => item.length > 0);
+        
+        logDebug(`✅ String processada:`, resultado);
+        return resultado;
+    }
+    
+    logDebug(`❌ Valor vazio ou inválido:`, valor);
+    return [];
+}
+
+// =================== FUNÇÃO PRINCIPAL DE RENDERIZAÇÃO ===================
 window.renderCards = function() {
     logInfo('Renderizando cards com dados REAIS da API');
     
@@ -92,7 +167,6 @@ window.renderCards = function() {
     const hospitalId = window.currentHospital || 'H1';
     const hospital = window.hospitalData[hospitalId];
     
-    // CORREÇÃO: Usar mapeamento correto de hospitais
     const hospitalNome = window.HOSPITAL_MAPPING[hospitalId] || 'Hospital';
     
     if (!hospital || !hospital.leitos || hospital.leitos.length === 0) {
@@ -118,19 +192,19 @@ window.renderCards = function() {
     logInfo(`${hospital.leitos.length} cards renderizados para ${hospitalNome} com dados reais`);
 };
 
-// =================== CRIAR CARD INDIVIDUAL - MANTÉM LAYOUT ORIGINAL 3x3 ===================
+// =================== CRIAR CARD INDIVIDUAL ===================
 function createCard(leito, hospitalNome) {
     const card = document.createElement('div');
     card.className = 'card';
     card.style.cssText = 'background: var(--card); border-radius: 12px; padding: 20px; color: var(--text-white); box-shadow: 0 4px 6px rgba(0,0,0,0.1);';
     
-    // CORREÇÃO: Status da API vem como "Em uso"/"Vago", padronizar para "ocupado"/"vago"
+    // Padronizar status
     let isVago = leito.status === 'Vago' || leito.status === 'vago';
     if (leito.status === 'Em uso') leito.status = 'ocupado';
     if (leito.status === 'Vago') leito.status = 'vago';
     isVago = leito.status === 'vago';
     
-    // CORREÇÃO: Dados vêm diretamente no objeto leito (não em leito.paciente)
+    // Dados do paciente
     const nome = leito.nome || '';
     const matricula = leito.matricula || '';
     const idade = leito.idade || null;
@@ -139,9 +213,12 @@ function createCard(leito, hospitalNome) {
     const spict = leito.spict || '';
     const previsaoAlta = leito.prevAlta || '';
     
-    // CORREÇÃO CRÍTICA: Processar concessões e linhas vindas da API
+    // CORREÇÃO: Processar concessões e linhas vindas da API
     const concessoes = processarArrayDaAPI(leito.concessoes || []);
     const linhas = processarArrayDaAPI(leito.linhas || []);
+    
+    logDebug(`📋 Card ${leito.leito} - Concessões: [${concessoes.join(', ')}]`);
+    logDebug(`📋 Card ${leito.leito} - Linhas: [${linhas.join(', ')}]`);
     
     // Calcular tempo de internação
     let tempoInternacao = '';
@@ -152,7 +229,7 @@ function createCard(leito, hospitalNome) {
     // Extrair iniciais do nome
     const iniciais = isVago ? '—' : getIniciais(nome);
     
-    // Formatar PPS (adicionar % se não tiver)
+    // Formatar PPS
     let ppsFormatado = pps ? `${pps}%` : '—';
     if (ppsFormatado !== '—' && !ppsFormatado.includes('%')) {
         ppsFormatado = `${pps}%`;
@@ -162,12 +239,11 @@ function createCard(leito, hospitalNome) {
     const spictFormatado = spict === 'elegivel' ? 'Elegível' : 
                           (spict === 'nao_elegivel' ? 'Não elegível' : '—');
     
-    // CORREÇÃO: Usar leito.leito (não leito.numero)
     const numeroLeito = leito.leito || leito.numero || 'N/A';
     
-    // MANTER LAYOUT ORIGINAL 3x3 CONFORME ARQUIVO ATUAL
+    // HTML do Card (layout 3x3 mantido)
     card.innerHTML = `
-        <!-- LINHA 1: Hospital / Leito / Tipo - LAYOUT 3x3 EXATO -->
+        <!-- LINHA 1: Hospital / Leito / Tipo -->
         <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 12px;">
             <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 10px; min-height: 50px; display: flex; flex-direction: column; justify-content: center;">
                 <div style="font-size: 10px; color: rgba(255,255,255,0.7); font-weight: 600; text-transform: uppercase; margin-bottom: 3px;">HOSPITAL</div>
@@ -186,7 +262,7 @@ function createCard(leito, hospitalNome) {
             </div>
         </div>
 
-        <!-- LINHA 2: Iniciais / Matrícula / Idade - LAYOUT 3x3 EXATO -->
+        <!-- LINHA 2: Iniciais / Matrícula / Idade -->
         <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 12px;">
             <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 10px; min-height: 50px; display: flex; flex-direction: column; justify-content: center;">
                 <div style="font-size: 10px; color: rgba(255,255,255,0.7); font-weight: 600; text-transform: uppercase; margin-bottom: 3px;">INICIAIS</div>
@@ -204,7 +280,7 @@ function createCard(leito, hospitalNome) {
             </div>
         </div>
 
-        <!-- LINHA 3: PPS / SPICT-BR / Previsão de Alta - LAYOUT 3x3 EXATO -->
+        <!-- LINHA 3: PPS / SPICT-BR / Previsão de Alta -->
         <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 15px;">
             <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 10px; min-height: 50px; display: flex; flex-direction: column; justify-content: center;">
                 <div style="font-size: 10px; color: rgba(255,255,255,0.7); font-weight: 600; text-transform: uppercase; margin-bottom: 3px;">PPS</div>
@@ -248,7 +324,7 @@ function createCard(leito, hospitalNome) {
             </div>
         </div>
 
-        <!-- SEÇÃO 6: ADMISSÃO E TEMPO DE INTERNAÇÃO LADO A LADO -->
+        <!-- SEÇÃO 6: ADMISSÃO E TEMPO DE INTERNAÇÃO -->
         <div style="margin-bottom: 15px;">
             <div style="display: flex; justify-content: flex-start; align-items: center; gap: 30px; margin-bottom: 12px;">
                 <div>
@@ -294,48 +370,6 @@ function createCard(leito, hospitalNome) {
     return card;
 }
 
-// =================== CORREÇÃO CRÍTICA: PROCESSAR ARRAYS DA API (MELHORADA) ===================
-function processarArrayDaAPI(valor) {
-    logDebug(`🔍 processarArrayDaAPI recebeu:`, valor, typeof valor);
-    
-    // Se for array, processar e filtrar
-    if (Array.isArray(valor)) {
-        const resultado = valor
-            .filter(item => item && typeof item === 'string' && item.trim() !== '')
-            .map(item => item.trim());
-        logDebug(`✅ Array processado:`, resultado);
-        return resultado;
-    }
-    
-    // Se for string separada por vírgula ou ponto-e-vírgula
-    if (typeof valor === 'string' && valor.length > 0) {
-        // CORREÇÃO: Suportar múltiplos separadores
-        let separadores = [',', ';', '|'];
-        let resultado = [];
-        
-        for (let sep of separadores) {
-            if (valor.includes(sep)) {
-                resultado = valor.split(sep)
-                    .map(item => item.trim())
-                    .filter(item => item.length > 0);
-                break;
-            }
-        }
-        
-        // Se nenhum separador foi encontrado, tratar como item único
-        if (resultado.length === 0 && valor.trim().length > 0) {
-            resultado = [valor.trim()];
-        }
-        
-        logDebug(`✅ String processada:`, resultado);
-        return resultado;
-    }
-    
-    // Se for vazio/null/undefined
-    logDebug(`❌ Valor vazio ou inválido:`, valor);
-    return [];
-}
-
 // =================== FLUXOS DE ADMISSÃO E ATUALIZAÇÃO ===================
 function openAdmissaoFlow(leitoNumero) {
     const button = document.querySelector(`[data-action="admitir"][data-leito="${leitoNumero}"]`);
@@ -363,7 +397,7 @@ function openAtualizacaoFlow(leitoNumero, dadosLeito) {
     }, 800);
 }
 
-// =================== MODAIS CORRIGIDOS COM BOTÃO CANCELAR FUNCIONANDO ===================
+// =================== MODAIS ===================
 function openAdmissaoModal(leitoNumero) {
     const hospitalId = window.currentHospital;
     const hospitalNome = window.HOSPITAL_MAPPING[hospitalId] || 'Hospital';
@@ -389,7 +423,7 @@ function openAtualizacaoModal(leitoNumero, dadosLeito) {
     
     setupModalEventListeners(modal, 'atualizacao');
     
-    // *** CORREÇÃO CRÍTICA: FORÇAR PRE-MARCAÇÃO APÓS RENDERIZAÇÃO ***
+    // Forçar pré-marcação após renderização
     setTimeout(() => {
         forcarPreMarcacaoCheckboxes(modal, dadosLeito);
     }, 100);
@@ -505,12 +539,12 @@ function createAtualizacaoForm(hospitalNome, leitoNumero, dadosLeito) {
     const tempoInternacao = dadosLeito?.admAt ? calcularTempoInternacao(dadosLeito.admAt) : '';
     const iniciais = dadosLeito?.nome ? getIniciais(dadosLeito.nome) : '';
     
-    // *** CORREÇÃO CRÍTICA: PROCESSAR ARRAYS PARA PRE-MARCAÇÃO DE CHECKBOXES ***
+    // CORREÇÃO: Processar arrays para pré-marcação
     const concessoesAtuais = processarArrayDaAPI(dadosLeito?.concessoes || []);
     const linhasAtuais = processarArrayDaAPI(dadosLeito?.linhas || []);
     
-    // *** DEBUG APRIMORADO ***
-    logDebug(`🔍 DADOS RECEBIDOS:`, {
+    // Debug
+    logDebug(`🔍 DADOS PARA ATUALIZAÇÃO:`, {
         dadosLeito,
         concessoesOriginais: dadosLeito?.concessoes,
         linhasOriginais: dadosLeito?.linhas,
@@ -568,7 +602,7 @@ function createAtualizacaoForm(hospitalNome, leitoNumero, dadosLeito) {
                 </div>
             </div>
             
-            <!-- *** CORREÇÃO CRÍTICA: CONCESSÕES COM MARCAÇÃO MANUAL *** -->
+            <!-- CORREÇÃO: CONCESSÕES COM MARCAÇÃO CORRETA -->
             <div style="margin-bottom: 20px;">
                 <div style="background: rgba(96,165,250,0.1); padding: 10px 15px; border-radius: 6px; margin-bottom: 10px;">
                     <div style="font-size: 11px; color: #ffffff; text-transform: uppercase; font-weight: 700;">
@@ -589,7 +623,7 @@ function createAtualizacaoForm(hospitalNome, leitoNumero, dadosLeito) {
                 </div>
             </div>
             
-            <!-- *** CORREÇÃO CRÍTICA: LINHAS DE CUIDADO COM MARCAÇÃO MANUAL *** -->
+            <!-- CORREÇÃO: LINHAS DE CUIDADO COM MARCAÇÃO CORRETA -->
             <div style="margin-bottom: 20px;">
                 <div style="background: rgba(96,165,250,0.1); padding: 10px 15px; border-radius: 6px; margin-bottom: 10px;">
                     <div style="font-size: 11px; color: #ffffff; text-transform: uppercase; font-weight: 700;">
@@ -629,7 +663,7 @@ function createAtualizacaoForm(hospitalNome, leitoNumero, dadosLeito) {
     `;
 }
 
-// *** NOVA FUNÇÃO: FORÇAR PRE-MARCAÇÃO DOS CHECKBOXES ***
+// FUNÇÃO: FORÇAR PRE-MARCAÇÃO DOS CHECKBOXES
 function forcarPreMarcacaoCheckboxes(modal, dadosLeito) {
     logDebug(`🔧 Forçando pré-marcação de checkboxes...`);
     
@@ -639,7 +673,7 @@ function forcarPreMarcacaoCheckboxes(modal, dadosLeito) {
     logDebug(`📋 Concessões para marcar:`, concessoesAtuais);
     logDebug(`📋 Linhas para marcar:`, linhasAtuais);
     
-    // *** FORÇAR MARCAÇÃO DAS CONCESSÕES ***
+    // Forçar marcação das concessões
     const concessoesCheckboxes = modal.querySelectorAll('#updConcessoes input[type="checkbox"]');
     concessoesCheckboxes.forEach(checkbox => {
         const shouldBeChecked = concessoesAtuais.includes(checkbox.value);
@@ -650,7 +684,7 @@ function forcarPreMarcacaoCheckboxes(modal, dadosLeito) {
         }
     });
     
-    // *** FORÇAR MARCAÇÃO DAS LINHAS DE CUIDADO ***
+    // Forçar marcação das linhas de cuidado
     const linhasCheckboxes = modal.querySelectorAll('#updLinhas input[type="checkbox"]');
     linhasCheckboxes.forEach(checkbox => {
         const shouldBeChecked = linhasAtuais.includes(checkbox.value);
@@ -664,9 +698,9 @@ function forcarPreMarcacaoCheckboxes(modal, dadosLeito) {
     logDebug(`🔧 Pré-marcação concluída`);
 }
 
-// =================== CORREÇÃO CRÍTICA: EVENT LISTENERS DOS MODAIS ===================
+// =================== EVENT LISTENERS DOS MODAIS ===================
 function setupModalEventListeners(modal, tipo) {
-    // CORREÇÃO: Botão Cancelar COM EVENT LISTENER FUNCIONANDO
+    // Botão Cancelar
     const btnCancelar = modal.querySelector('.btn-cancelar');
     if (btnCancelar) {
         btnCancelar.addEventListener('click', function(e) {
@@ -677,7 +711,7 @@ function setupModalEventListeners(modal, tipo) {
         });
     }
     
-    // Botão Salvar COM INTEGRAÇÃO API REAL
+    // Botão Salvar
     const btnSalvar = modal.querySelector('.btn-salvar');
     if (btnSalvar) {
         btnSalvar.addEventListener('click', async function(e) {
@@ -691,11 +725,9 @@ function setupModalEventListeners(modal, tipo) {
                 const dadosFormulario = coletarDadosFormulario(modal, tipo);
                 
                 if (tipo === 'admissao') {
-                    // USAR FUNÇÃO REAL DA API
                     await window.admitirPaciente(dadosFormulario.hospital, dadosFormulario.leito, dadosFormulario);
                     showSuccessMessage('✅ Paciente admitido com sucesso!');
                 } else {
-                    // USAR FUNÇÃO REAL DA API
                     await window.atualizarPaciente(dadosFormulario.hospital, dadosFormulario.leito, dadosFormulario);
                     showSuccessMessage('✅ Dados atualizados com sucesso!');
                 }
@@ -703,7 +735,7 @@ function setupModalEventListeners(modal, tipo) {
                 hideButtonLoading(this, originalText);
                 closeModal(modal);
                 
-                // REFRESH AUTOMÁTICO
+                // Refresh automático
                 await window.refreshAfterAction();
                 
             } catch (error) {
@@ -714,7 +746,7 @@ function setupModalEventListeners(modal, tipo) {
         });
     }
     
-    // Botão Alta COM INTEGRAÇÃO API REAL
+    // Botão Alta
     const btnAlta = modal.querySelector('.btn-alta');
     if (btnAlta) {
         btnAlta.addEventListener('click', async function(e) {
@@ -727,14 +759,13 @@ function setupModalEventListeners(modal, tipo) {
             showButtonLoading(this, 'PROCESSANDO ALTA...');
             
             try {
-                // USAR FUNÇÃO REAL DA API
                 await window.darAltaPaciente(window.currentHospital, window.selectedLeito);
                 
                 hideButtonLoading(this, originalText);
                 showSuccessMessage('✅ Alta processada com sucesso!');
                 closeModal(modal);
                 
-                // REFRESH AUTOMÁTICO
+                // Refresh automático
                 await window.refreshAfterAction();
                 
             } catch (error) {
@@ -745,7 +776,7 @@ function setupModalEventListeners(modal, tipo) {
         });
     }
     
-    // CORREÇÃO: Fechar modal clicando fora COM PREVENÇÃO DE BUBBLING
+    // Fechar modal clicando fora
     modal.addEventListener('click', function(e) {
         if (e.target === modal) {
             e.preventDefault();
@@ -755,7 +786,7 @@ function setupModalEventListeners(modal, tipo) {
     });
 }
 
-// =================== CORREÇÃO: FUNÇÃO CLOSE MODAL MELHORADA ===================
+// FUNÇÃO: CLOSE MODAL
 function closeModal(modal) {
     if (modal && modal.parentNode) {
         modal.style.animation = 'fadeOut 0.3s ease';
@@ -770,7 +801,7 @@ function closeModal(modal) {
     }
 }
 
-// *** CORREÇÃO FINAL: FUNÇÃO DE COLETA DE DADOS COMPLETAMENTE REESCRITA ***
+// FUNÇÃO: COLETA DE DADOS DO FORMULÁRIO
 function coletarDadosFormulario(modal, tipo) {
     const dados = {
         hospital: window.currentHospital,
@@ -786,7 +817,6 @@ function coletarDadosFormulario(modal, tipo) {
         dados.complexidade = modal.querySelector('#admComplexidade')?.value || 'I';
         dados.prevAlta = modal.querySelector('#admPrevAlta')?.value || 'SP';
         
-        // *** COLETA ROBUSTA DE CHECKBOXES ***
         const concessoesSelecionadas = coletarCheckboxesSelecionados(modal, '#admConcessoes');
         const linhasSelecionadas = coletarCheckboxesSelecionados(modal, '#admLinhas');
         
@@ -800,7 +830,6 @@ function coletarDadosFormulario(modal, tipo) {
         dados.complexidade = modal.querySelector('#updComplexidade')?.value || 'I';
         dados.prevAlta = modal.querySelector('#updPrevAlta')?.value || 'SP';
         
-        // *** COLETA ROBUSTA DE CHECKBOXES ***
         const concessoesSelecionadas = coletarCheckboxesSelecionados(modal, '#updConcessoes');
         const linhasSelecionadas = coletarCheckboxesSelecionados(modal, '#updLinhas');
         
@@ -808,7 +837,6 @@ function coletarDadosFormulario(modal, tipo) {
         dados.linhas = linhasSelecionadas.length > 0 ? linhasSelecionadas.join(',') : '';
     }
     
-    // *** LOG FINAL DETALHADO ***
     logDebug(`📋 Dados coletados para ${tipo}:`, dados);
     logDebug(`📋 Concessões: ${dados.concessoes || 'nenhuma'}`);
     logDebug(`📋 Linhas: ${dados.linhas || 'nenhuma'}`);
@@ -816,7 +844,7 @@ function coletarDadosFormulario(modal, tipo) {
     return dados;
 }
 
-// *** NOVA FUNÇÃO: COLETA ROBUSTA DE CHECKBOXES ***
+// FUNÇÃO: COLETA ROBUSTA DE CHECKBOXES
 function coletarCheckboxesSelecionados(modal, seletor) {
     const checkboxes = modal.querySelectorAll(`${seletor} input[type="checkbox"]`);
     const selecionados = [];
@@ -846,7 +874,7 @@ function coletarCheckboxesSelecionados(modal, seletor) {
     return selecionados;
 }
 
-// =================== FUNÇÕES AUXILIARES MANTIDAS ===================
+// =================== FUNÇÕES AUXILIARES ===================
 function showButtonLoading(button, loadingText) {
     if (button) {
         button.disabled = true;
@@ -995,7 +1023,7 @@ function formatarDataHora(dataISO) {
     }
 }
 
-// =================== FUNÇÕES DE LOG (EXPANDIDAS) ===================
+// =================== FUNÇÕES DE LOG ===================
 function logInfo(message, data = null) {
     console.log(`🔵 [CARDS] ${message}`, data || '');
 }
@@ -1017,7 +1045,7 @@ if (!document.getElementById('cardsAnimations')) {
     const style = document.createElement('style');
     style.id = 'cardsAnimations';
     style.textContent = `
-        @keyframes slideIn {
+@keyframes slideIn {
             from {
                 transform: translateX(100%);
                 opacity: 0;
@@ -1071,6 +1099,11 @@ if (!document.getElementById('cardsAnimations')) {
             appearance: none !important;
             -webkit-appearance: none !important;
             -moz-appearance: none !important;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 0.7rem center;
+            background-size: 1em;
+            padding-right: 2.5rem !important;
         }
 
         select option {
@@ -1084,7 +1117,7 @@ if (!document.getElementById('cardsAnimations')) {
             box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.2) !important;
         }
 
-        /* *** CORREÇÃO CRÍTICA: CHECKBOXES COM ESTILO MELHORADO *** */
+        /* Checkboxes com estilo melhorado */
         input[type="checkbox"] {
             width: 16px;
             height: 16px;
@@ -1092,7 +1125,6 @@ if (!document.getElementById('cardsAnimations')) {
             cursor: pointer;
         }
         
-        /* Garantir que checkboxes marcados mantenham estado */
         input[type="checkbox"]:checked {
             background-color: #60a5fa !important;
             border-color: #60a5fa !important;
@@ -1130,19 +1162,42 @@ if (!document.getElementById('cardsAnimations')) {
                 max-height: 120px !important;
             }
             
-            /* *** CORREÇÃO MOBILE: CHECKBOXES MAIORES NO MOBILE *** */
-            @media (max-width: 768px) {
-                input[type="checkbox"] {
-                    width: 18px !important;
-                    height: 18px !important;
-                    margin-right: 10px !important;
-                }
-                
-                label:has(input[type="checkbox"]) {
-                    padding: 8px !important;
-                    font-size: 13px !important;
-                }
+            /* Checkboxes maiores no mobile */
+            input[type="checkbox"] {
+                width: 18px !important;
+                height: 18px !important;
+                margin-right: 10px !important;
             }
+            
+            label:has(input[type="checkbox"]) {
+                padding: 8px !important;
+                font-size: 13px !important;
+            }
+        }
+        
+        /* Responsividade para landscape mobile */
+        @media (max-width: 768px) and (orientation: landscape) {
+            .modal-overlay > div {
+                max-height: 85vh !important;
+                padding: 20px !important;
+            }
+            
+            .modal-overlay div[id$="Concessoes"], 
+            .modal-overlay div[id$="Linhas"] {
+                max-height: 100px !important;
+            }
+        }
+        
+        /* Animação de loading */
+        .loading-spinner {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: #ffffff;
+            animation: spin 0.8s linear infinite;
+            margin-right: 8px;
         }
     `;
     document.head.appendChild(style);
@@ -1150,7 +1205,7 @@ if (!document.getElementById('cardsAnimations')) {
 
 // =================== INICIALIZAÇÃO ===================
 document.addEventListener('DOMContentLoaded', function() {
-    logSuccess('✅ Cards.js FINAL carregado - CHECKBOXES CORRIGIDOS + Pré-marcação funcionando');
+    logSuccess('✅ Cards.js v3.0 CORRIGIDO - Processamento de separadores pipe implementado');
     
     // Verificar dependências
     if (typeof window.CONFIG === 'undefined') {
@@ -1162,10 +1217,36 @@ document.addEventListener('DOMContentLoaded', function() {
         logInfo('hospitalData inicializado');
     }
     
-    // CORREÇÃO: Garantir que seleção inicial funcione
+    // Verificar se API está disponível
+    if (typeof window.admitirPaciente === 'undefined') {
+        logError('Funções da API não encontradas - verificar api.js');
+    }
+    
+    // Garantir que seleção inicial funcione
     if (window.currentHospital && window.HOSPITAL_MAPPING[window.currentHospital]) {
         logInfo(`Hospital inicial: ${window.currentHospital} - ${window.HOSPITAL_MAPPING[window.currentHospital]}`);
     }
+    
+    // Adicionar listener para resize
+    window.addEventListener('resize', function() {
+        const width = window.innerWidth;
+        if (width < 768) {
+            logDebug('Modo mobile ativado');
+        } else if (width < 1024) {
+            logDebug('Modo tablet ativado');
+        } else {
+            logDebug('Modo desktop ativado');
+        }
+    });
 });
 
-logSuccess('🏥 CARDS.JS FINAL - CORREÇÃO COMPLETA DOS CHECKBOXES IMPLEMENTADA!');
+// =================== EXPORT DE FUNÇÕES PÚBLICAS ===================
+window.processarArrayDaAPI = processarArrayDaAPI;
+window.createCard = createCard;
+window.openAdmissaoModal = openAdmissaoModal;
+window.openAtualizacaoModal = openAtualizacaoModal;
+
+logSuccess('🏥 CARDS.JS v3.0 - CORREÇÃO COMPLETA DOS SEPARADORES PIPE IMPLEMENTADA!');
+logInfo('📋 Suporte a separadores: pipe (|), vírgula (,) e ponto-e-vírgula (;)');
+logInfo('✅ Pré-marcação de checkboxes funcionando corretamente');
+logInfo('✅ Integração com API Google Apps Script otimizada');

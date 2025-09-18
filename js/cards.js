@@ -722,15 +722,42 @@ function coletarDadosFormulario(modal, tipo) {
         dados.complexidade = modal.querySelector('#updComplexidade')?.value || 'I';
         dados.prevAlta = modal.querySelector('#updPrevAlta')?.value || 'SP';
         
-        // CORREÇÃO FINAL: Coletar checkboxes corretamente (RESOLVENDO O BUG DAS LINHAS)
-        const concessoesSelecionadas = Array.from(modal.querySelectorAll('#updConcessoes input[type="checkbox"]:checked')).map(i => i.value);
-        const linhasSelecionadas = Array.from(modal.querySelectorAll('#updLinhas input[type="checkbox"]:checked')).map(i => i.value);
+        // CORREÇÃO ROBUSTA: Usar métodos alternativos para detectar checkboxes marcados
+        const concessoesCheckboxes = modal.querySelectorAll('#updConcessoes input[type="checkbox"]');
+        const linhasCheckboxes = modal.querySelectorAll('#updLinhas input[type="checkbox"]');
+        
+        const concessoesSelecionadas = [];
+        const linhasSelecionadas = [];
+        
+        // Verificar concessões com múltiplos métodos
+        concessoesCheckboxes.forEach(checkbox => {
+            if (checkbox.checked || checkbox.hasAttribute('checked')) {
+                concessoesSelecionadas.push(checkbox.value);
+            }
+        });
+        
+        // CORREÇÃO ESPECÍFICA PARA LINHAS: Usar múltiplos métodos de detecção
+        linhasCheckboxes.forEach(checkbox => {
+            // Método 1: propriedade checked
+            if (checkbox.checked) {
+                linhasSelecionadas.push(checkbox.value);
+            }
+            // Método 2: atributo checked (fallback)
+            else if (checkbox.hasAttribute('checked')) {
+                linhasSelecionadas.push(checkbox.value);
+            }
+            // Método 3: verificar se o elemento pai tem classe ativa (último recurso)
+            else if (checkbox.parentElement && checkbox.parentElement.classList.contains('active')) {
+                linhasSelecionadas.push(checkbox.value);
+            }
+        });
         
         // DEBUG: Log para verificar seletores
-        logInfo(`DEBUG - Concessões encontradas: ${modal.querySelectorAll('#updConcessoes input[type="checkbox"]').length}`);
-        logInfo(`DEBUG - Concessões marcadas: ${modal.querySelectorAll('#updConcessoes input[type="checkbox"]:checked').length}`);
-        logInfo(`DEBUG - Linhas encontradas: ${modal.querySelectorAll('#updLinhas input[type="checkbox"]').length}`);
-        logInfo(`DEBUG - Linhas marcadas: ${modal.querySelectorAll('#updLinhas input[type="checkbox"]:checked').length}`);
+        logInfo(`DEBUG - Concessões encontradas: ${concessoesCheckboxes.length}`);
+        logInfo(`DEBUG - Concessões marcadas: ${concessoesSelecionadas.length}`);
+        logInfo(`DEBUG - Linhas encontradas: ${linhasCheckboxes.length}`);
+        logInfo(`DEBUG - Linhas marcadas: ${linhasSelecionadas.length}`);
+        logInfo(`DEBUG - Linhas marcadas (valores): ${JSON.stringify(linhasSelecionadas)}`);
         
         // CORREÇÃO: Enviar como string separada por vírgula (formato que Apps Script espera)
         dados.concessoes = concessoesSelecionadas.length > 0 ? concessoesSelecionadas.join(',') : '';

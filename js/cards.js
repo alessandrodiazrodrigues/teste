@@ -665,7 +665,7 @@ function closeModal(modal) {
     }
 }
 
-// =================== FUNÇÕES DE COLETA DE DADOS CORRIGIDAS ===================
+// =================== CORREÇÃO CRÍTICA: FUNÇÕES DE COLETA DE DADOS ===================
 function coletarDadosFormulario(modal, tipo) {
     const dados = {
         hospital: window.currentHospital,
@@ -680,17 +680,41 @@ function coletarDadosFormulario(modal, tipo) {
         dados.spict = modal.querySelector('#admSPICT')?.value || 'nao_elegivel';
         dados.complexidade = modal.querySelector('#admComplexidade')?.value || 'I';
         dados.prevAlta = modal.querySelector('#admPrevAlta')?.value || 'SP';
-        dados.concessoes = Array.from(modal.querySelectorAll('#admConcessoes input:checked')).map(i => i.value);
-        dados.linhas = Array.from(modal.querySelectorAll('#admLinhas input:checked')).map(i => i.value);
+        
+        // CORREÇÃO CRÍTICA: Serializar arrays corretamente para a API
+        const concessoesSelecionadas = Array.from(modal.querySelectorAll('#admConcessoes input:checked')).map(i => i.value);
+        const linhasSelecionadas = Array.from(modal.querySelectorAll('#admLinhas input:checked')).map(i => i.value);
+        
+        // CORREÇÃO: Enviar como arrays válidos, não strings concatenadas
+        dados.concessoes = concessoesSelecionadas.length > 0 ? concessoesSelecionadas : [];
+        dados.linhas = linhasSelecionadas.length > 0 ? linhasSelecionadas : [];
+        
+        // LOG para debug
+        logInfo(`Concessões coletadas: ${JSON.stringify(dados.concessoes)}`);
+        logInfo(`Linhas coletadas: ${JSON.stringify(dados.linhas)}`);
+        
     } else {
         dados.idade = parseInt(modal.querySelector('#updIdade')?.value) || null;
         dados.pps = modal.querySelector('#updPPS')?.value?.replace('%', '') || null;
         dados.spict = modal.querySelector('#updSPICT')?.value || 'nao_elegivel';
         dados.complexidade = modal.querySelector('#updComplexidade')?.value || 'I';
         dados.prevAlta = modal.querySelector('#updPrevAlta')?.value || 'SP';
-        dados.concessoes = Array.from(modal.querySelectorAll('#updConcessoes input:checked')).map(i => i.value);
-        dados.linhas = Array.from(modal.querySelectorAll('#updLinhas input:checked')).map(i => i.value);
+        
+        // CORREÇÃO CRÍTICA: Serializar arrays corretamente para a API  
+        const concessoesSelecionadas = Array.from(modal.querySelectorAll('#updConcessoes input:checked')).map(i => i.value);
+        const linhasSelecionadas = Array.from(modal.querySelectorAll('#updLinhas input:checked')).map(i => i.value);
+        
+        // CORREÇÃO: Enviar como arrays válidos, não strings concatenadas
+        dados.concessoes = concessoesSelecionadas.length > 0 ? concessoesSelecionadas : [];
+        dados.linhas = linhasSelecionadas.length > 0 ? linhasSelecionadas : [];
+        
+        // LOG para debug
+        logInfo(`Concessões atualizadas: ${JSON.stringify(dados.concessoes)}`);
+        logInfo(`Linhas atualizadas: ${JSON.stringify(dados.linhas)}`);
     }
+    
+    // LOG dos dados finais para debug
+    logInfo(`Dados coletados para ${tipo}:`, dados);
     
     return dados;
 }

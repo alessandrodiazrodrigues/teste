@@ -1,4 +1,4 @@
-// =================== CARDS.JS - VERSÃO CORRIGIDA COM MAPEAMENTO HOSPITAIS ===================
+// =================== CARDS.JS - VERSÃO FINAL COM CORREÇÕES COMPLETAS ===================
 
 // =================== VARIÁVEIS GLOBAIS ===================  
 window.selectedLeito = null;
@@ -138,8 +138,10 @@ function createCard(leito, hospitalNome) {
     const pps = leito.pps || null;
     const spict = leito.spict || '';
     const previsaoAlta = leito.prevAlta || '';
-    const concessoes = leito.concessoes || [];
-    const linhas = leito.linhas || [];
+    
+    // CORREÇÃO CRÍTICA: Processar concessões e linhas vindas da API
+    const concessoes = processarArrayDaAPI(leito.concessoes || []);
+    const linhas = processarArrayDaAPI(leito.linhas || []);
     
     // Calcular tempo de internação
     let tempoInternacao = '';
@@ -290,6 +292,22 @@ function createCard(leito, hospitalNome) {
     }
 
     return card;
+}
+
+// =================== CORREÇÃO CRÍTICA: PROCESSAR ARRAYS DA API ===================
+function processarArrayDaAPI(valor) {
+    // Se for array, retornar como está
+    if (Array.isArray(valor)) {
+        return valor.filter(item => item && item.trim() !== '');
+    }
+    
+    // Se for string separada por vírgula (vinda do Google Apps Script)
+    if (typeof valor === 'string' && valor.length > 0) {
+        return valor.split(',').map(item => item.trim()).filter(item => item.length > 0);
+    }
+    
+    // Se for vazio/null
+    return [];
 }
 
 // =================== FLUXOS DE ADMISSÃO E ATUALIZAÇÃO ===================
@@ -456,6 +474,10 @@ function createAtualizacaoForm(hospitalNome, leitoNumero, dadosLeito) {
     const tempoInternacao = dadosLeito?.admAt ? calcularTempoInternacao(dadosLeito.admAt) : '';
     const iniciais = dadosLeito?.nome ? getIniciais(dadosLeito.nome) : '';
     
+    // CORREÇÃO CRÍTICA: Processar arrays para pre-marcação de checkboxes
+    const concessoesAtuais = processarArrayDaAPI(dadosLeito?.concessoes || []);
+    const linhasAtuais = processarArrayDaAPI(dadosLeito?.linhas || []);
+    
     return `
         <div style="background: #1a1f2e; border-radius: 12px; padding: 30px; max-width: 700px; width: 95%; max-height: 90vh; overflow-y: auto; color: #ffffff;">
             <h2 style="margin: 0 0 20px 0; text-align: center; color: #60a5fa; font-size: 24px; font-weight: 700; text-transform: uppercase;">
@@ -516,7 +538,7 @@ function createAtualizacaoForm(hospitalNome, leitoNumero, dadosLeito) {
                 <div id="updConcessoes" style="max-height: 150px; overflow-y: auto; background: rgba(255,255,255,0.03); border-radius: 6px; padding: 10px; display: grid; grid-template-columns: 1fr; gap: 6px;">
                     ${window.CONCESSOES_LIST.map(c => `
                         <label style="display: flex; align-items: center; padding: 4px 0; cursor: pointer; font-size: 12px;">
-                            <input type="checkbox" value="${c}" ${(dadosLeito?.concessoes || []).includes(c) ? 'checked' : ''} style="margin-right: 8px; accent-color: #60a5fa;">
+                            <input type="checkbox" value="${c}" ${concessoesAtuais.includes(c) ? 'checked' : ''} style="margin-right: 8px; accent-color: #60a5fa;">
                             <span>${c}</span>
                         </label>
                     `).join('')}
@@ -533,7 +555,7 @@ function createAtualizacaoForm(hospitalNome, leitoNumero, dadosLeito) {
                 <div id="updLinhas" style="max-height: 150px; overflow-y: auto; background: rgba(255,255,255,0.03); border-radius: 6px; padding: 10px; display: grid; grid-template-columns: 1fr; gap: 6px;">
                     ${window.LINHAS_CUIDADO_LIST.map(l => `
                         <label style="display: flex; align-items: center; padding: 4px 0; cursor: pointer; font-size: 12px;">
-                            <input type="checkbox" value="${l}" ${(dadosLeito?.linhas || []).includes(l) ? 'checked' : ''} style="margin-right: 8px; accent-color: #60a5fa;">
+                            <input type="checkbox" value="${l}" ${linhasAtuais.includes(l) ? 'checked' : ''} style="margin-right: 8px; accent-color: #60a5fa;">
                             <span>${l}</span>
                         </label>
                     `).join('')}
@@ -681,9 +703,9 @@ function coletarDadosFormulario(modal, tipo) {
         dados.complexidade = modal.querySelector('#admComplexidade')?.value || 'I';
         dados.prevAlta = modal.querySelector('#admPrevAlta')?.value || 'SP';
         
-        // CORREÇÃO FINAL: Coletar arrays e enviar como string separada por vírgula (compatível com Apps Script)
-        const concessoesSelecionadas = Array.from(modal.querySelectorAll('#admConcessoes input:checked')).map(i => i.value);
-        const linhasSelecionadas = Array.from(modal.querySelectorAll('#admLinhas input:checked')).map(i => i.value);
+        // CORREÇÃO FINAL: Coletar checkboxes corretamente (RESOLVENDO O BUG DAS LINHAS)
+        const concessoesSelecionadas = Array.from(modal.querySelectorAll('#admConcessoes input[type="checkbox"]:checked')).map(i => i.value);
+        const linhasSelecionadas = Array.from(modal.querySelectorAll('#admLinhas input[type="checkbox"]:checked')).map(i => i.value);
         
         // CORREÇÃO: Enviar como string separada por vírgula (formato que Apps Script espera)
         dados.concessoes = concessoesSelecionadas.length > 0 ? concessoesSelecionadas.join(',') : '';
@@ -700,9 +722,9 @@ function coletarDadosFormulario(modal, tipo) {
         dados.complexidade = modal.querySelector('#updComplexidade')?.value || 'I';
         dados.prevAlta = modal.querySelector('#updPrevAlta')?.value || 'SP';
         
-        // CORREÇÃO FINAL: Coletar arrays e enviar como string separada por vírgula  
-        const concessoesSelecionadas = Array.from(modal.querySelectorAll('#updConcessoes input:checked')).map(i => i.value);
-        const linhasSelecionadas = Array.from(modal.querySelectorAll('#updLinhas input:checked')).map(i => i.value);
+        // CORREÇÃO FINAL: Coletar checkboxes corretamente (RESOLVENDO O BUG DAS LINHAS)
+        const concessoesSelecionadas = Array.from(modal.querySelectorAll('#updConcessoes input[type="checkbox"]:checked')).map(i => i.value);
+        const linhasSelecionadas = Array.from(modal.querySelectorAll('#updLinhas input[type="checkbox"]:checked')).map(i => i.value);
         
         // CORREÇÃO: Enviar como string separada por vírgula (formato que Apps Script espera)
         dados.concessoes = concessoesSelecionadas.length > 0 ? concessoesSelecionadas.join(',') : '';
@@ -985,7 +1007,7 @@ if (!document.getElementById('cardsAnimations')) {
 
 // =================== INICIALIZAÇÃO ===================
 document.addEventListener('DOMContentLoaded', function() {
-    logInfo('✅ Cards.js CORRIGIDO carregado - Mapeamento de hospitais e botão cancelar funcionando');
+    logInfo('✅ Cards.js FINAL carregado - Mapeamento hospitais + botão cancelar + checkboxes funcionando');
     
     // Verificar dependências
     if (typeof window.CONFIG === 'undefined') {
@@ -1003,4 +1025,4 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-logSuccess('🏥 CARDS.JS CORRIGIDO - Mapeamento hospitais + botão cancelar + API real funcionando!');
+logSuccess('🏥 CARDS.JS FINAL - Todas as correções aplicadas!');

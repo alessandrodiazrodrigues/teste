@@ -681,17 +681,17 @@ function coletarDadosFormulario(modal, tipo) {
         dados.complexidade = modal.querySelector('#admComplexidade')?.value || 'I';
         dados.prevAlta = modal.querySelector('#admPrevAlta')?.value || 'SP';
         
-        // CORREÇÃO CRÍTICA: Serializar arrays corretamente para a API
+        // CORREÇÃO CRÍTICA: Serializar arrays como JSON string para JSONP
         const concessoesSelecionadas = Array.from(modal.querySelectorAll('#admConcessoes input:checked')).map(i => i.value);
         const linhasSelecionadas = Array.from(modal.querySelectorAll('#admLinhas input:checked')).map(i => i.value);
         
-        // CORREÇÃO: Enviar como arrays válidos, não strings concatenadas
-        dados.concessoes = concessoesSelecionadas.length > 0 ? concessoesSelecionadas : [];
-        dados.linhas = linhasSelecionadas.length > 0 ? linhasSelecionadas : [];
+        // CORREÇÃO: Enviar como JSON string para a API Google Apps Script
+        dados.concessoes = JSON.stringify(concessoesSelecionadas);
+        dados.linhas = JSON.stringify(linhasSelecionadas);
         
         // LOG para debug
-        logInfo(`Concessões coletadas: ${JSON.stringify(dados.concessoes)}`);
-        logInfo(`Linhas coletadas: ${JSON.stringify(dados.linhas)}`);
+        logInfo(`Concessões coletadas: ${dados.concessoes}`);
+        logInfo(`Linhas coletadas: ${dados.linhas}`);
         
     } else {
         dados.idade = parseInt(modal.querySelector('#updIdade')?.value) || null;
@@ -700,17 +700,17 @@ function coletarDadosFormulario(modal, tipo) {
         dados.complexidade = modal.querySelector('#updComplexidade')?.value || 'I';
         dados.prevAlta = modal.querySelector('#updPrevAlta')?.value || 'SP';
         
-        // CORREÇÃO CRÍTICA: Serializar arrays corretamente para a API  
+        // CORREÇÃO CRÍTICA: Serializar arrays como JSON string para JSONP  
         const concessoesSelecionadas = Array.from(modal.querySelectorAll('#updConcessoes input:checked')).map(i => i.value);
         const linhasSelecionadas = Array.from(modal.querySelectorAll('#updLinhas input:checked')).map(i => i.value);
         
-        // CORREÇÃO: Enviar como arrays válidos, não strings concatenadas
-        dados.concessoes = concessoesSelecionadas.length > 0 ? concessoesSelecionadas : [];
-        dados.linhas = linhasSelecionadas.length > 0 ? linhasSelecionadas : [];
+        // CORREÇÃO: Enviar como JSON string para a API Google Apps Script
+        dados.concessoes = JSON.stringify(concessoesSelecionadas);
+        dados.linhas = JSON.stringify(linhasSelecionadas);
         
         // LOG para debug
-        logInfo(`Concessões atualizadas: ${JSON.stringify(dados.concessoes)}`);
-        logInfo(`Linhas atualizadas: ${JSON.stringify(dados.linhas)}`);
+        logInfo(`Concessões atualizadas: ${dados.concessoes}`);
+        logInfo(`Linhas atualizadas: ${dados.linhas}`);
     }
     
     // LOG dos dados finais para debug

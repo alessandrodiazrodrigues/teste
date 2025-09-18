@@ -1,8 +1,37 @@
-// =================== CARDS.JS - VERSÃO COMPLETA BASEADA NO ARQUIVO ATUAL ===================
+// =================== CARDS.JS - VERSÃO CORRIGIDA COM MAPEAMENTO HOSPITAIS ===================
 
 // =================== VARIÁVEIS GLOBAIS ===================  
 window.selectedLeito = null;
 window.currentHospital = 'H1';
+
+// =================== CORREÇÃO CRÍTICA: MAPEAMENTO DE HOSPITAIS ===================
+window.HOSPITAL_MAPPING = {
+    H1: 'Neomater',
+    H2: 'Cruz Azul', 
+    H3: 'Santa Marcelina',
+    H4: 'Santa Clara'
+};
+
+// =================== FUNÇÃO CRÍTICA CORRIGIDA: SELECT HOSPITAL ===================
+window.selectHospital = function(hospitalId) {
+    logInfo(`Selecionando hospital: ${hospitalId} (${window.HOSPITAL_MAPPING[hospitalId]})`);
+    
+    // CORREÇÃO: Definir currentHospital ANTES de qualquer operação
+    window.currentHospital = hospitalId;
+    
+    // CORREÇÃO: Atualizar botões visuais corretamente
+    document.querySelectorAll('.hospital-btn').forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.dataset.hospital === hospitalId) {
+            btn.classList.add('active');
+        }
+    });
+    
+    // CORREÇÃO: Renderizar cards com hospital correto
+    window.renderCards();
+    
+    logSuccess(`Hospital selecionado: ${window.HOSPITAL_MAPPING[hospitalId]}`);
+};
 
 // =================== LISTAS COMPLETAS CONFORME MANUAL ===================
 window.CONCESSOES_LIST = [
@@ -49,7 +78,7 @@ window.PREVISAO_ALTA_OPTIONS = [
     'Hoje Ouro', '24h Ouro', '24h 2R', '48h 3R', '72h', '96h', 'Sem previsao'
 ];
 
-// =================== FUNÇÃO PRINCIPAL DE RENDERIZAÇÃO (CORRIGIDA PARA API) ===================
+// =================== FUNÇÃO PRINCIPAL DE RENDERIZAÇÃO CORRIGIDA ===================
 window.renderCards = function() {
     logInfo('Renderizando cards com dados REAIS da API');
     
@@ -63,11 +92,14 @@ window.renderCards = function() {
     const hospitalId = window.currentHospital || 'H1';
     const hospital = window.hospitalData[hospitalId];
     
+    // CORREÇÃO: Usar mapeamento correto de hospitais
+    const hospitalNome = window.HOSPITAL_MAPPING[hospitalId] || 'Hospital';
+    
     if (!hospital || !hospital.leitos || hospital.leitos.length === 0) {
         container.innerHTML = `
             <div class="card" style="grid-column: 1 / -1; text-align: center; padding: 40px;">
                 <div style="color: #60a5fa; margin-bottom: 15px;">
-                    <h3>📋 ${window.CONFIG?.HOSPITAIS[hospitalId]?.nome || 'Hospital'}</h3>
+                    <h3>📋 ${hospitalNome}</h3>
                 </div>
                 <div style="background: rgba(96,165,250,0.1); border-radius: 8px; padding: 20px;">
                     <p style="margin-bottom: 15px;">Carregando dados reais da planilha...</p>
@@ -79,11 +111,11 @@ window.renderCards = function() {
     }
     
     hospital.leitos.forEach(leito => {
-        const card = createCard(leito, hospital.nome);
+        const card = createCard(leito, hospitalNome);
         container.appendChild(card);
     });
     
-    logInfo(`${hospital.leitos.length} cards renderizados para ${hospital.nome} com dados reais`);
+    logInfo(`${hospital.leitos.length} cards renderizados para ${hospitalNome} com dados reais`);
 };
 
 // =================== CRIAR CARD INDIVIDUAL - MANTÉM LAYOUT ORIGINAL 3x3 ===================
@@ -287,519 +319,10 @@ function openAtualizacaoFlow(leitoNumero, dadosLeito) {
     }, 800);
 }
 
-// =================== MODAIS - MANTÉM ESTRUTURA DO ARQUIVO ATUAL ===================
-window.openAdmitModal = function(hospital, leito) {
-    logInfo(`Abrindo modal de admissão para ${hospital}-${leito}`);
-    window.selectedLeito = leito;
-    window.currentHospital = hospital;
-    
-    const modal = document.getElementById('patientModal');
-    const title = document.getElementById('modalTitle');
-    const form = document.getElementById('patientForm');
-    
-    if (!modal || !title || !form) {
-        logError('Elementos do modal não encontrados');
-        return;
-    }
-    
-    title.textContent = `Admitir Paciente - ${hospital} Leito ${leito}`;
-    
-    form.innerHTML = `
-        <div class="form-section">
-            <h3>📋 Dados do Paciente</h3>
-            <div class="form-grid">
-                <div class="form-group">
-                    <label for="admNome">Nome Completo *</label>
-                    <input type="text" id="admNome" required placeholder="Nome do paciente">
-                </div>
-                <div class="form-group">
-                    <label for="admMatricula">Matrícula *</label>
-                    <input type="text" id="admMatricula" required placeholder="Matrícula">
-                </div>
-                <div class="form-group">
-                    <label for="admIdade">Idade</label>
-                    <input type="number" id="admIdade" min="0" max="120" placeholder="Anos">
-                </div>
-                <div class="form-group">
-                    <label for="admPPS">PPS (%)</label>
-                    <input type="number" id="admPPS" min="0" max="100" placeholder="0-100">
-                </div>
-                <div class="form-group">
-                    <label for="admSPICT">SPICT</label>
-                    <select id="admSPICT">
-                        <option value="nao_elegivel">Não Elegível</option>
-                        <option value="elegivel">Elegível</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="admComplexidade">Complexidade</label>
-                    <select id="admComplexidade">
-                        <option value="I">I</option>
-                        <option value="II">II</option>
-                        <option value="III">III</option>
-                    </select>
-                </div>
-            </div>
-        </div>
-        
-        <div class="form-section">
-            <h3>📅 Previsão de Alta</h3>
-            <div class="form-group">
-                <label for="admPrevAlta">Timeline</label>
-                <select id="admPrevAlta">
-                    <option value="SP">Sem Previsão</option>
-                    <option value="Hoje Ouro">Hoje (Ouro)</option>
-                    <option value="Hoje 2R">Hoje (2R)</option>
-                    <option value="24h Ouro">24h (Ouro)</option>
-                    <option value="24h 2R">24h (2R)</option>
-                    <option value="24h 3R">24h (3R)</option>
-                    <option value="48h">48h</option>
-                    <option value="72h">72h</option>
-                    <option value="96h">96h</option>
-                </select>
-            </div>
-        </div>
-        
-        <div class="form-section">
-            <h3>🩺 Linhas de Cuidado</h3>
-            <div class="checkbox-grid" id="admLinhas">
-                ${renderCheckboxGroup(window.LINHAS_CUIDADO_LIST, 'linha')}
-            </div>
-        </div>
-        
-        <div class="form-section">
-            <h3>💊 Concessões</h3>
-            <div class="checkbox-grid" id="admConcessoes">
-                ${renderCheckboxGroup(window.CONCESSOES_LIST, 'concessao')}
-            </div>
-        </div>
-    `;
-    
-    setupModalEvents(modal, 'admissao');
-    showModal(modal);
-};
-
-window.openUpdateModal = function(hospital, leito) {
-    logInfo(`Abrindo modal de atualização para ${hospital}-${leito}`);
-    
-    // Buscar dados atuais do paciente
-    const hospitalData = window.hospitalData[hospital];
-    if (!hospitalData || !hospitalData.leitos) {
-        logError('Dados do hospital não encontrados');
-        return;
-    }
-    
-    const leitoData = hospitalData.leitos.find(l => l.leito == leito);
-    if (!leitoData || leitoData.status === 'vago') {
-        logError('Leito não encontrado ou não está ocupado');
-        return;
-    }
-    
-    const paciente = leitoData; // Dados vêm diretamente no leito
-    window.selectedLeito = leito;
-    window.currentHospital = hospital;
-    
-    const modal = document.getElementById('patientModal');
-    const title = document.getElementById('modalTitle');
-    const form = document.getElementById('patientForm');
-    
-    title.textContent = `Atualizar Paciente - ${paciente.nome || 'Paciente'} (${hospital} Leito ${leito})`;
-    
-    form.innerHTML = `
-        <div class="form-section">
-            <h3>📋 Dados Clínicos</h3>
-            <div class="form-grid">
-                <div class="form-group">
-                    <label for="updIdade">Idade</label>
-                    <input type="number" id="updIdade" min="0" max="120" value="${paciente.idade || ''}" placeholder="Anos">
-                </div>
-                <div class="form-group">
-                    <label for="updPPS">PPS (%)</label>
-                    <input type="number" id="updPPS" min="0" max="100" value="${paciente.pps || ''}" placeholder="0-100">
-                </div>
-                <div class="form-group">
-                    <label for="updSPICT">SPICT</label>
-                    <select id="updSPICT">
-                        <option value="nao_elegivel" ${paciente.spict === 'nao_elegivel' ? 'selected' : ''}>Não Elegível</option>
-                        <option value="elegivel" ${paciente.spict === 'elegivel' ? 'selected' : ''}>Elegível</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="updComplexidade">Complexidade</label>
-                    <select id="updComplexidade">
-                        <option value="I" ${paciente.complexidade === 'I' ? 'selected' : ''}>I</option>
-                        <option value="II" ${paciente.complexidade === 'II' ? 'selected' : ''}>II</option>
-                        <option value="III" ${paciente.complexidade === 'III' ? 'selected' : ''}>III</option>
-                    </select>
-                </div>
-            </div>
-        </div>
-        
-        <div class="form-section">
-            <h3>📅 Previsão de Alta</h3>
-            <div class="form-group">
-                <label for="updPrevAlta">Timeline</label>
-                <select id="updPrevAlta">
-                    <option value="SP" ${paciente.prevAlta === 'SP' ? 'selected' : ''}>Sem Previsão</option>
-                    <option value="Hoje Ouro" ${paciente.prevAlta === 'Hoje Ouro' ? 'selected' : ''}>Hoje (Ouro)</option>
-                    <option value="Hoje 2R" ${paciente.prevAlta === 'Hoje 2R' ? 'selected' : ''}>Hoje (2R)</option>
-                    <option value="24h Ouro" ${paciente.prevAlta === '24h Ouro' ? 'selected' : ''}>24h (Ouro)</option>
-                    <option value="24h 2R" ${paciente.prevAlta === '24h 2R' ? 'selected' : ''}>24h (2R)</option>
-                    <option value="24h 3R" ${paciente.prevAlta === '24h 3R' ? 'selected' : ''}>24h (3R)</option>
-                    <option value="48h" ${paciente.prevAlta === '48h' ? 'selected' : ''}>48h</option>
-                    <option value="72h" ${paciente.prevAlta === '72h' ? 'selected' : ''}>72h</option>
-                    <option value="96h" ${paciente.prevAlta === '96h' ? 'selected' : ''}>96h</option>
-                </select>
-            </div>
-        </div>
-        
-        <div class="form-section">
-            <h3>🩺 Linhas de Cuidado</h3>
-            <div class="checkbox-grid" id="updLinhas">
-                ${renderCheckboxGroup(window.LINHAS_CUIDADO_LIST, 'linha', paciente.linhas)}
-            </div>
-        </div>
-        
-        <div class="form-section">
-            <h3>💊 Concessões</h3>
-            <div class="checkbox-grid" id="updConcessoes">
-                ${renderCheckboxGroup(window.CONCESSOES_LIST, 'concessao', paciente.concessoes)}
-            </div>
-        </div>
-    `;
-    
-    setupModalEvents(modal, 'atualizacao');
-    showModal(modal);
-};
-
-// =================== FUNÇÕES AUXILIARES DO MODAL ===================
-function renderCheckboxGroup(items, prefix, selected = []) {
-    return items.map(item => `
-        <label class="checkbox-item">
-            <input type="checkbox" value="${item}" ${selected && selected.includes(item) ? 'checked' : ''}>
-            <span class="checkbox-text">${item}</span>
-        </label>
-    `).join('');
-}
-
-function showModal(modal) {
-    modal.classList.remove('hidden');
-    document.body.style.overflow = 'hidden';
-}
-
-window.closeModal = function() {
-    const modal = document.getElementById('patientModal');
-    if (modal) {
-        modal.classList.add('hidden');
-        document.body.style.overflow = 'auto';
-    }
-    window.selectedLeito = null;
-};
-
-// =================== CONFIGURAÇÃO DE EVENTOS DO MODAL - CORRIGIDO PARA API ===================
-function setupModalEvents(modal, tipo) {
-    // Botão Cancelar
-    const btnCancel = modal.querySelector('.btn-cancel');
-    if (btnCancel) {
-        btnCancel.onclick = window.closeModal;
-    }
-    
-    // Botão Salvar - CORREÇÃO CRÍTICA: Usar funções corretas da API
-    const btnSave = modal.querySelector('.btn-save');
-    if (btnSave) {
-        btnSave.addEventListener('click', async function() {
-            const originalText = this.innerHTML;
-            showButtonLoading(this, '💾 Salvando...');
-            
-            try {
-                const dados = coletarDadosFormulario(modal, tipo);
-                
-                if (tipo === 'admissao') {
-                    // *** CORREÇÃO: Usar função correta da API ***
-                    await window.admitirPaciente(dados.hospital, dados.leito, dados);
-                    showSuccessMessage('✅ Paciente admitido com sucesso!');
-                } else {
-                    // *** CORREÇÃO: Usar função correta da API ***
-                    await window.atualizarPaciente(dados.hospital, dados.leito, dados);
-                    showSuccessMessage('✅ Dados atualizados com sucesso!');
-                }
-                
-                hideButtonLoading(this, originalText);
-                window.closeModal();
-                
-                // *** CORREÇÃO: REFRESH AUTOMÁTICO APÓS SALVAR ***
-                await window.refreshAfterAction();
-                
-            } catch (error) {
-                hideButtonLoading(this, originalText);
-                showErrorMessage('❌ Erro ao salvar: ' + error.message);
-                logError('Erro ao salvar dados:', error);
-            }
-        });
-    }
-    
-    // Botão Alta - CORREÇÃO CRÍTICA: Usar função correta da API
-    const btnAlta = modal.querySelector('.btn-alta');
-    if (btnAlta) {
-        btnAlta.style.display = tipo === 'atualizacao' ? 'block' : 'none';
-        btnAlta.addEventListener('click', async function() {
-            if (!confirm("Confirmar ALTA deste paciente?")) return;
-            
-            const originalText = this.innerHTML;
-            showButtonLoading(this, '🏥 Processando Alta...');
-            
-            try {
-                // *** CORREÇÃO: Usar função correta da API ***
-                await window.darAltaPaciente(window.currentHospital, window.selectedLeito);
-                
-                hideButtonLoading(this, originalText);
-                showSuccessMessage('✅ Alta processada com sucesso!');
-                window.closeModal();
-                
-                // *** CORREÇÃO: REFRESH AUTOMÁTICO APÓS ALTA ***
-                await window.refreshAfterAction();
-                
-            } catch (error) {
-                hideButtonLoading(this, originalText);
-                showErrorMessage('❌ Erro ao processar alta: ' + error.message);
-                logError('Erro ao processar alta:', error);
-            }
-        });
-    }
-    
-    // Fechar modal clicando fora
-    modal.addEventListener('click', function(e) {
-        if (e.target === modal) {
-            window.closeModal();
-        }
-    });
-}
-
-// =================== FUNÇÃO DE ALTA DIRETA DOS CARDS ===================
-window.processarAlta = async function(hospital, leito) {
-    if (!confirm(`Confirmar ALTA do paciente no leito ${hospital}-${leito}?`)) {
-        return;
-    }
-    
-    const card = document.querySelector(`[data-hospital="${hospital}"][data-leito="${leito}"]`);
-    const button = card ? card.querySelector('.btn-discharge') : null;
-    
-    if (button) {
-        const originalText = button.innerHTML;
-        showButtonLoading(button, '🏥 Processando...');
-        
-        try {
-            // *** CORREÇÃO: Usar função correta da API ***
-            await window.darAltaPaciente(hospital, leito);
-            
-            showSuccessMessage('✅ Alta processada com sucesso!');
-            
-            // *** CORREÇÃO: REFRESH AUTOMÁTICO APÓS ALTA ***
-            await window.refreshAfterAction();
-            
-        } catch (error) {
-            if (button) hideButtonLoading(button, originalText);
-            showErrorMessage('❌ Erro ao processar alta: ' + error.message);
-            logError('Erro ao processar alta:', error);
-        }
-    }
-};
-
-// =================== FUNÇÕES AUXILIARES - MANTÉM ORIGINAIS ===================
-function coletarDadosFormulario(modal, tipo) {
-    const dados = {
-        hospital: window.currentHospital,
-        leito: window.selectedLeito
-    };
-    
-    if (tipo === 'admissao') {
-        dados.nome = modal.querySelector('#admNome')?.value || '';
-        dados.matricula = modal.querySelector('#admMatricula')?.value || '';
-        dados.idade = parseInt(modal.querySelector('#admIdade')?.value) || null;
-        dados.pps = parseInt(modal.querySelector('#admPPS')?.value) || null;
-        dados.spict = modal.querySelector('#admSPICT')?.value || 'nao_elegivel';
-        dados.complexidade = modal.querySelector('#admComplexidade')?.value || 'I';
-        dados.prevAlta = modal.querySelector('#admPrevAlta')?.value || 'SP';
-        dados.concessoes = Array.from(modal.querySelectorAll('#admConcessoes input:checked')).map(i => i.value);
-        dados.linhas = Array.from(modal.querySelectorAll('#admLinhas input:checked')).map(i => i.value);
-    } else {
-        dados.idade = parseInt(modal.querySelector('#updIdade')?.value) || null;
-        dados.pps = parseInt(modal.querySelector('#updPPS')?.value) || null;
-        dados.spict = modal.querySelector('#updSPICT')?.value || 'nao_elegivel';
-        dados.complexidade = modal.querySelector('#updComplexidade')?.value || 'I';
-        dados.prevAlta = modal.querySelector('#updPrevAlta')?.value || 'SP';
-        dados.concessoes = Array.from(modal.querySelectorAll('#updConcessoes input:checked')).map(i => i.value);
-        dados.linhas = Array.from(modal.querySelectorAll('#updLinhas input:checked')).map(i => i.value);
-    }
-    
-    return dados;
-}
-
-function showButtonLoading(button, loadingText) {
-    if (button) {
-        button.disabled = true;
-        button.innerHTML = loadingText;
-        button.style.opacity = '0.7';
-    }
-}
-
-function hideButtonLoading(button, originalText) {
-    if (button) {
-        button.disabled = false;
-        button.innerHTML = originalText;
-        button.style.opacity = '1';
-    }
-}
-
-function showSuccessMessage(message) {
-    const toast = document.createElement('div');
-    toast.className = 'toast success-toast';
-    toast.innerHTML = message;
-    toast.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        background: #16a34a;
-        color: white;
-        padding: 15px 20px;
-        border-radius: 8px;
-        font-weight: 500;
-        z-index: 10000;
-        animation: slideIn 0.3s ease;
-    `;
-    
-    document.body.appendChild(toast);
-    
-    setTimeout(() => {
-        toast.remove();
-    }, 4000);
-}
-
-function showErrorMessage(message) {
-    const toast = document.createElement('div');
-    toast.className = 'toast error-toast';
-    toast.innerHTML = message;
-    toast.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        background: #dc2626;
-        color: white;
-        padding: 15px 20px;
-        border-radius: 8px;
-        font-weight: 500;
-        z-index: 10000;
-        animation: slideIn 0.3s ease;
-    `;
-    
-    document.body.appendChild(toast);
-    
-    setTimeout(() => {
-        toast.remove();
-    }, 5000);
-}
-
-// =================== FUNÇÕES AUXILIARES PRINCIPAIS ===================
-function getIniciais(nomeCompleto) {
-    if (!nomeCompleto) return '—';
-    return nomeCompleto.split(' ')
-        .filter(part => part.length > 0)
-        .map(part => part.charAt(0).toUpperCase())
-        .slice(0, 3)
-        .join(' ');
-}
-
-function calcularTempoInternacao(admissao) {
-    if (!admissao) return '';
-    
-    try {
-        let dataAdmissao;
-        
-        if (typeof admissao === 'string') {
-            if (admissao.includes('/')) {
-                // Formato brasileiro: DD/MM/YYYY
-                const [datePart] = admissao.split(' ');
-                const [dia, mes, ano] = datePart.split('/');
-                
-                if (dia && mes && ano) {
-                    const d = parseInt(dia);
-                    const m = parseInt(mes);
-                    const a = parseInt(ano);
-                    
-                    if (!isNaN(d) && !isNaN(m) && !isNaN(a) && 
-                        d >= 1 && d <= 31 && m >= 1 && m <= 12 && a >= 1900) {
-                        dataAdmissao = new Date(a, m - 1, d);
-                    } else {
-                        return 'Data inválida';
-                    }
-                } else {
-                    return 'Data incompleta';
-                }
-            } else {
-                dataAdmissao = new Date(admissao);
-            }
-        } else {
-            dataAdmissao = new Date(admissao);
-        }
-        
-        if (!dataAdmissao || isNaN(dataAdmissao.getTime())) {
-            return 'Data inválida';
-        }
-        
-        const agora = new Date();
-        const diffTime = agora - dataAdmissao;
-        
-        if (diffTime < 0) return 'Data futura';
-        if (diffTime > (2 * 365 * 24 * 60 * 60 * 1000)) return 'Data antiga';
-        
-        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-        const diffHours = Math.floor((diffTime % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-        
-        if (diffDays === 0) return `${diffHours}h`;
-        if (diffDays === 1) return `1d ${diffHours}h`;
-        return `${diffDays}d ${diffHours}h`;
-        
-    } catch (error) {
-        logError('Erro ao calcular tempo internação:', error);
-        return 'Erro no cálculo';
-    }
-}
-
-function formatarDataHora(dataISO) {
-    if (!dataISO) return '—';
-    
-    try {
-        const data = new Date(dataISO);
-        return data.toLocaleString('pt-BR', {
-            day: '2-digit',
-            month: '2-digit', 
-            year: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        });
-    } catch (error) {
-        logError('Erro ao formatar data:', error);
-        return '—';
-    }
-}
-
-// =================== FUNÇÕES DE LOG ===================
-function logInfo(message, data = null) {
-    console.log(`🔵 [CARDS] ${message}`, data || '');
-}
-
-function logError(message, error = null) {
-    console.error(`🔴 [CARDS ERROR] ${message}`, error || '');
-}
-
-function logSuccess(message) {
-    console.log(`🟢 [CARDS SUCCESS] ${message}`);
-}
-
-// =================== MODAIS ADICIONAIS DO ARQUIVO ORIGINAL ===================
+// =================== MODAIS CORRIGIDOS COM BOTÃO CANCELAR FUNCIONANDO ===================
 function openAdmissaoModal(leitoNumero) {
     const hospitalId = window.currentHospital;
-    const hospitalNome = window.CONFIG?.HOSPITAIS[hospitalId]?.nome || 'Hospital';
+    const hospitalNome = window.HOSPITAL_MAPPING[hospitalId] || 'Hospital';
     
     window.selectedLeito = leitoNumero;
     
@@ -812,7 +335,7 @@ function openAdmissaoModal(leitoNumero) {
 
 function openAtualizacaoModal(leitoNumero, dadosLeito) {
     const hospitalId = window.currentHospital;
-    const hospitalNome = window.CONFIG?.HOSPITAIS[hospitalId]?.nome || 'Hospital';
+    const hospitalNome = window.HOSPITAL_MAPPING[hospitalId] || 'Hospital';
     
     window.selectedLeito = leitoNumero;
     
@@ -1036,20 +559,26 @@ function createAtualizacaoForm(hospitalNome, leitoNumero, dadosLeito) {
     `;
 }
 
-// =================== EVENT LISTENERS DOS MODAIS - COMPLETOS ===================
+// =================== CORREÇÃO CRÍTICA: EVENT LISTENERS DOS MODAIS ===================
 function setupModalEventListeners(modal, tipo) {
-    // Botão Cancelar
+    // CORREÇÃO: Botão Cancelar COM EVENT LISTENER FUNCIONANDO
     const btnCancelar = modal.querySelector('.btn-cancelar');
     if (btnCancelar) {
-        btnCancelar.addEventListener('click', function() {
+        btnCancelar.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
             closeModal(modal);
+            logInfo('Modal cancelado pelo usuário');
         });
     }
     
     // Botão Salvar COM INTEGRAÇÃO API REAL
     const btnSalvar = modal.querySelector('.btn-salvar');
     if (btnSalvar) {
-        btnSalvar.addEventListener('click', async function() {
+        btnSalvar.addEventListener('click', async function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
             const originalText = this.innerHTML;
             showButtonLoading(this, 'SALVANDO...');
             
@@ -1083,7 +612,10 @@ function setupModalEventListeners(modal, tipo) {
     // Botão Alta COM INTEGRAÇÃO API REAL
     const btnAlta = modal.querySelector('.btn-alta');
     if (btnAlta) {
-        btnAlta.addEventListener('click', async function() {
+        btnAlta.addEventListener('click', async function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
             if (!confirm("Confirmar ALTA deste paciente?")) return;
             
             const originalText = this.innerHTML;
@@ -1108,23 +640,221 @@ function setupModalEventListeners(modal, tipo) {
         });
     }
     
-    // Fechar modal clicando fora
+    // CORREÇÃO: Fechar modal clicando fora COM PREVENÇÃO DE BUBBLING
     modal.addEventListener('click', function(e) {
         if (e.target === modal) {
+            e.preventDefault();
+            e.stopPropagation();
             closeModal(modal);
         }
     });
 }
 
+// =================== CORREÇÃO: FUNÇÃO CLOSE MODAL MELHORADA ===================
 function closeModal(modal) {
     if (modal && modal.parentNode) {
+        modal.style.animation = 'fadeOut 0.3s ease';
         modal.style.opacity = '0';
         setTimeout(() => {
             if (modal.parentNode) {
                 modal.parentNode.removeChild(modal);
             }
+            window.selectedLeito = null;
+            logInfo('Modal fechado');
         }, 300);
     }
+}
+
+// =================== FUNÇÕES DE COLETA DE DADOS CORRIGIDAS ===================
+function coletarDadosFormulario(modal, tipo) {
+    const dados = {
+        hospital: window.currentHospital,
+        leito: window.selectedLeito
+    };
+    
+    if (tipo === 'admissao') {
+        dados.nome = modal.querySelector('#admNome')?.value?.trim() || '';
+        dados.matricula = modal.querySelector('#admMatricula')?.value?.trim() || '';
+        dados.idade = parseInt(modal.querySelector('#admIdade')?.value) || null;
+        dados.pps = modal.querySelector('#admPPS')?.value?.replace('%', '') || null;
+        dados.spict = modal.querySelector('#admSPICT')?.value || 'nao_elegivel';
+        dados.complexidade = modal.querySelector('#admComplexidade')?.value || 'I';
+        dados.prevAlta = modal.querySelector('#admPrevAlta')?.value || 'SP';
+        dados.concessoes = Array.from(modal.querySelectorAll('#admConcessoes input:checked')).map(i => i.value);
+        dados.linhas = Array.from(modal.querySelectorAll('#admLinhas input:checked')).map(i => i.value);
+    } else {
+        dados.idade = parseInt(modal.querySelector('#updIdade')?.value) || null;
+        dados.pps = modal.querySelector('#updPPS')?.value?.replace('%', '') || null;
+        dados.spict = modal.querySelector('#updSPICT')?.value || 'nao_elegivel';
+        dados.complexidade = modal.querySelector('#updComplexidade')?.value || 'I';
+        dados.prevAlta = modal.querySelector('#updPrevAlta')?.value || 'SP';
+        dados.concessoes = Array.from(modal.querySelectorAll('#updConcessoes input:checked')).map(i => i.value);
+        dados.linhas = Array.from(modal.querySelectorAll('#updLinhas input:checked')).map(i => i.value);
+    }
+    
+    return dados;
+}
+
+// =================== FUNÇÕES AUXILIARES MANTIDAS ===================
+function showButtonLoading(button, loadingText) {
+    if (button) {
+        button.disabled = true;
+        button.innerHTML = loadingText;
+        button.style.opacity = '0.7';
+    }
+}
+
+function hideButtonLoading(button, originalText) {
+    if (button) {
+        button.disabled = false;
+        button.innerHTML = originalText;
+        button.style.opacity = '1';
+    }
+}
+
+function showSuccessMessage(message) {
+    const toast = document.createElement('div');
+    toast.className = 'toast success-toast';
+    toast.innerHTML = message;
+    toast.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: #16a34a;
+        color: white;
+        padding: 15px 20px;
+        border-radius: 8px;
+        font-weight: 500;
+        z-index: 10000;
+        animation: slideIn 0.3s ease;
+    `;
+    
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.remove();
+    }, 4000);
+}
+
+function showErrorMessage(message) {
+    const toast = document.createElement('div');
+    toast.className = 'toast error-toast';
+    toast.innerHTML = message;
+    toast.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: #dc2626;
+        color: white;
+        padding: 15px 20px;
+        border-radius: 8px;
+        font-weight: 500;
+        z-index: 10000;
+        animation: slideIn 0.3s ease;
+    `;
+    
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.remove();
+    }, 5000);
+}
+
+// =================== FUNÇÕES AUXILIARES PRINCIPAIS ===================
+function getIniciais(nomeCompleto) {
+    if (!nomeCompleto) return '—';
+    return nomeCompleto.split(' ')
+        .filter(part => part.length > 0)
+        .map(part => part.charAt(0).toUpperCase())
+        .slice(0, 3)
+        .join(' ');
+}
+
+function calcularTempoInternacao(admissao) {
+    if (!admissao) return '';
+    
+    try {
+        let dataAdmissao;
+        
+        if (typeof admissao === 'string') {
+            if (admissao.includes('/')) {
+                // Formato brasileiro: DD/MM/YYYY
+                const [datePart] = admissao.split(' ');
+                const [dia, mes, ano] = datePart.split('/');
+                
+                if (dia && mes && ano) {
+                    const d = parseInt(dia);
+                    const m = parseInt(mes);
+                    const a = parseInt(ano);
+                    
+                    if (!isNaN(d) && !isNaN(m) && !isNaN(a) && 
+                        d >= 1 && d <= 31 && m >= 1 && m <= 12 && a >= 1900) {
+                        dataAdmissao = new Date(a, m - 1, d);
+                    } else {
+                        return 'Data inválida';
+                    }
+                } else {
+                    return 'Data incompleta';
+                }
+            } else {
+                dataAdmissao = new Date(admissao);
+            }
+        } else {
+            dataAdmissao = new Date(admissao);
+        }
+        
+        if (!dataAdmissao || isNaN(dataAdmissao.getTime())) {
+            return 'Data inválida';
+        }
+        
+        const agora = new Date();
+        const diffTime = agora - dataAdmissao;
+        
+        if (diffTime < 0) return 'Data futura';
+        if (diffTime > (2 * 365 * 24 * 60 * 60 * 1000)) return 'Data antiga';
+        
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        const diffHours = Math.floor((diffTime % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        
+        if (diffDays === 0) return `${diffHours}h`;
+        if (diffDays === 1) return `1d ${diffHours}h`;
+        return `${diffDays}d ${diffHours}h`;
+        
+    } catch (error) {
+        logError('Erro ao calcular tempo internação:', error);
+        return 'Erro no cálculo';
+    }
+}
+
+function formatarDataHora(dataISO) {
+    if (!dataISO) return '—';
+    
+    try {
+        const data = new Date(dataISO);
+        return data.toLocaleString('pt-BR', {
+            day: '2-digit',
+            month: '2-digit', 
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    } catch (error) {
+        logError('Erro ao formatar data:', error);
+        return '—';
+    }
+}
+
+// =================== FUNÇÕES DE LOG ===================
+function logInfo(message, data = null) {
+    console.log(`🔵 [CARDS] ${message}`, data || '');
+}
+
+function logError(message, error = null) {
+    console.error(`🔴 [CARDS ERROR] ${message}`, error || '');
+}
+
+function logSuccess(message) {
+    console.log(`🟢 [CARDS SUCCESS] ${message}`);
 }
 
 // =================== CSS PARA ANIMAÇÕES E RESPONSIVIDADE ===================
@@ -1146,6 +876,11 @@ if (!document.getElementById('cardsAnimations')) {
         @keyframes fadeIn {
             from { opacity: 0; transform: scale(0.9); }
             to { opacity: 1; transform: scale(1); }
+        }
+        
+        @keyframes fadeOut {
+            from { opacity: 1; transform: scale(1); }
+            to { opacity: 0; transform: scale(0.9); }
         }
         
         @keyframes spin {
@@ -1226,7 +961,7 @@ if (!document.getElementById('cardsAnimations')) {
 
 // =================== INICIALIZAÇÃO ===================
 document.addEventListener('DOMContentLoaded', function() {
-    logInfo('✅ Cards.js COMPLETO carregado - Baseado no arquivo atual com API real');
+    logInfo('✅ Cards.js CORRIGIDO carregado - Mapeamento de hospitais e botão cancelar funcionando');
     
     // Verificar dependências
     if (typeof window.CONFIG === 'undefined') {
@@ -1237,6 +972,11 @@ document.addEventListener('DOMContentLoaded', function() {
         window.hospitalData = {};
         logInfo('hospitalData inicializado');
     }
+    
+    // CORREÇÃO: Garantir que seleção inicial funcione
+    if (window.currentHospital && window.HOSPITAL_MAPPING[window.currentHospital]) {
+        logInfo(`Hospital inicial: ${window.currentHospital} - ${window.HOSPITAL_MAPPING[window.currentHospital]}`);
+    }
 });
 
-logSuccess('🏥 CARDS.JS COMPLETO - Versão baseada no arquivo atual + API real funcionando!');
+logSuccess('🏥 CARDS.JS CORRIGIDO - Mapeamento hospitais + botão cancelar + API real funcionando!');

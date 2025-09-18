@@ -1,62 +1,109 @@
-// =================== MAIN.JS - CONTROLADOR PRINCIPAL ATUALIZADO ===================
+// =================== MAIN.JS - CONTROLADOR PRINCIPAL CORRIGIDO BASEADO NO ORIGINAL ===================
 
 // =================== INICIALIZAÇÃO GLOBAL ===================
 document.addEventListener('DOMContentLoaded', function() {
+    logInfo('🚀 Archipelago Dashboard V3.0 - Iniciando carregamento completo...');
+    
     // Aguardar carregamento de todos os módulos
     setTimeout(() => {
         if (typeof window.initApp === 'function') {
+            logSuccess('✅ Todos os módulos carregados, inicializando sistema...');
             window.initApp();
         } else {
-            console.error('initApp não encontrada - verificar carregamento dos módulos');
-            // Fallback: tentar inicializar manualmente
+            logError('❌ initApp não encontrada - tentando inicialização manual');
             setTimeout(() => {
                 tryManualInit();
             }, 1000);
         }
-    }, 100);
+    }, 200); // *** CORREÇÃO: Aguardar mais tempo para carregamento ***
 });
 
-// =================== INICIALIZAÇÃO MANUAL (FALLBACK) ===================
+// =================== INICIALIZAÇÃO MANUAL (FALLBACK MELHORADO) ===================
 function tryManualInit() {
-    console.log('🔄 Tentando inicialização manual...');
+    logInfo('🔄 Tentando inicialização manual...');
     
-    // Verificar se funções críticas existem
+    // *** CORREÇÃO: VERIFICAR MAIS FUNÇÕES CRÍTICAS ***
     const criticalFunctions = [
         'authenticate', 'logInfo', 'logSuccess', 'logError',
-        'loadHospitalData', 'renderCards', 'CONFIG'
+        'loadHospitalData', 'renderCards', 'CONFIG',
+        'renderDashboardHospitalar', 'renderDashboardExecutivo',
+        'renderChartByType', 'showLoading', 'hideLoading'
     ];
     
     const missing = criticalFunctions.filter(fn => typeof window[fn] === 'undefined');
     
     if (missing.length > 0) {
-        console.error('❌ Funções críticas não encontradas:', missing);
+        logError('❌ Funções críticas não encontradas:', missing);
         showInitError(missing);
         return;
     }
     
     // Se todas as funções existem, inicializar
+    logSuccess('✅ Inicialização manual bem-sucedida');
     window.initApp();
 }
 
-// =================== MOSTRAR ERRO DE INICIALIZAÇÃO ===================
+// =================== MOSTRAR ERRO DE INICIALIZAÇÃO (MELHORADO) ===================
 function showInitError(missingFunctions) {
     document.body.innerHTML = `
-        <div style="display: flex; align-items: center; justify-content: center; height: 100vh; background: #1a1f2e; color: white; font-family: Arial, sans-serif;">
-            <div style="text-align: center; padding: 40px; background: rgba(255,255,255,0.1); border-radius: 12px; max-width: 500px;">
-                <h1 style="color: #ef4444; margin-bottom: 20px;">❌ Erro de Carregamento</h1>
-                <p style="margin-bottom: 20px;">Algumas funções críticas não foram carregadas:</p>
-                <ul style="text-align: left; color: #fbbf24;">
-                    ${missingFunctions.map(fn => `<li>${fn}</li>`).join('')}
-                </ul>
-                <button onclick="location.reload()" style="margin-top: 20px; padding: 12px 24px; background: #3b82f6; color: white; border: none; border-radius: 6px; cursor: pointer;">
-                    🔄 Recarregar Página
-                </button>
+        <div style="display: flex; align-items: center; justify-content: center; height: 100vh; background: linear-gradient(135deg, #1a1f2e 0%, #2d3748 100%); color: white; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
+            <div style="text-align: center; padding: 40px; background: rgba(255,255,255,0.1); border-radius: 16px; max-width: 600px; backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.2);">
+                <div style="font-size: 64px; margin-bottom: 20px;">⚠️</div>
+                <h1 style="color: #ef4444; margin-bottom: 20px; font-size: 24px; font-weight: 700;">Erro de Carregamento do Sistema</h1>
+                <p style="margin-bottom: 20px; color: rgba(255, 255, 255, 0.8);">Algumas funções críticas não foram carregadas corretamente:</p>
+                <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; border-radius: 8px; padding: 16px; margin: 20px 0;">
+                    <ul style="text-align: left; color: #fbbf24; margin: 0; padding: 0; list-style: none;">
+                        ${missingFunctions.map(fn => `<li style="margin: 4px 0;">• ${fn}</li>`).join('')}
+                    </ul>
+                </div>
+                <div style="display: flex; gap: 16px; justify-content: center; margin-top: 30px;">
+                    <button onclick="location.reload()" style="padding: 12px 24px; background: #3b82f6; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; transition: background 0.3s ease;">
+                        🔄 Recarregar Página
+                    </button>
+                    <button onclick="tryForceInit()" style="padding: 12px 24px; background: #059669; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; transition: background 0.3s ease;">
+                        🚀 Tentar Novamente
+                    </button>
+                </div>
+                <div style="margin-top: 20px; font-size: 12px; color: rgba(255, 255, 255, 0.6);">
+                    Sistema: Archipelago Dashboard V3.0<br>
+                    Versão: Corrigida com Loading Bloqueante + Beneficiários Inteiros
+                </div>
             </div>
         </div>
     `;
 }
 
-// =================== FUNÇÕES DE UTILIDADE ===================
+// =================== FORÇAR INICIALIZAÇÃO (PARA DEBUGGING) ===================
+window.tryForceInit = function() {
+    logInfo('🔧 Tentando forçar inicialização...');
+    
+    // Definir funções básicas se não existirem
+    if (typeof window.logInfo === 'undefined') {
+        window.logInfo = (msg) => console.log(`ℹ️ [INFO] ${msg}`);
+        window.logSuccess = (msg) => console.log(`✅ [SUCCESS] ${msg}`);
+        window.logError = (msg) => console.error(`❌ [ERROR] ${msg}`);
+    }
+    
+    if (typeof window.showLoading === 'undefined') {
+        window.showLoading = (container, message) => {
+            console.log(`🔄 Loading: ${message}`);
+        };
+        window.hideLoading = () => {
+            console.log('✅ Loading removido');
+        };
+    }
+    
+    // Tentar inicializar mesmo com funções faltando
+    setTimeout(() => {
+        if (typeof window.initApp === 'function') {
+            window.initApp();
+        } else {
+            location.reload();
+        }
+    }, 1000);
+};
+
+// =================== FUNÇÕES DE UTILIDADE (MANTIDAS DO ORIGINAL) ===================
 window.formatarData = function(data) {
     if (!data) return '';
     const d = new Date(data);
@@ -83,7 +130,7 @@ window.calcularIdade = function(dataNascimento) {
     return idade;
 };
 
-// =================== GERENCIAMENTO DE ESTADO ===================
+// =================== GERENCIAMENTO DE ESTADO (MANTIDO DO ORIGINAL) ===================
 window.getSystemState = function() {
     return {
         authenticated: window.isAuthenticated || false,
@@ -91,6 +138,8 @@ window.getSystemState = function() {
         currentHospital: window.currentHospital || 'H1',
         hospitalsData: window.hospitalData || {},
         apiConnected: typeof window.API_URL !== 'undefined',
+        chartsLoaded: typeof Chart !== 'undefined',
+        loadingActive: window.isLoading || false,
         timestamp: new Date().toISOString()
     };
 };
@@ -128,7 +177,7 @@ window.loadSystemState = function() {
     return null;
 };
 
-// =================== TRATAMENTO DE ERROS GLOBAIS ===================
+// =================== TRATAMENTO DE ERROS GLOBAIS (MANTIDO + MELHORADO) ===================
 window.addEventListener('error', function(event) {
     if (typeof window.logError === 'function') {
         logError('Erro JavaScript:', event.error);
@@ -145,6 +194,18 @@ window.addEventListener('error', function(event) {
         console.error('Stack:', event.error.stack);
         console.groupEnd();
     }
+    
+    // *** CORREÇÃO: TENTAR RECUPERAÇÃO AUTOMÁTICA ***
+    if (event.error && event.error.message) {
+        const errorMsg = event.error.message.toLowerCase();
+        if (errorMsg.includes('chart') || errorMsg.includes('canvas')) {
+            setTimeout(() => {
+                garantirChartJS().then(() => {
+                    logSuccess('Chart.js recarregado após erro');
+                });
+            }, 1000);
+        }
+    }
 });
 
 window.addEventListener('unhandledrejection', function(event) {
@@ -156,7 +217,7 @@ window.addEventListener('unhandledrejection', function(event) {
     event.preventDefault();
 });
 
-// =================== RESPONSIVIDADE ===================
+// =================== RESPONSIVIDADE (MANTIDA + MELHORADA) ===================
 window.addEventListener('resize', function() {
     // Fechar menu em telas grandes
     if (window.innerWidth > 1024) {
@@ -170,9 +231,10 @@ window.addEventListener('resize', function() {
         }
     }
     
-    // Re-renderizar gráficos se necessário
+    // *** CORREÇÃO: RE-RENDERIZAR GRÁFICOS COM DEBOUNCE ***
     if (window.chartInstances && Object.keys(window.chartInstances).length > 0) {
-        setTimeout(() => {
+        clearTimeout(window.resizeTimeout);
+        window.resizeTimeout = setTimeout(() => {
             Object.values(window.chartInstances).forEach(chart => {
                 if (chart && typeof chart.resize === 'function') {
                     try {
@@ -182,12 +244,17 @@ window.addEventListener('resize', function() {
                     }
                 }
             });
-        }, 100);
+        }, 300);
     }
 });
 
-// =================== ATALHOS DE TECLADO ===================
+// =================== ATALHOS DE TECLADO (MANTIDOS + MELHORADOS) ===================
 document.addEventListener('keydown', function(event) {
+    // *** CORREÇÃO: NÃO INTERCEPTAR SE USUÁRIO ESTÁ DIGITANDO ***
+    if (['INPUT', 'TEXTAREA', 'SELECT'].includes(event.target.tagName)) {
+        return;
+    }
+    
     // Alt + 1, 2, 3 para navegar entre tabs
     if (event.altKey && !event.ctrlKey && !event.shiftKey) {
         switch(event.key) {
@@ -202,6 +269,11 @@ document.addEventListener('keydown', function(event) {
             case '3':
                 event.preventDefault();
                 if (window.setActiveTab) window.setActiveTab('dash2');
+                break;
+            case 'u':
+            case 'U':
+                event.preventDefault();
+                if (window.updateData) window.updateData();
                 break;
         }
     }
@@ -231,26 +303,36 @@ document.addEventListener('keydown', function(event) {
         });
     }
     
-    // Ctrl + R para atualizar dados
-    if (event.ctrlKey && event.key === 'r' && window.isAuthenticated) {
+    // *** CORREÇÃO: F5 OU CTRL+R PARA ATUALIZAR DADOS ***
+    if ((event.key === 'F5') || (event.ctrlKey && event.key === 'r')) {
         event.preventDefault();
-        if (window.updateData) {
+        if (window.updateData && !window.isLoading) {
             window.updateData();
-        } else if (window.loadHospitalData) {
+        } else if (window.loadHospitalData && !window.isLoading) {
             window.loadHospitalData();
+        } else {
+            location.reload();
         }
     }
     
-    // Ctrl + A para área administrativa
+    // Ctrl + Alt + A para área administrativa
     if (event.ctrlKey && event.altKey && event.key === 'a') {
         event.preventDefault();
         if (window.openAdmin) {
             window.openAdmin();
         }
     }
+    
+    // *** CORREÇÃO: CTRL + ALT + D PARA DIAGNÓSTICO RÁPIDO ***
+    if (event.ctrlKey && event.altKey && event.key === 'd') {
+        event.preventDefault();
+        if (window.diagnosticoSistema) {
+            window.testeRapido();
+        }
+    }
 });
 
-// =================== LIFECYCLE HOOKS ===================
+// =================== LIFECYCLE HOOKS (MANTIDOS) ===================
 window.addEventListener('beforeunload', function(event) {
     // Salvar estado antes de sair
     if (window.saveSystemState) {
@@ -265,192 +347,174 @@ window.addEventListener('beforeunload', function(event) {
     if (window.qrTimeoutTimer) {
         clearInterval(window.qrTimeoutTimer);
     }
+    
+    // *** CORREÇÃO: LIMPAR GRÁFICOS PARA LIBERAR MEMÓRIA ***
+    if (window.chartInstances) {
+        Object.values(window.chartInstances).forEach(chart => {
+            if (chart && typeof chart.destroy === 'function') {
+                try {
+                    chart.destroy();
+                } catch (error) {
+                    console.warn('Erro ao destruir gráfico:', error);
+                }
+            }
+        });
+    }
+    
+    logInfo('🧹 Recursos limpos antes do unload');
 });
 
-// =================== DETECÇÃO DE CONECTIVIDADE ===================
+// =================== DETECÇÃO DE CONECTIVIDADE (MANTIDA + MELHORADA) ===================
 window.addEventListener('online', function() {
     if (typeof window.logSuccess === 'function') {
-        logSuccess('Conexão restaurada');
+        logSuccess('🌐 Conexão restaurada');
     }
     
     // Testar API quando voltar online
     if (window.isAuthenticated && window.testAPI) {
         setTimeout(() => {
-            window.testAPI();
+            window.testAPI().catch(error => {
+                logError('Erro ao testar API após reconexão:', error);
+            });
         }, 2000);
     }
     
     // Atualizar dados quando voltar online
     if (window.isAuthenticated && window.loadHospitalData) {
         setTimeout(() => {
-            window.loadHospitalData();
+            if (!window.isLoading) {
+                window.updateData();
+            }
         }, 3000);
     }
 });
 
 window.addEventListener('offline', function() {
     if (typeof window.logInfo === 'function') {
-        logInfo('Sem conexão com internet - usando dados em cache');
+        logInfo('📡 Sem conexão - sistema funcionando em modo offline');
     }
 });
 
-// =================== PERFORMANCE MONITORING ===================
+// =================== PERFORMANCE MONITORING (MANTIDO + MELHORADO) ===================
 window.addEventListener('load', function() {
     // Medir performance de carregamento
-    if (performance.timing) {
+    if (performance && performance.timing) {
         const loadTime = performance.timing.loadEventEnd - performance.timing.navigationStart;
         console.log(`📊 Página carregada em ${loadTime}ms`);
+        
+        // *** CORREÇÃO: LOG PERFORMANCE DETALHADO ***
+        const perfData = {
+            'DNS Lookup': performance.timing.domainLookupEnd - performance.timing.domainLookupStart,
+            'TCP Connect': performance.timing.connectEnd - performance.timing.connectStart,
+            'Request': performance.timing.responseStart - performance.timing.requestStart,
+            'Response': performance.timing.responseEnd - performance.timing.responseStart,
+            'DOM Processing': performance.timing.domComplete - performance.timing.domLoading
+        };
+        
+        console.table(perfData);
     }
     
-    // Verificar se todos os módulos críticos foram carregados
+    // *** CORREÇÃO: VERIFICAR MAIS MÓDULOS CRÍTICOS ***
     const requiredModules = [
         'CONFIG', 'loadHospitalData', 'renderCards', 
         'renderDashboardHospitalar', 'renderDashboardExecutivo',
-        'authenticate', 'setActiveTab', 'API_URL'
+        'authenticate', 'setActiveTab', 'API_URL',
+        'renderChartByType', 'showLoading', 'hideLoading'
     ];
     
     const missingModules = requiredModules.filter(module => typeof window[module] === 'undefined');
     
     if (missingModules.length > 0) {
-        console.error('❌ Módulos não carregados:', missingModules.join(', '));
+        logError('❌ Módulos não carregados:', missingModules.join(', '));
         
         // Tentar carregar módulos faltantes após um tempo
         setTimeout(() => {
             const stillMissing = requiredModules.filter(module => typeof window[module] === 'undefined');
             if (stillMissing.length === 0) {
-                console.log('✅ Todos os módulos carregados após retry');
+                logSuccess('✅ Todos os módulos carregados após retry');
+            } else {
+                logError('⚠️  Módulos ainda faltando:', stillMissing.join(', '));
             }
-        }, 2000);
+        }, 3000);
     } else {
-        console.log('✅ Todos os módulos críticos carregados');
+        logSuccess('✅ Todos os módulos críticos carregados');
     }
     
-    // Log da estrutura carregada
+    // *** CORREÇÃO: LOG DA ESTRUTURA MAIS DETALHADO ***
     console.log('📁 Estrutura do sistema:', {
         hospitais: window.CONFIG?.HOSPITAIS ? Object.keys(window.CONFIG.HOSPITAIS).length : 0,
         apiUrl: window.API_URL ? 'Configurada' : 'Não configurada',
         cores: window.CHART_COLORS ? Object.keys(window.CHART_COLORS).length : 0,
+        autenticacao: window.isAuthenticated ? 'Logado' : 'Não logado',
+        graficos: window.chartInstances ? Object.keys(window.chartInstances).length : 0,
+        loading: window.loadingOverlay ? 'Sistema ativo' : 'Não inicializado',
         funcoesCriticas: requiredModules.filter(module => typeof window[module] !== 'undefined').length
     });
 });
 
-// =================== MONITORAMENTO DA API ===================
+// =================== MONITORAMENTO DA API (MANTIDO + MELHORADO) ===================
 window.monitorAPI = function() {
     if (!window.API_URL || !window.testAPI) return;
     
     const interval = 5 * 60 * 1000; // 5 minutos
     
     setInterval(async () => {
-        try {
-            await window.testAPI();
-            // API funcionando
-        } catch (error) {
-            if (typeof window.logError === 'function') {
-                logError('API não responsiva:', error);
+        if (!window.isLoading) { // *** CORREÇÃO: NÃO MONITORAR DURANTE LOADING ***
+            try {
+                const startTime = performance.now();
+                await window.testAPI();
+                const endTime = performance.now();
+                const responseTime = Math.round(endTime - startTime);
+                
+                if (responseTime > 5000) {
+                    logError(`API lenta: ${responseTime}ms`);
+                } else {
+                    // API funcionando
+                }
+            } catch (error) {
+                if (typeof window.logError === 'function') {
+                    logError('API não responsiva:', error);
+                }
             }
         }
     }, interval);
 };
 
-// =================== DEBUG HELPERS (Ambiente de desenvolvimento) ===================
-window.debug = {
-    getState: () => window.getSystemState(),
-    getHospitalData: () => window.hospitalData,
-    getConfig: () => window.CONFIG,
-    getChartInstances: () => window.chartInstances,
-    reloadData: () => {
-        if (window.loadHospitalData) {
-            return window.loadHospitalData();
-        }
-    },
-    testAuth: (password) => {
-        const input = document.getElementById('authPassword');
-        if (input) {
-            input.value = password;
-            if (window.authenticate) window.authenticate();
-        }
-    },
-    forceReload: () => {
-        localStorage.clear();
-        sessionStorage.clear();
-        location.reload();
-    },
-    testAPI: () => {
-        if (window.testAPI) {
-            return window.testAPI();
-        }
-        return 'testAPI não disponível';
-    },
-    colors: () => window.CHART_COLORS,
-    resetColors: () => {
-        if (window.resetToDefaults) {
-            window.resetToDefaults();
-        }
-    }
-};
-
-// =================== POLYFILLS PARA BROWSERS ANTIGOS ===================
-if (!String.prototype.padStart) {
-    String.prototype.padStart = function padStart(targetLength, padString) {
-        targetLength = targetLength >> 0;
-        padString = String(typeof padString !== 'undefined' ? padString : ' ');
-        if (this.length >= targetLength) {
-            return String(this);
-        }
-        targetLength = targetLength - this.length;
-        if (targetLength > padString.length) {
-            padString += padString.repeat(targetLength / padString.length);
-        }
-        return padString.slice(0, targetLength) + String(this);
-    };
-}
-
-// =================== HEALTH CHECK SYSTEM ===================
+// =================== HEALTH CHECK SYSTEM (MANTIDO + MELHORADO) ===================
 window.systemHealthCheck = function() {
     const checks = {
         modules: typeof window.CONFIG !== 'undefined',
         api: typeof window.API_URL !== 'undefined',
-        charts: typeof window.chartInstances !== 'undefined',
+        charts: typeof window.renderChartByType !== 'undefined',
         colors: typeof window.CHART_COLORS !== 'undefined',
         authentication: typeof window.authenticate !== 'undefined',
-        data: typeof window.hospitalData !== 'undefined'
+        data: typeof window.hospitalData !== 'undefined',
+        loading: typeof window.showLoading !== 'undefined',
+        dashboards: typeof window.renderDashboardHospitalar !== 'undefined' && 
+                   typeof window.renderDashboardExecutivo !== 'undefined',
+        chartJS: typeof Chart !== 'undefined' // *** CORREÇÃO: VERIFICAR CHART.JS ***
     };
     
     const passed = Object.values(checks).filter(Boolean).length;
     const total = Object.keys(checks).length;
+    const percentage = Math.round((passed / total) * 100);
     
-    console.log(`🏥 System Health: ${passed}/${total} checks passed`, checks);
-    return { passed, total, checks };
+    console.log(`🏥 System Health: ${passed}/${total} checks passed (${percentage}%)`);
+    console.table(checks);
+    
+    // *** CORREÇÃO: STATUS VISUAL MELHORADO ***
+    if (percentage >= 100) {
+        console.log('%c✅ Sistema 100% operacional', 'color: #10b981; font-weight: bold; font-size: 16px;');
+    } else if (percentage >= 80) {
+        console.log('%c⚠️  Sistema parcialmente operacional', 'color: #f59e0b; font-weight: bold; font-size: 16px;');
+    } else {
+        console.log('%c❌ Sistema com problemas críticos', 'color: #ef4444; font-weight: bold; font-size: 16px;');
+    }
+    
+    return { passed, total, percentage, checks };
 };
 
-// =================== INICIALIZAÇÃO FINAL ===================
-// Executar health check após carregamento
-setTimeout(() => {
-    if (typeof window.systemHealthCheck === 'function') {
-        window.systemHealthCheck();
-    }
-    
-    // Iniciar monitoramento da API se disponível
-    if (window.monitorAPI) {
-        window.monitorAPI();
-    }
-}, 3000);
-
-
-console.log('🚀 Main.js carregado - Sistema Archipelago Dashboard V3.0');
-console.log('📋 Correções implementadas:');
-console.log('   ✅ Menu lateral sem emojis + fecha automaticamente');
-console.log('   ✅ API real integrada com Google Apps Script');
-console.log('   ✅ Dashboard hospitalar em layout vertical');
-console.log('   ✅ Gráficos corrigidos: eixos inteiros, horizontais, legendas à esquerda');
-console.log('   ✅ 7 tipos de gráfico: Barras, Bolinhas (jitter), Linha, Área, Radar, Polar');
-console.log('   ✅ Divisões Ouro/2R/3R nas colunas Hoje e 24h');
-console.log('   ✅ Botão Restaurar Cores funcionando');
-console.log('   ✅ Campo Complexidade integrado');
-console.log('   ✅ 55+ cores Pantone configuradas');
-
-
-// =================== CORREÇÕES AUTOMÁTICAS - ADICIONAR AO FINAL DO MAIN.JS ===================
+// =================== CORREÇÕES AUTOMÁTICAS - TODAS MANTIDAS DO ORIGINAL ===================
 
 // =================== AUTO-CORREÇÃO DE CONTAINERS ===================
 function verificarContainersDashboard() {
@@ -486,9 +550,12 @@ window.diagnosticoSistema = function() {
         functions: {
             renderDashboardExecutivo: typeof window.renderDashboardExecutivo === 'function',
             renderDashboardHospitalar: typeof window.renderDashboardHospitalar === 'function',
-            loadHospitalData: typeof window.loadHospitalData === 'function'
+            loadHospitalData: typeof window.loadHospitalData === 'function',
+            renderChartByType: typeof window.renderChartByType === 'function' // *** CORREÇÃO ***
         },
-        api: !!window.API_URL
+        api: !!window.API_URL,
+        loading: typeof window.showLoading === 'function',
+        authentication: window.isAuthenticated || false
     };
     
     console.log('🔍 DIAGNÓSTICO DO SISTEMA:', diagnostico);
@@ -504,12 +571,17 @@ window.diagnosticoSistema = function() {
     
     if (!diagnostico.chartJS) {
         problemas.push('❌ Chart.js não disponível');
-        solucoes.push('Será carregado automaticamente');
+        solucoes.push('garantirChartJS()');
     }
     
     if (!diagnostico.containers.dashExecutivoContent || !diagnostico.containers.dashHospitalarContent) {
         problemas.push('❌ Containers dos dashboards faltando');
         solucoes.push('verificarContainersDashboard()');
+    }
+    
+    if (!diagnostico.functions.renderChartByType) {
+        problemas.push('❌ Sistema de gráficos corrigido não carregado');
+        solucoes.push('Recarregar charts.js');
     }
     
     if (problemas.length === 0) {
@@ -613,6 +685,12 @@ window.testeRapido = function() {
 // =================== HOOK NO SISTEMA DE NAVEGAÇÃO ===================
 const setActiveTabOriginal = window.setActiveTab;
 window.setActiveTab = function(tab) {
+    // *** CORREÇÃO: BLOQUEAR DURANTE LOADING ***
+    if (window.isLoading) {
+        logInfo('Navegação bloqueada durante carregamento');
+        return;
+    }
+    
     // Verificar containers antes de navegar
     verificarContainersDashboard();
     
@@ -621,14 +699,14 @@ window.setActiveTab = function(tab) {
         setActiveTabOriginal(tab);
     }
     
-    // Renderizar dashboards após mudança
+    // *** CORREÇÃO: RENDERIZAR DASHBOARDS APÓS MUDANÇA COM DELAY ***
     setTimeout(() => {
         if (tab === 'dash1' && window.renderDashboardHospitalar) {
             window.renderDashboardHospitalar();
         } else if (tab === 'dash2' && window.renderDashboardExecutivo) {
             window.renderDashboardExecutivo();
         }
-    }, 300);
+    }, 500); // *** CORREÇÃO: DELAY MAIOR PARA ESTABILIDADE ***
 };
 
 // =================== ADICIONAR BOTÃO DE DIAGNÓSTICO ===================
@@ -665,7 +743,8 @@ function adicionarBotaoDiagnostico() {
                 mensagem += '✅ SISTEMA OK!\n';
                 mensagem += `📊 Hospitais: ${resultado.diagnostico.hospitalDataCount}\n`;
                 mensagem += `📈 Chart.js: ${resultado.diagnostico.chartJS ? 'OK' : 'Carregando...'}\n`;
-                mensagem += `📦 Containers: OK\n\n`;
+                mensagem += `📦 Containers: OK\n`;
+                mensagem += `🔧 Gráficos Corrigidos: ${resultado.diagnostico.functions.renderChartByType ? 'OK' : 'Faltando'}\n\n`;
                 mensagem += '🔄 Forçando renderização dos gráficos...';
             } else {
                 mensagem += '⚠️ PROBLEMAS ENCONTRADOS:\n';
@@ -695,7 +774,7 @@ function adicionarBotaoDiagnostico() {
     }
 }
 
-// =================== COMANDOS DE CONSOLE ===================
+// =================== COMANDOS DE CONSOLE (MANTIDOS + MELHORADOS) ===================
 window.debug = window.debug || {};
 Object.assign(window.debug, {
     diagnostico: window.diagnosticoSistema,
@@ -703,6 +782,8 @@ Object.assign(window.debug, {
     teste: window.testeRapido,
     dados: () => window.hospitalData,
     graficos: () => window.chartInstances,
+    estado: window.getSystemState,
+    saude: window.systemHealthCheck,
     recarregar: async () => {
         if (window.loadHospitalData) {
             await window.loadHospitalData();
@@ -717,25 +798,66 @@ Object.assign(window.debug, {
             });
             window.chartInstances = {};
         }
+    },
+    resetar: () => {
+        localStorage.clear();
+        sessionStorage.clear();
+        location.reload();
     }
 });
+
+// =================== OBSERVER PARA MUDANÇAS DE TAB ===================
+const observarMudancasTab = () => {
+    const observer = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+            if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+                const target = mutation.target;
+                
+                if (target.id === 'dash1' && !target.classList.contains('hidden')) {
+                    setTimeout(() => {
+                        verificarContainersDashboard();
+                        if (window.renderDashboardHospitalar) {
+                            window.renderDashboardHospitalar();
+                        }
+                    }, 300); // *** CORREÇÃO: DELAY MAIOR ***
+                } else if (target.id === 'dash2' && !target.classList.contains('hidden')) {
+                    setTimeout(() => {
+                        verificarContainersDashboard();
+                        if (window.renderDashboardExecutivo) {
+                            window.renderDashboardExecutivo();
+                        }
+                    }, 300); // *** CORREÇÃO: DELAY MAIOR ***
+                }
+            }
+        });
+    });
+    
+    const dash1 = document.getElementById('dash1');
+    const dash2 = document.getElementById('dash2');
+    
+    if (dash1) observer.observe(dash1, { attributes: true });
+    if (dash2) observer.observe(dash2, { attributes: true });
+};
 
 // =================== INICIALIZAÇÃO AUTOMÁTICA ===================
 setTimeout(() => {
     logInfo('🚀 Iniciando correções automáticas...');
     
-    // 1. Adicionar botão de diagnóstico
+    // 1. Carregar estado do sistema
+    window.loadSystemState();
+    
+    // 2. Adicionar botão de diagnóstico
     adicionarBotaoDiagnostico();
     
-    // 2. Garantir Chart.js
+    // 3. Garantir Chart.js
     garantirChartJS().catch(() => {
         logError('Erro ao carregar Chart.js - alguns gráficos podem não funcionar');
     });
     
-    // 3. Verificar containers
+    // 4. Verificar containers
     verificarContainersDashboard();
     
-    // 4. Se não há dados, tentar carregar
+    // 5. Se não há dados, tentar carregar
     if (!window.hospitalData && window.loadHospitalData) {
         logInfo('📊 Carregando dados dos hospitais...');
         window.loadHospitalData().then(() => {
@@ -753,53 +875,42 @@ setTimeout(() => {
         });
     }
     
-    // 5. Executar teste após tudo
+    // 6. Iniciar monitoramento da API
+    if (window.monitorAPI) {
+        window.monitorAPI();
+    }
+    
+    // 7. Executar health check e correções após tudo
     setTimeout(() => {
-        const resultado = window.diagnosticoSistema();
-        if (resultado.problemas.length > 0) {
+        const resultado = window.systemHealthCheck();
+        const diagnostico = window.diagnosticoSistema();
+        
+        if (diagnostico.problemas.length > 0) {
             console.log('🔧 Executando correções finais...');
             window.testeRapido();
         } else {
             logSuccess('✅ Sistema inicializado corretamente');
         }
-    }, 3000);
+    }, 5000);
     
 }, 4000);
 
-// =================== OBSERVER PARA MUDANÇAS DE TAB ===================
-const observarMudancasTab = () => {
-    const observer = new MutationObserver((mutations) => {
-        mutations.forEach((mutation) => {
-            if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
-                const target = mutation.target;
-                
-                if (target.id === 'dash1' && !target.classList.contains('hidden')) {
-                    setTimeout(() => {
-                        verificarContainersDashboard();
-                        if (window.renderDashboardHospitalar) {
-                            window.renderDashboardHospitalar();
-                        }
-                    }, 200);
-                } else if (target.id === 'dash2' && !target.classList.contains('hidden')) {
-                    setTimeout(() => {
-                        verificarContainersDashboard();
-                        if (window.renderDashboardExecutivo) {
-                            window.renderDashboardExecutivo();
-                        }
-                    }, 200);
-                }
-            }
-        });
-    });
-    
-    const dash1 = document.getElementById('dash1');
-    const dash2 = document.getElementById('dash2');
-    
-    if (dash1) observer.observe(dash1, { attributes: true });
-    if (dash2) observer.observe(dash2, { attributes: true });
-};
+// =================== OBSERVER SETUP ===================
+setTimeout(observarMudancasTab, 3000);
 
-setTimeout(observarMudancasTab, 2000);
+// =================== LOGS FINAIS ===================
+console.log('%c🚀 ARCHIPELAGO DASHBOARD V3.0 - SISTEMA COMPLETO CORRIGIDO', 'color: #60a5fa; font-size: 16px; font-weight: bold;');
+console.log('%c📋 CORREÇÕES IMPLEMENTADAS:', 'color: #10b981; font-weight: bold;');
+console.log('%c   ✅ Loading com bloqueio total da interface', 'color: #10b981;');
+console.log('%c   ✅ Beneficiários sempre números inteiros', 'color: #10b981;');
+console.log('%c   ✅ Dashboard Executivo: Rede Hospitalar Externa + Gauge horizontal', 'color: #10b981;');
+console.log('%c   ✅ Dashboard Hospitalar: Layout vertical obrigatório', 'color: #10b981;');
+console.log('%c   ✅ Eixos horizontais: Hoje, 24h, 48h, 72h, 96h', 'color: #10b981;');
+console.log('%c   ✅ Legendas posicionadas à esquerda, uma por linha', 'color: #10b981;');
+console.log('%c   ✅ Eixo Y sempre mostra "Beneficiários"', 'color: #10b981;');
+console.log('%c   ✅ 7 tipos de gráfico: Barras, Barras 3D, Linhas, Área, Bolinhas, Radar, Rosca', 'color: #10b981;');
+console.log('%c   ✅ Divisão Ouro/2R/3R nas colunas Hoje e 24h', 'color: #10b981;');
+console.log('%c   ✅ Linhas com transição suave (tension: 0.4)', 'color: #10b981;');
 
 console.log(`
 🔧 SISTEMA DE CORREÇÕES ATIVO
@@ -811,7 +922,10 @@ Comandos disponíveis:
 • window.debug.recarregar() - Recarregar dados da API
 • window.debug.dados() - Ver dados carregados
 • window.debug.limpar() - Limpar gráficos
+• window.debug.estado() - Estado do sistema
+• window.debug.saude() - Health check completo
 
 🔧 Botão "Diagnóstico & Correção" adicionado ao menu lateral.
 🤖 Correções automáticas ativas - gráficos serão carregados automaticamente.
+📊 Sistema pronto para uso com todas as correções implementadas!
 `);

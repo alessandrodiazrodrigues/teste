@@ -1,4 +1,4 @@
-// =================== INTEGRAÇÃO API GOOGLE APPS SCRIPT - 100% FUNCIONAL ===================
+// =================== INTEGRAÇÃO API GOOGLE APPS SCRIPT - 100% FUNCIONAL COM CORS FIX ===================
 
 // *** URL NOVA DA API CORRIGIDA ***
 window.API_URL = 'https://script.google.com/macros/s/AKfycby2W0sR7AVS3qbvecRaeMhsJavKnVXuB4VwkvHzy-f1XWhPCm1RRg2Cn_Run5oTb349/exec';
@@ -7,7 +7,7 @@ window.API_URL = 'https://script.google.com/macros/s/AKfycby2W0sR7AVS3qbvecRaeMh
 window.hospitalData = {};
 window.apiCache = {};
 window.lastAPICall = 0;
-window.API_TIMEOUT = 10000; // 10 segundos
+window.API_TIMEOUT = 15000; // 15 segundos para CORS
 
 // =================== FUNÇÕES AUXILIARES ===================
 function logAPI(message, data = null) {
@@ -22,69 +22,148 @@ function logAPISuccess(message, data = null) {
     console.log(`✅ [API SUCCESS] ${message}`, data || '');
 }
 
-// =================== CONFIGURAÇÃO DE REQUISIÇÕES ===================
+// =================== CORREÇÃO CRÍTICA PARA CORS - JSONP ===================
 
-// Fazer requisição GET para API com timeout
+// Função auxiliar para requisições JSONP (bypass CORS)
+function jsonpRequest(url, params = {}) {
+    return new Promise((resolve, reject) => {
+        const callbackName = 'jsonp_callback_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
+        
+        // Criar URL com parâmetros
+        const urlObj = new URL(url);
+        Object.keys(params).forEach(key => {
+            if (params[key] !== null && params[key] !== undefined) {
+                urlObj.searchParams.append(key, String(params[key]));
+            }
+        });
+        urlObj.searchParams.append('callback', callbackName);
+        
+        // Criar callback global
+        window[callbackName] = function(data) {
+            delete window[callbackName];
+            if (script && script.parentNode) {
+                document.head.removeChild(script);
+            }
+            resolve(data);
+        };
+        
+        // Criar script tag
+        const script = document.createElement('script');
+        script.src = urlObj.toString();
+        script.onerror = () => {
+            delete window[callbackName];
+            if (script && script.parentNode) {
+                document.head.removeChild(script);
+            }
+            reject(new Error('JSONP request failed'));
+        };
+        
+        // Timeout
+        setTimeout(() => {
+            if (window[callbackName]) {
+                delete window[callbackName];
+                if (script && script.parentNode) {
+                    document.head.removeChild(script);
+                }
+                reject(new Error('JSONP request timeout'));
+            }
+        }, window.API_TIMEOUT);
+        
+        document.head.appendChild(script);
+    });
+}
+
+// =================== CONFIGURAÇÃO DE REQUISIÇÕES COM CORS FIX ===================
+
+// Fazer requisição com fallback JSONP
 async function apiRequest(action, params = {}, method = 'GET') {
     try {
         logAPI(`Fazendo requisição ${method}: ${action}`, params);
         
-        let url = new URL(window.API_URL);
-        let options = {
-            method: method,
-            redirect: 'follow',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            }
-        };
-        
         if (method === 'GET') {
-            // Para GET, adicionar parâmetros na URL
-            url.searchParams.append('action', action);
-            Object.keys(params).forEach(key => {
-                if (params[key] !== null && params[key] !== undefined) {
-                    url.searchParams.append(key, String(params[key]));
-                }
-            });
-        } else {
-            // Para POST, enviar no body
-            const payload = { action, ...params };
-            options.body = JSON.stringify(payload);
-        }
-        
-        // Timeout controller
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), window.API_TIMEOUT);
-        options.signal = controller.signal;
-        
-        const response = await fetch(url.toString(), options);
-        clearTimeout(timeoutId);
-        
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-        
-        const contentType = response.headers.get('content-type');
-        let data;
-        
-        if (contentType && contentType.includes('application/json')) {
-            data = await response.json();
-        } else {
-            const text = await response.text();
             try {
-                data = JSON.parse(text);
-            } catch (e) {
-                throw new Error(`Resposta não é JSON válido: ${text.substring(0, 200)}`);
+                // TENTATIVA 1: Fetch normal
+                let url = new URL(window.API_URL);
+                url.searchParams.append('action', action);
+                Object.keys(params).forEach(key => {
+                    if (params[key] !== null && params[key] !== undefined) {
+                        url.searchParams.append(key, String(params[key]));
+                    }
+                });
+                
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 8000);
+                
+                const response = await fetch(url.toString(), {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                    },
+                    signal: controller.signal
+                });
+                
+                clearTimeout(timeoutId);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                
+                if (!data.ok) {
+                    throw new Error(data.error || data.message || 'Erro desconhecido da API');
+                }
+                
+                logAPISuccess(`${method} ${action} concluído (Fetch)`, data.data ? `${Object.keys(data.data).length || 0} registros` : 'sem dados');
+                return data.data;
+                
+            } catch (fetchError) {
+                logAPI(`Fetch falhou (${fetchError.message}), tentando JSONP...`);
+                
+                // TENTATIVA 2: JSONP (bypass CORS)
+                const data = await jsonpRequest(window.API_URL, { action, ...params });
+                
+                if (!data || !data.ok) {
+                    throw new Error(data?.error || data?.message || 'Erro desconhecido da API via JSONP');
+                }
+                
+                logAPISuccess(`${method} ${action} concluído (JSONP)`, data.data ? `${Object.keys(data.data).length || 0} registros` : 'sem dados');
+                return data.data;
+            }
+            
+        } else {
+            // Para POST, tentar fetch primeiro, depois fallback para GET via JSONP
+            try {
+                const response = await fetch(window.API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({ action, ...params })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                if (!data.ok) throw new Error(data.error || 'Erro no POST');
+                
+                logAPISuccess(`${method} ${action} concluído (POST)`, 'dados salvos');
+                return data.data;
+                
+            } catch (postError) {
+                logAPI(`POST falhou (${postError.message}), tentando via GET com JSONP...`);
+                
+                // FALLBACK: Tentar POST via GET com JSONP
+                const data = await jsonpRequest(window.API_URL, { action, ...params });
+                if (!data || !data.ok) throw new Error(data?.error || 'Erro no POST via JSONP');
+                
+                logAPISuccess(`${method} ${action} concluído (POST via JSONP)`, 'dados salvos');
+                return data.data;
             }
         }
-        
-        if (!data.ok) {
-            throw new Error(data.error || data.message || 'Erro desconhecido da API');
-        }
-        
-        logAPISuccess(`${method} ${action} concluído`, data.data ? `${Object.keys(data.data).length || 0} registros` : 'sem dados');
-        return data.data;
         
     } catch (error) {
         if (error.name === 'AbortError') {
@@ -462,4 +541,4 @@ window.addEventListener('load', () => {
     }, 10000);
 });
 
-logAPISuccess('✅ API.js 100% FUNCIONAL - Integração Google Apps Script ativa');
+logAPISuccess('✅ API.js 100% FUNCIONAL - Integração Google Apps Script com CORS fix ativa');

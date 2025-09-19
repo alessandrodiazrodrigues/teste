@@ -531,7 +531,7 @@ const CORES_CONCESSOES = {
     'PICC': '#E03C31'
 };
 
-// *** CORREÇÃO 2: GRÁFICO DE CONCESSÕES - CORES PANTONE CORRETAS ***
+// *** CORREÇÃO 2: GRÁFICO DE CONCESSÕES - EIXO X TIMELINE + LEGENDAS ***
 function renderConcessoesHospital(hospitalId, type = 'bar') {
     const canvas = document.getElementById(`graficoConcessoes${hospitalId}`);
     if (!canvas || typeof Chart === 'undefined') return;
@@ -546,61 +546,90 @@ function renderConcessoesHospital(hospitalId, type = 'bar') {
     
     if (!window.chartInstances) window.chartInstances = {};
     
-    // Processar dados com números inteiros garantidos
-    const concessoesCount = {};
+    // *** EIXO X CORRETO: HOJE, 24H, 48H, 96H ***
+    const categorias = ['HOJE', '24H', '48H', '96H'];
+    
+    // Processar dados por concessão e timeline
+    const concessoesPorTimeline = {};
     
     hospital.leitos.forEach(leito => {
-        if (leito.status === 'ocupado' && leito.paciente && leito.paciente.concessoes) {
+        if (leito.status === 'ocupado' && leito.paciente && leito.paciente.concessoes && leito.paciente.prevAlta) {
             const concessoesList = Array.isArray(leito.paciente.concessoes) ? 
                 leito.paciente.concessoes : 
                 String(leito.paciente.concessoes).split('|');
             
-            concessoesList.forEach(concessao => {
-                if (concessao && concessao.trim()) {
-                    concessoesCount[concessao.trim()] = (concessoesCount[concessao.trim()] || 0) + 1;
-                }
-            });
+            // Mapear prevAlta para timeline
+            let timelineIndex = -1;
+            if (leito.paciente.prevAlta.includes('Hoje')) timelineIndex = 0;
+            else if (leito.paciente.prevAlta.includes('24h')) timelineIndex = 1;
+            else if (leito.paciente.prevAlta === '48h') timelineIndex = 2;
+            else if (leito.paciente.prevAlta === '72h' || leito.paciente.prevAlta === '96h') timelineIndex = 3;
+            
+            if (timelineIndex >= 0) {
+                concessoesList.forEach(concessao => {
+                    if (concessao && concessao.trim()) {
+                        const nome = concessao.trim();
+                        if (!concessoesPorTimeline[nome]) {
+                            concessoesPorTimeline[nome] = [0, 0, 0, 0];
+                        }
+                        concessoesPorTimeline[nome][timelineIndex]++;
+                    }
+                });
+            }
         }
     });
     
-    const concessoesOrdenadas = Object.entries(concessoesCount)
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 8);
+    // Ordenar concessões por total de beneficiários
+    const concessoesOrdenadas = Object.entries(concessoesPorTimeline)
+        .map(([nome, dados]) => [nome, dados, dados.reduce((a, b) => a + b, 0)])
+        .sort((a, b) => b[2] - a[2])
+        .slice(0, 6); // Top 6 concessões
     
     if (concessoesOrdenadas.length === 0) {
         return;
     }
     
-    const labels = concessoesOrdenadas.map(([nome]) => nome);
-    const valores = concessoesOrdenadas.map(([, count]) => Math.round(count)); // *** GARANTIR INTEIROS ***
-    
-    // *** MAPEAR CORES PANTONE PARA CADA CONCESSÃO ***
-    const cores = labels.map(concessao => {
-        return CORES_CONCESSOES[concessao] || '#007A53'; // Fallback para verde padrão
+    // Criar datasets (uma linha por concessão)
+    const datasets = concessoesOrdenadas.map(([nome, dados]) => {
+        const cor = CORES_CONCESSOES[nome] || '#007A53';
+        return {
+            label: nome,
+            data: dados,
+            backgroundColor: type === 'area' ? cor + '4D' : cor,
+            borderColor: cor,
+            borderWidth: (type === 'line' || type === 'area') ? 2 : 0,
+            fill: type === 'area',
+            tension: (type === 'line' || type === 'area') ? 0.4 : 0,
+            pointRadius: type === 'scatter' ? 8 : 4,
+            pointBackgroundColor: cor
+        };
     });
+    
+    // *** CALCULAR VALOR MÁXIMO PARA EIXO Y +1 ***
+    const todosValores = concessoesOrdenadas.flatMap(([, dados]) => dados);
+    const valorMaximo = Math.max(...todosValores);
+    const limiteSuperior = valorMaximo + 1;
     
     const ctx = canvas.getContext('2d');
     
     let chartConfig = {
         type: type === 'scatter' ? 'scatter' : type === 'area' ? 'line' : type,
         data: {
-            labels: labels,
-            datasets: [{
-                label: 'Beneficiários',
-                data: type === 'scatter' ? 
-                    valores.map((value, index) => ({
-                        x: index + 1, // *** POSIÇÃO INTEIRA ***
-                        y: value     // *** VALOR INTEIRO ***
-                    })) : 
-                    valores, // *** TODOS INTEIROS ***
-                backgroundColor: type === 'area' ? cores.map(cor => cor + '4D') : cores, // 30% transparência para área
-                borderColor: type === 'line' || type === 'area' ? cores[0] : cores,
-                borderWidth: (type === 'line' || type === 'area') ? 2 : 0,
-                fill: type === 'area',
-                tension: (type === 'line' || type === 'area') ? 0.4 : 0,
-                pointRadius: type === 'scatter' ? 8 : 4,
-                pointBackgroundColor: type === 'scatter' ? cores : undefined
-            }]
+            labels: categorias,
+            datasets: type === 'scatter' ? 
+                // Para scatter: uma dataset com todos os pontos
+                [{
+                    label: 'Concessões',
+                    data: concessoesOrdenadas.flatMap(([nome, dados], concessaoIndex) => 
+                        dados.map((value, timelineIndex) => ({
+                            x: timelineIndex,
+                            y: value
+                        }))
+                    ),
+                    backgroundColor: concessoesOrdenadas.map(([nome]) => CORES_CONCESSOES[nome] || '#007A53').flatMap(cor => Array(4).fill(cor)),
+                    pointRadius: 8
+                }] : 
+                datasets
         },
         options: {
             responsive: false,

@@ -531,7 +531,7 @@ const CORES_CONCESSOES = {
     'PICC': '#E03C31'
 };
 
-// *** CORREÇÃO 2: GRÁFICO DE CONCESSÕES - EIXO X TIMELINE + LEGENDAS ***
+// *** CORREÇÃO 2: GRÁFICO DE CONCESSÕES - EIXO X 5 PONTOS + LEGENDAS CORRETAS ***
 function renderConcessoesHospital(hospitalId, type = 'bar') {
     const canvas = document.getElementById(`graficoConcessoes${hospitalId}`);
     if (!canvas || typeof Chart === 'undefined') return;
@@ -546,8 +546,8 @@ function renderConcessoesHospital(hospitalId, type = 'bar') {
     
     if (!window.chartInstances) window.chartInstances = {};
     
-    // *** EIXO X CORRETO: HOJE, 24H, 48H, 96H ***
-    const categorias = ['HOJE', '24H', '48H', '96H'];
+    // *** EIXO X CORRETO: 5 PONTOS ***
+    const categorias = ['HOJE', '24H', '48H', '72H', '96H'];
     
     // Processar dados por concessão e timeline
     const concessoesPorTimeline = {};
@@ -558,19 +558,20 @@ function renderConcessoesHospital(hospitalId, type = 'bar') {
                 leito.paciente.concessoes : 
                 String(leito.paciente.concessoes).split('|');
             
-            // Mapear prevAlta para timeline
+            // Mapear prevAlta para timeline (5 pontos)
             let timelineIndex = -1;
-            if (leito.paciente.prevAlta.includes('Hoje')) timelineIndex = 0;
-            else if (leito.paciente.prevAlta.includes('24h')) timelineIndex = 1;
-            else if (leito.paciente.prevAlta === '48h') timelineIndex = 2;
-            else if (leito.paciente.prevAlta === '72h' || leito.paciente.prevAlta === '96h') timelineIndex = 3;
+            if (leito.paciente.prevAlta.includes('Hoje')) timelineIndex = 0; // HOJE
+            else if (leito.paciente.prevAlta.includes('24h')) timelineIndex = 1; // 24H
+            else if (leito.paciente.prevAlta === '48h') timelineIndex = 2; // 48H
+            else if (leito.paciente.prevAlta === '72h') timelineIndex = 3; // 72H
+            else if (leito.paciente.prevAlta === '96h') timelineIndex = 4; // 96H
             
             if (timelineIndex >= 0) {
                 concessoesList.forEach(concessao => {
                     if (concessao && concessao.trim()) {
                         const nome = concessao.trim();
                         if (!concessoesPorTimeline[nome]) {
-                            concessoesPorTimeline[nome] = [0, 0, 0, 0];
+                            concessoesPorTimeline[nome] = [0, 0, 0, 0, 0]; // 5 pontos
                         }
                         concessoesPorTimeline[nome][timelineIndex]++;
                     }
@@ -589,26 +590,62 @@ function renderConcessoesHospital(hospitalId, type = 'bar') {
         return;
     }
     
-    // Criar datasets (uma linha por concessão)
-    const datasets = concessoesOrdenadas.map(([nome, dados]) => {
-        const cor = CORES_CONCESSOES[nome] || '#007A53';
-        return {
-            label: nome,
-            data: dados,
-            backgroundColor: type === 'area' ? cor + '4D' : cor,
-            borderColor: cor,
-            borderWidth: (type === 'line' || type === 'area') ? 2 : 0,
-            fill: type === 'area',
-            tension: (type === 'line' || type === 'area') ? 0.4 : 0,
-            pointRadius: type === 'scatter' ? 8 : 4,
-            pointBackgroundColor: cor
-        };
-    });
-    
     // *** CALCULAR VALOR MÁXIMO PARA EIXO Y +1 ***
     const todosValores = concessoesOrdenadas.flatMap(([, dados]) => dados);
     const valorMaximo = Math.max(...todosValores);
     const limiteSuperior = valorMaximo + 1;
+    
+    // *** CRIAR UMA DATASET POR CONCESSÃO (UMA COR CADA) ***
+    const datasets = concessoesOrdenadas.map(([nome, dados]) => {
+        const cor = CORES_CONCESSOES[nome] || '#007A53';
+        
+        if (type === 'scatter') {
+            // Para scatter: pontos individuais
+            return {
+                label: nome,
+                data: dados.map((value, index) => ({ x: index, y: value })),
+                backgroundColor: cor,
+                borderColor: cor,
+                pointRadius: 8,
+                showLine: false
+            };
+        } else if (type === 'line') {
+            // Para linha: uma linha por concessão
+            return {
+                label: nome,
+                data: dados,
+                backgroundColor: 'transparent',
+                borderColor: cor,
+                borderWidth: 2,
+                fill: false,
+                tension: 0.4,
+                pointRadius: 4,
+                pointBackgroundColor: cor
+            };
+        } else if (type === 'area') {
+            // Para área: uma área por concessão
+            return {
+                label: nome,
+                data: dados,
+                backgroundColor: cor + '4D', // 30% transparência
+                borderColor: cor,
+                borderWidth: 2,
+                fill: true,
+                tension: 0.4,
+                pointRadius: 4,
+                pointBackgroundColor: cor
+            };
+        } else {
+            // Para barras: uma cor por concessão
+            return {
+                label: nome,
+                data: dados,
+                backgroundColor: cor,
+                borderColor: cor,
+                borderWidth: 0
+            };
+        }
+    });
     
     const ctx = canvas.getContext('2d');
     
@@ -616,21 +653,78 @@ function renderConcessoesHospital(hospitalId, type = 'bar') {
         type: type === 'scatter' ? 'scatter' : type === 'area' ? 'line' : type,
         data: {
             labels: categorias,
-            datasets: type === 'scatter' ? 
-                // Para scatter: uma dataset com todos os pontos
-                [{
-                    label: 'Concessões',
-                    data: concessoesOrdenadas.flatMap(([nome, dados], concessaoIndex) => 
-                        dados.map((value, timelineIndex) => ({
-                            x: timelineIndex,
-                            y: value
-                        }))
-                    ),
-                    backgroundColor: concessoesOrdenadas.map(([nome]) => CORES_CONCESSOES[nome] || '#007A53').flatMap(cor => Array(4).fill(cor)),
-                    pointRadius: 8
-                }] : 
-                datasets
+            datasets: datasets
         },
+        options: {
+            responsive: false,
+            maintainAspectRatio: false,
+            plugins: {
+                // *** LEGENDA EMBAIXO, UMA POR LINHA ***
+                legend: { 
+                    display: true,
+                    position: 'bottom',
+                    align: 'start',
+                    labels: {
+                        color: '#ffffff',
+                        padding: 8,
+                        font: { size: 11, weight: 500 },
+                        usePointStyle: true,
+                        boxWidth: 12,
+                        boxHeight: 12
+                    }
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(26, 31, 46, 0.95)',
+                    titleColor: '#ffffff',
+                    bodyColor: '#ffffff',
+                    callbacks: {
+                        label: function(context) {
+                            const value = Math.round(context.parsed.y || context.parsed);
+                            return `${context.dataset.label}: ${value} beneficiário${value !== 1 ? 's' : ''}`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    type: type === 'scatter' ? 'linear' : 'category',
+                    stacked: type === 'bar', // Empilhar apenas para barras
+                    ticks: { 
+                        color: '#e2e8f0',
+                        font: { size: 12, weight: 600 },
+                        maxRotation: 0
+                    },
+                    grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                },
+                y: {
+                    beginAtZero: true,
+                    stacked: type === 'bar', // Empilhar apenas para barras
+                    // *** EIXO Y SEMPRE +1 ***
+                    max: limiteSuperior,
+                    title: {
+                        display: true,
+                        text: 'Beneficiários',
+                        color: '#e2e8f0',
+                        font: { size: 12, weight: 600 }
+                    },
+                    ticks: { 
+                        stepSize: 1, // *** DE 1 EM 1 ***
+                        color: '#e2e8f0',
+                        font: { size: 11 },
+                        callback: function(value) {
+                            // *** APENAS NÚMEROS INTEIROS ***
+                            return Number.isInteger(value) && value >= 0 ? value : '';
+                        }
+                    },
+                    grid: { color: 'rgba(255, 255, 255, 0.05)' }
+                }
+            }
+        }
+    };
+    
+    window.chartInstances[chartKey] = new Chart(ctx, chartConfig);
+    logInfo(`Gráfico de concessões CORRIGIDO: ${type} - 5 pontos + datasets individuais`);
+}
         options: {
             responsive: false,
             maintainAspectRatio: false,

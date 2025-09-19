@@ -715,11 +715,6 @@ function renderConcessoesHospital(hospitalId, type = 'bar') {
             maintainAspectRatio: false,
             // *** FORÇAR MESMA PROPORÇÃO DOS OUTROS GRÁFICOS ***
             aspectRatio: 2,
-            // *** GARANTIR BARRAS AGRUPADAS PARA TIPO BAR ***
-            interaction: {
-                mode: 'index',
-                intersect: false,
-            },
             plugins: {
                 legend: { 
                     display: true,
@@ -800,17 +795,11 @@ function renderLinhasHospital(hospitalId, type = 'bar') {
     if (!hospital || !hospital.leitos) return;
     
     const chartKey = `linhas${hospitalId}`;
-    // *** DESTRUIÇÃO FORÇADA PARA GARANTIR LIMPEZA ***
     if (window.chartInstances && window.chartInstances[chartKey]) {
         window.chartInstances[chartKey].destroy();
-        delete window.chartInstances[chartKey];
     }
     
     if (!window.chartInstances) window.chartInstances = {};
-    
-    // Limpar canvas manualmente
-    const ctx = canvas.getContext('2d');
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
     
     // EIXO X: HOJE, 24H, 48H, 72H, 96H
     const categorias = ['HOJE', '24H', '48H', '72H', '96H'];

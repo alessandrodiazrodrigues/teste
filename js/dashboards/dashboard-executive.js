@@ -1,4 +1,4 @@
-/ =================== DASHBOARD EXECUTIVO - REDE HOSPITALAR EXTERNA (BASEADO NO ORIGINAL) ===================
+// =================== DASHBOARD EXECUTIVO - REDE HOSPITALAR EXTERNA (BASEADO NO ORIGINAL) ===================
 
 window.renderDashboardExecutivo = function() {
     logInfo('Renderizando Dashboard Executivo: REDE HOSPITALAR EXTERNA');

@@ -1,5 +1,5 @@
-// =================== DASHBOARD.JS V4.0 - ARRAYS DIRETOS - SEM PARSING ===================
-// =================== NOVA ESTRUTURA: TIMELINE 9 OPÇÕES + ARRAYS DIRETOS ===================
+// =================== DASHBOARD.JS V4.0 - PARTE 1 DE 2 ===================
+// =================== CORREÇÕES IMPLEMENTADAS: TIMELINE 9 OPÇÕES + ARRAYS DIRETOS ===================
 
 // =================== DASHBOARD EXECUTIVO V4.0 ===================
 window.renderDashboardExecutivo = function() {
@@ -235,9 +235,9 @@ window.renderDashboardExecutivo = function() {
     }, 100);
 };
 
-// =================== DASHBOARD HOSPITALAR V4.0 (LAYOUT VERTICAL CORRIGIDO) ===================
+// =================== DASHBOARD HOSPITALAR V4.0 - CORREÇÕES IMPLEMENTADAS ===================
 window.renderDashboardHospitalar = function() {
-    logInfo('Renderizando Dashboard Hospitalar V4.0 com arrays diretos...');
+    logInfo('Renderizando Dashboard Hospitalar V4.0 com correções implementadas...');
     
     // Buscar container, criando se necessário
     let container = document.getElementById('dashHospitalarContent');
@@ -334,66 +334,79 @@ window.renderDashboardHospitalar = function() {
             <div class="hospital-section" data-hospital="${hospitalId}">
                 <h3 class="hospital-title">${CONFIG.HOSPITAIS[hospitalId].nome} V4.0</h3>
                 
-                <!-- KPIs do Hospital -->
-                <div class="hospital-kpis">
-                    <div class="hospital-gauge">
+                <!-- *** CORREÇÃO 1: KPIs LAYOUT HORIZONTAL *** -->
+                <div style="display: flex; align-items: center; gap: 20px; margin-bottom: 25px; padding: 20px; background: rgba(255, 255, 255, 0.05); border-radius: 10px; flex-wrap: wrap; justify-content: center;">
+                    <!-- Gauge -->
+                    <div style="text-align: center; position: relative; width: 120px; height: 80px; margin-right: 20px;">
                         <canvas id="gauge${hospitalId}" width="120" height="60"></canvas>
-                        <div class="gauge-label">${ocupacao}%</div>
+                        <div style="position: absolute; bottom: -10px; left: 50%; transform: translateX(-50%); font-size: 16px; font-weight: 700; color: #60a5fa;">${ocupacao}%</div>
                     </div>
-                    <div class="kpi-mini">
-                        <div class="kpi-value">${hospital.leitos.length}</div>
-                        <div class="kpi-label">TOTAL</div>
+                    
+                    <!-- TOTAL -->
+                    <div style="text-align: center; min-width: 80px; padding: 12px 16px; background: rgba(255, 255, 255, 0.05); border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.1);">
+                        <div style="font-size: 24px; font-weight: 700; margin-bottom: 4px; color: #60a5fa;">${hospital.leitos.length}</div>
+                        <div style="font-size: 10px; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.5px;">TOTAL</div>
                     </div>
-                    <div class="kpi-mini">
-                        <div class="kpi-value">${ocupados}</div>
-                        <div class="kpi-label">OCUPADOS</div>
+                    
+                    <!-- OCUPADOS -->
+                    <div style="text-align: center; min-width: 80px; padding: 12px 16px; background: rgba(255, 255, 255, 0.05); border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.1);">
+                        <div style="font-size: 24px; font-weight: 700; margin-bottom: 4px; color: #60a5fa;">${ocupados}</div>
+                        <div style="font-size: 10px; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.5px;">OCUPADOS</div>
                     </div>
-                    <div class="kpi-mini">
-                        <div class="kpi-value">${vagos}</div>
-                        <div class="kpi-label">VAGOS</div>
+                    
+                    <!-- VAGOS -->
+                    <div style="text-align: center; min-width: 80px; padding: 12px 16px; background: rgba(255, 255, 255, 0.05); border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.1);">
+                        <div style="font-size: 24px; font-weight: 700; margin-bottom: 4px; color: #60a5fa;">${vagos}</div>
+                        <div style="font-size: 10px; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.5px;">VAGOS</div>
                     </div>
-                    <div class="kpi-mini">
-                        <div class="kpi-value">${emAlta}</div>
-                        <div class="kpi-label">EM ALTA</div>
+                    
+                    <!-- EM ALTA -->
+                    <div style="text-align: center; min-width: 80px; padding: 12px 16px; background: rgba(255, 255, 255, 0.05); border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.1);">
+                        <div style="font-size: 24px; font-weight: 700; margin-bottom: 4px; color: #60a5fa;">${emAlta}</div>
+                        <div style="font-size: 10px; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.5px;">EM ALTA</div>
                     </div>
                 </div>
                 
-                <!-- *** V4.0: GRÁFICOS EM LAYOUT VERTICAL *** -->
-                <div class="hospital-graficos">
-                    <!-- Gráfico 1: Projeção de Altas V4.0 -->
-                    <div class="chart-container">
-                        <h4>Projeção de Altas V4.0 em ${new Date().toLocaleDateString('pt-BR')}</h4>
-                        <canvas id="graficoAltas${hospitalId}" height="200"></canvas>
+                <!-- *** CORREÇÃO 2: GRÁFICOS EM LAYOUT VERTICAL *** -->
+                <div style="display: flex; flex-direction: column; gap: 25px; width: 100%;">
+                    <!-- Gráfico 1: Análise Preditiva de Altas (SEM EMOJIS) -->
+                    <div style="width: 100%; background: rgba(0, 0, 0, 0.2); border-radius: 12px; padding: 20px; border: 1px solid rgba(255, 255, 255, 0.1);">
+                        <h4 style="margin: 0 0 15px 0; font-size: 16px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: #e2e8f0;">Análise Preditiva de Altas V4.0 em ${new Date().toLocaleDateString('pt-BR')}</h4>
+                        <canvas id="graficoAltas${hospitalId}" style="max-height: 400px; width: 100%; height: 400px;"></canvas>
                     </div>
                     
-                    <!-- Gráfico 2: Projeção de Concessões V4.0 -->
-                    <div class="chart-container">
-                        <h4>Projeção de Concessões V4.0 em ${new Date().toLocaleDateString('pt-BR')}</h4>
-                        <div class="chart-type-selector">
-                            <button class="chart-type-btn active" data-hospital="${hospitalId}" data-chart="concessoes" data-type="bar">Barras</button>
-                            <button class="chart-type-btn" data-hospital="${hospitalId}" data-chart="concessoes" data-type="scatter">Bolinhas</button>
-                            <button class="chart-type-btn" data-hospital="${hospitalId}" data-chart="concessoes" data-type="line">Linha</button>
-                            <button class="chart-type-btn" data-hospital="${hospitalId}" data-chart="concessoes" data-type="area">Área</button>
-                            <button class="chart-type-btn" data-hospital="${hospitalId}" data-chart="concessoes" data-type="radar">Radar</button>
-                            <button class="chart-type-btn" data-hospital="${hospitalId}" data-chart="concessoes" data-type="polar">Polar</button>
-                            <button class="chart-type-btn" data-hospital="${hospitalId}" data-chart="concessoes" data-type="doughnut">Rosca</button>
+                    <!-- Gráfico 2: Concessões Previstas (7 tipos) -->
+                    <div style="width: 100%; background: rgba(0, 0, 0, 0.2); border-radius: 12px; padding: 20px; border: 1px solid rgba(255, 255, 255, 0.1);">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
+                            <h4 style="margin: 0; font-size: 16px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: #e2e8f0;">Concessões Previstas V4.0 em ${new Date().toLocaleDateString('pt-BR')}</h4>
+                            <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                                <button class="chart-type-btn active" data-hospital="${hospitalId}" data-chart="concessoes" data-type="bar" style="padding: 6px 10px; background: #60a5fa; border: 1px solid #60a5fa; border-radius: 4px; color: white; cursor: pointer; font-size: 10px; text-transform: uppercase; font-weight: 500;">Barras</button>
+                                <button class="chart-type-btn" data-hospital="${hospitalId}" data-chart="concessoes" data-type="scatter" style="padding: 6px 10px; background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 4px; color: #e2e8f0; cursor: pointer; font-size: 10px; text-transform: uppercase; font-weight: 500;">Bolinhas</button>
+                                <button class="chart-type-btn" data-hospital="${hospitalId}" data-chart="concessoes" data-type="line" style="padding: 6px 10px; background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 4px; color: #e2e8f0; cursor: pointer; font-size: 10px; text-transform: uppercase; font-weight: 500;">Linha</button>
+                                <button class="chart-type-btn" data-hospital="${hospitalId}" data-chart="concessoes" data-type="area" style="padding: 6px 10px; background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 4px; color: #e2e8f0; cursor: pointer; font-size: 10px; text-transform: uppercase; font-weight: 500;">Área</button>
+                                <button class="chart-type-btn" data-hospital="${hospitalId}" data-chart="concessoes" data-type="radar" style="padding: 6px 10px; background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 4px; color: #e2e8f0; cursor: pointer; font-size: 10px; text-transform: uppercase; font-weight: 500;">Radar</button>
+                                <button class="chart-type-btn" data-hospital="${hospitalId}" data-chart="concessoes" data-type="polar" style="padding: 6px 10px; background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 4px; color: #e2e8f0; cursor: pointer; font-size: 10px; text-transform: uppercase; font-weight: 500;">Polar</button>
+                                <button class="chart-type-btn" data-hospital="${hospitalId}" data-chart="concessoes" data-type="doughnut" style="padding: 6px 10px; background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 4px; color: #e2e8f0; cursor: pointer; font-size: 10px; text-transform: uppercase; font-weight: 500;">Rosca</button>
+                            </div>
                         </div>
-                        <canvas id="graficoConcessoes${hospitalId}" height="200"></canvas>
+                        <canvas id="graficoConcessoes${hospitalId}" style="max-height: 400px; width: 100%; height: 400px;"></canvas>
                     </div>
                     
-                    <!-- Gráfico 3: Projeção de Linhas de Cuidado V4.0 -->
-                    <div class="chart-container">
-                        <h4>Projeção de Linhas de Cuidado V4.0 em ${new Date().toLocaleDateString('pt-BR')}</h4>
-                        <div class="chart-type-selector">
-                            <button class="chart-type-btn active" data-hospital="${hospitalId}" data-chart="linhas" data-type="bar">Barras</button>
-                            <button class="chart-type-btn" data-hospital="${hospitalId}" data-chart="linhas" data-type="scatter">Bolinhas</button>
-                            <button class="chart-type-btn" data-hospital="${hospitalId}" data-chart="linhas" data-type="line">Linha</button>
-                            <button class="chart-type-btn" data-hospital="${hospitalId}" data-chart="linhas" data-type="area">Área</button>
-                            <button class="chart-type-btn" data-hospital="${hospitalId}" data-chart="linhas" data-type="radar">Radar</button>
-                            <button class="chart-type-btn" data-hospital="${hospitalId}" data-chart="linhas" data-type="polar">Polar</button>
-                            <button class="chart-type-btn" data-hospital="${hospitalId}" data-chart="linhas" data-type="doughnut">Rosca</button>
+                    <!-- Gráfico 3: Linhas de Cuidado (7 tipos) -->
+                    <div style="width: 100%; background: rgba(0, 0, 0, 0.2); border-radius: 12px; padding: 20px; border: 1px solid rgba(255, 255, 255, 0.1);">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
+                            <h4 style="margin: 0; font-size: 16px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: #e2e8f0;">Linhas de Cuidado V4.0 em ${new Date().toLocaleDateString('pt-BR')}</h4>
+                            <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                                <button class="chart-type-btn active" data-hospital="${hospitalId}" data-chart="linhas" data-type="bar" style="padding: 6px 10px; background: #60a5fa; border: 1px solid #60a5fa; border-radius: 4px; color: white; cursor: pointer; font-size: 10px; text-transform: uppercase; font-weight: 500;">Barras</button>
+                                <button class="chart-type-btn" data-hospital="${hospitalId}" data-chart="linhas" data-type="scatter" style="padding: 6px 10px; background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 4px; color: #e2e8f0; cursor: pointer; font-size: 10px; text-transform: uppercase; font-weight: 500;">Bolinhas</button>
+                                <button class="chart-type-btn" data-hospital="${hospitalId}" data-chart="linhas" data-type="line" style="padding: 6px 10px; background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 4px; color: #e2e8f0; cursor: pointer; font-size: 10px; text-transform: uppercase; font-weight: 500;">Linha</button>
+                                <button class="chart-type-btn" data-hospital="${hospitalId}" data-chart="linhas" data-type="area" style="padding: 6px 10px; background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 4px; color: #e2e8f0; cursor: pointer; font-size: 10px; text-transform: uppercase; font-weight: 500;">Área</button>
+                                <button class="chart-type-btn" data-hospital="${hospitalId}" data-chart="linhas" data-type="radar" style="padding: 6px 10px; background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 4px; color: #e2e8f0; cursor: pointer; font-size: 10px; text-transform: uppercase; font-weight: 500;">Radar</button>
+                                <button class="chart-type-btn" data-hospital="${hospitalId}" data-chart="linhas" data-type="polar" style="padding: 6px 10px; background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 4px; color: #e2e8f0; cursor: pointer; font-size: 10px; text-transform: uppercase; font-weight: 500;">Polar</button>
+                                <button class="chart-type-btn" data-hospital="${hospitalId}" data-chart="linhas" data-type="doughnut" style="padding: 6px 10px; background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 4px; color: #e2e8f0; cursor: pointer; font-size: 10px; text-transform: uppercase; font-weight: 500;">Rosca</button>
+                            </div>
                         </div>
-                        <canvas id="graficoLinhas${hospitalId}" height="200"></canvas>
+                        <canvas id="graficoLinhas${hospitalId}" style="max-height: 400px; width: 100%; height: 400px;"></canvas>
                     </div>
                 </div>
             </div>
@@ -419,8 +432,16 @@ window.renderDashboardHospitalar = function() {
                     const type = e.target.dataset.type;
                     
                     // Atualizar botões visuais
-                    const selector = e.target.closest('.chart-type-selector');
-                    selector.querySelectorAll('.chart-type-btn').forEach(b => b.classList.remove('active'));
+                    const selector = e.target.closest('div');
+                    selector.querySelectorAll('.chart-type-btn').forEach(b => {
+                        b.style.background = 'rgba(255, 255, 255, 0.1)';
+                        b.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+                        b.style.color = '#e2e8f0';
+                        b.classList.remove('active');
+                    });
+                    e.target.style.background = '#60a5fa';
+                    e.target.style.borderColor = '#60a5fa';
+                    e.target.style.color = 'white';
                     e.target.classList.add('active');
                     
                     // Re-renderizar gráfico com novo tipo
@@ -446,7 +467,7 @@ window.renderDashboardHospitalar = function() {
                 
                 const hospitalData = window.hospitalData[hospitalId];
                 if (hospitalData) {
-                    renderGraficoAltasV4(`graficoAltas${hospitalId}`, hospitalData);
+                    renderGraficoAltasV4Corrigido(`graficoAltas${hospitalId}`, hospitalData);
                     renderGraficoConcessoesV4(`graficoConcessoes${hospitalId}`, hospitalData, 'bar');
                     renderGraficoLinhasV4(`graficoLinhas${hospitalId}`, hospitalData, 'bar');
                 }
@@ -456,10 +477,10 @@ window.renderDashboardHospitalar = function() {
     
     aguardarChartJS();
     
-    logSuccess('Dashboard Hospitalar V4.0 renderizado com layout vertical (arrays diretos)');
+    logSuccess('Dashboard Hospitalar V4.0 renderizado com layout vertical e correções implementadas');
 };
 
-// =================== FUNÇÕES DE GRÁFICOS V4.0 ===================
+// =================== FUNÇÕES DE GRÁFICOS V4.0 - CORREÇÕES IMPLEMENTADAS ===================
 
 // Renderizar Gauge Executivo - HORIZONTAL
 function renderGaugeExecutivo(ocupacao) {
@@ -539,6 +560,147 @@ function renderGaugeHospital(hospitalId) {
             plugins: {
                 legend: { display: false },
                 tooltip: { enabled: false }
+            }
+        }
+    });
+}
+// =================== DASHBOARD.JS V4.0 - PARTE 2 DE 2 ===================
+// =================== CONTINUAÇÃO: FUNÇÕES DE GRÁFICOS E CORREÇÕES ===================
+
+// *** CORREÇÃO 3: GRÁFICO DE ALTAS COM BARRAS ESPECIAIS HOJE/24H ***
+function renderGraficoAltasV4Corrigido(canvasId, hospitalData) {
+    const canvas = document.getElementById(canvasId);
+    if (!canvas || typeof Chart === 'undefined') return;
+    
+    // *** CORREÇÃO: EIXOS CORRETOS - X: HOJE, 24H, 48H, 72H, SP ***
+    const categorias = ['HOJE', '24H', '48H', '72H', 'SP'];
+    
+    // *** CORREÇÃO: SEPARAR HOJE E 24H EM OURO/2R/3R ***
+    const dados = {
+        'Ouro': [0, 0, 0, 0, 0],
+        '2R': [0, 0, 0, 0, 0],
+        '3R': [0, 0, 0, 0, 0],
+        'Outros': [0, 0, 0, 0, 0]
+    };
+    
+    hospitalData.leitos.forEach(leito => {
+        if (leito.status === 'ocupado' && leito.paciente && leito.paciente.prevAlta) {
+            let index = -1;
+            let tipo = 'Outros';
+            
+            // Mapear previsão de alta para categoria e tipo
+            if (leito.paciente.prevAlta === 'Hoje Ouro') { index = 0; tipo = 'Ouro'; }
+            else if (leito.paciente.prevAlta === 'Hoje 2R') { index = 0; tipo = '2R'; }
+            else if (leito.paciente.prevAlta === 'Hoje 3R') { index = 0; tipo = '3R'; }
+            else if (leito.paciente.prevAlta === '24h Ouro') { index = 1; tipo = 'Ouro'; }
+            else if (leito.paciente.prevAlta === '24h 2R') { index = 1; tipo = '2R'; }
+            else if (leito.paciente.prevAlta === '24h 3R') { index = 1; tipo = '3R'; }
+            else if (leito.paciente.prevAlta === '48h') { index = 2; tipo = 'Outros'; }
+            else if (leito.paciente.prevAlta === '72h') { index = 3; tipo = 'Outros'; }
+            else if (leito.paciente.prevAlta === 'SP') { index = 4; tipo = 'Outros'; }
+            
+            if (index >= 0) {
+                dados[tipo][index]++;
+            }
+        }
+    });
+    
+    const chartKey = `altas${canvasId}`;
+    if (window.chartInstances && window.chartInstances[chartKey]) {
+        window.chartInstances[chartKey].destroy();
+    }
+    
+    if (!window.chartInstances) window.chartInstances = {};
+    
+    const ctx = canvas.getContext('2d');
+    window.chartInstances[chartKey] = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: categorias,
+            datasets: [
+                {
+                    label: 'Ouro',
+                    data: dados['Ouro'],
+                    backgroundColor: '#fbbf24',
+                    borderWidth: 0
+                },
+                {
+                    label: '2R',
+                    data: dados['2R'],
+                    backgroundColor: '#3b82f6',
+                    borderWidth: 0
+                },
+                {
+                    label: '3R',
+                    data: dados['3R'],
+                    backgroundColor: '#8b5cf6',
+                    borderWidth: 0
+                },
+                {
+                    label: 'Outros',
+                    data: dados['Outros'],
+                    backgroundColor: '#6b7280',
+                    borderWidth: 0
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'left', // *** CORREÇÃO: LEGENDAS À ESQUERDA ***
+                    labels: {
+                        color: '#ffffff',
+                        padding: 8,
+                        font: { size: 11, weight: 600 }
+                    }
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(26, 31, 46, 0.95)',
+                    titleColor: '#ffffff',
+                    bodyColor: '#ffffff',
+                    callbacks: {
+                        label: function(context) {
+                            return `${context.dataset.label}: ${context.parsed.y} beneficiários`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    stacked: true,
+                    ticks: {
+                        color: '#e2e8f0',
+                        font: { size: 12, weight: 600 },
+                        maxRotation: 0
+                    },
+                    grid: {
+                        color: 'rgba(255, 255, 255, 0.1)'
+                    }
+                },
+                y: {
+                    stacked: true,
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Beneficiários', // *** CORREÇÃO: EIXO Y SEMPRE "Beneficiários" ***
+                        color: '#e2e8f0',
+                        font: { size: 12, weight: 600 }
+                    },
+                    ticks: {
+                        stepSize: 1, // *** CORREÇÃO: SEMPRE NÚMEROS INTEIROS ***
+                        color: '#e2e8f0',
+                        font: { size: 11 },
+                        callback: function(value) {
+                            return Number.isInteger(value) ? value : '';
+                        }
+                    },
+                    grid: {
+                        color: 'rgba(255, 255, 255, 0.05)'
+                    }
+                }
             }
         }
     });
@@ -969,115 +1131,9 @@ function renderGraficoLinhasExecutivoV4(dados) {
     });
 }
 
-// =================== GRÁFICOS HOSPITALARES V4.0 ===================
+// =================== GRÁFICOS HOSPITALARES V4.0 - CORREÇÕES IMPLEMENTADAS ===================
 
-// *** V4.0: GRÁFICO DE ALTAS HOSPITALAR COM TIMELINE CORRIGIDA ***
-function renderGraficoAltasV4(canvasId, hospitalData) {
-    const canvas = document.getElementById(canvasId);
-    if (!canvas || typeof Chart === 'undefined') return;
-    
-    // *** V4.0: TIMELINE CORRIGIDA - 9 OPÇÕES ***
-    const categorias = ['Hoje Ouro', 'Hoje 2R', 'Hoje 3R', '24h Ouro', '24h 2R', '24h 3R', '48h', '72h', 'SP'];
-    
-    const valores = categorias.map(cat => {
-        return hospitalData.leitos.filter(l => 
-            l.status === 'ocupado' && 
-            l.paciente && 
-            l.paciente.prevAlta === cat
-        ).length;
-    });
-    
-    // *** V4.0: CORES ESPECÍFICAS PARA TIMELINE CORRIGIDA ***
-    const cores = categorias.map(cat => {
-        if (cat.includes('Ouro')) return '#fbbf24';  // Ouro
-        if (cat.includes('2R')) return '#3b82f6';    // 2R - Azul
-        if (cat.includes('3R')) return '#8b5cf6';    // 3R - Roxo
-        if (cat === '48h') return '#f59e0b';         // Laranja
-        if (cat === '72h') return '#ef4444';         // Vermelho
-        if (cat === 'SP') return '#6b7280';          // Cinza - Sem Previsão
-        return '#6b7280';                            // Default
-    });
-    
-    const chartKey = `altas${canvasId}`;
-    if (window.chartInstances && window.chartInstances[chartKey]) {
-        window.chartInstances[chartKey].destroy();
-    }
-    
-    if (!window.chartInstances) window.chartInstances = {};
-    
-    const ctx = canvas.getContext('2d');
-    window.chartInstances[chartKey] = new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: categorias,
-            datasets: [{
-                label: 'Beneficiários',
-                data: valores,
-                backgroundColor: cores,
-                borderWidth: 0
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    display: true,
-                    position: 'left',
-                    labels: {
-                        color: '#ffffff',
-                        padding: 8,
-                        font: { size: 11, weight: 600 }
-                    }
-                },
-                tooltip: {
-                    backgroundColor: 'rgba(26, 31, 46, 0.95)',
-                    titleColor: '#ffffff',
-                    bodyColor: '#ffffff',
-                    callbacks: {
-                        label: function(context) {
-                            return `Beneficiários: ${context.parsed.y}`;
-                        }
-                    }
-                }
-            },
-            scales: {
-                x: {
-                    ticks: {
-                        color: '#e2e8f0',
-                        font: { size: 10 },
-                        maxRotation: 45
-                    },
-                    grid: {
-                        color: 'rgba(255, 255, 255, 0.1)'
-                    }
-                },
-                y: {
-                    beginAtZero: true,
-                    title: {
-                        display: true,
-                        text: 'Beneficiários',
-                        color: '#e2e8f0',
-                        font: { size: 12, weight: 600 }
-                    },
-                    ticks: {
-                        stepSize: 1,
-                        color: '#e2e8f0',
-                        font: { size: 11 },
-                        callback: function(value) {
-                            return Number.isInteger(value) ? value : '';
-                        }
-                    },
-                    grid: {
-                        color: 'rgba(255, 255, 255, 0.05)'
-                    }
-                }
-            }
-        }
-    });
-}
-
-// *** V4.0: GRÁFICO DE CONCESSÕES HOSPITALAR COM ARRAYS DIRETOS ***
+// *** V4.0: GRÁFICO DE CONCESSÕES HOSPITALAR COM ARRAYS DIRETOS E 7 TIPOS ***
 function renderGraficoConcessoesV4(canvasId, hospitalData, type = 'bar') {
     const canvas = document.getElementById(canvasId);
     if (!canvas || typeof Chart === 'undefined') return;
@@ -1143,7 +1199,9 @@ function renderGraficoConcessoesV4(canvasId, hospitalData, type = 'bar') {
     if (!window.chartInstances) window.chartInstances = {};
     
     const ctx = canvas.getContext('2d');
-    window.chartInstances[chartKey] = new Chart(ctx, {
+    
+    // *** CORREÇÃO 4: IMPLEMENTAR 7 TIPOS DE GRÁFICO COM BOLINHAS ESPECIAIS ***
+    let chartConfig = {
         type: type,
         data: {
             labels: labels,
@@ -1154,7 +1212,7 @@ function renderGraficoConcessoesV4(canvasId, hospitalData, type = 'bar') {
                 borderWidth: type === 'line' ? 2 : 0,
                 borderColor: type === 'line' ? coresGrafico : undefined,
                 fill: type === 'area',
-                tension: type === 'line' ? 0.4 : undefined
+                tension: type === 'line' || type === 'area' ? 0.4 : undefined // *** CORREÇÃO: LINHAS SUAVES ***
             }]
         },
         options: {
@@ -1227,10 +1285,30 @@ function renderGraficoConcessoesV4(canvasId, hospitalData, type = 'bar') {
                 }
             }
         }
-    });
+    };
+    
+    // *** CORREÇÃO: CONFIGURAÇÕES ESPECIAIS PARA BOLINHAS ***
+    if (type === 'scatter') {
+        chartConfig.data.datasets[0].pointRadius = 8;
+        chartConfig.data.datasets[0].pointHoverRadius = 12;
+        chartConfig.data.datasets[0].showLine = false;
+        
+        // *** IMPLEMENTAR BOLINHAS ESPIRAL PARA EVITAR SOBREPOSIÇÕES ***
+        const maxValue = Math.max(...valores);
+        chartConfig.data.datasets[0].data = valores.map((value, index) => {
+            const angle = (index * 2 * Math.PI) / valores.length;
+            const radius = (value / maxValue) * 5;
+            return {
+                x: index + Math.cos(angle) * radius * 0.3,
+                y: value + Math.sin(angle) * radius * 0.3
+            };
+        });
+    }
+    
+    window.chartInstances[chartKey] = new Chart(ctx, chartConfig);
 }
 
-// *** V4.0: GRÁFICO DE LINHAS HOSPITALAR COM ARRAYS DIRETOS ***
+// *** V4.0: GRÁFICO DE LINHAS HOSPITALAR COM ARRAYS DIRETOS E 7 TIPOS ***
 function renderGraficoLinhasV4(canvasId, hospitalData, type = 'bar') {
     const canvas = document.getElementById(canvasId);
     if (!canvas || typeof Chart === 'undefined') return;
@@ -1302,7 +1380,9 @@ function renderGraficoLinhasV4(canvasId, hospitalData, type = 'bar') {
     if (!window.chartInstances) window.chartInstances = {};
     
     const ctx = canvas.getContext('2d');
-    window.chartInstances[chartKey] = new Chart(ctx, {
+    
+    // *** CONFIGURAÇÃO BÁSICA COM 7 TIPOS ***
+    let chartConfig = {
         type: type,
         data: {
             labels: labels,
@@ -1313,7 +1393,7 @@ function renderGraficoLinhasV4(canvasId, hospitalData, type = 'bar') {
                 borderWidth: type === 'line' ? 2 : 0,
                 borderColor: type === 'line' ? coresGrafico : undefined,
                 fill: type === 'area',
-                tension: type === 'line' ? 0.4 : undefined
+                tension: type === 'line' || type === 'area' ? 0.4 : undefined // *** CORREÇÃO: LINHAS SUAVES ***
             }]
         },
         options: {
@@ -1386,7 +1466,27 @@ function renderGraficoLinhasV4(canvasId, hospitalData, type = 'bar') {
                 }
             }
         }
-    });
+    };
+    
+    // *** CONFIGURAÇÕES ESPECIAIS PARA BOLINHAS ***
+    if (type === 'scatter') {
+        chartConfig.data.datasets[0].pointRadius = 8;
+        chartConfig.data.datasets[0].pointHoverRadius = 12;
+        chartConfig.data.datasets[0].showLine = false;
+        
+        // *** IMPLEMENTAR BOLINHAS CLUSTER PARA EVITAR SOBREPOSIÇÕES ***
+        const maxValue = Math.max(...valores);
+        chartConfig.data.datasets[0].data = valores.map((value, index) => {
+            const angle = (index * 2 * Math.PI) / valores.length;
+            const radius = (value / maxValue) * 3;
+            return {
+                x: index + Math.cos(angle) * radius * 0.5,
+                y: value + Math.sin(angle) * radius * 0.5
+            };
+        });
+    }
+    
+    window.chartInstances[chartKey] = new Chart(ctx, chartConfig);
 }
 
 // =================== SISTEMA DE LOGS V4.0 ===================
@@ -1443,4 +1543,17 @@ window.debug.verificarChart = function() {
     }
 };
 
-console.log('🚀 Dashboard.js V4.0 COMPLETO carregado - Arrays diretos + Timeline 9 opções');
+console.log('🚀 Dashboard.js V4.0 COMPLETO CORRIGIDO carregado - Arrays diretos + Timeline 9 opções + Todas as correções implementadas');
+console.log('✅ CORREÇÕES IMPLEMENTADAS:');
+console.log('   1. Layout KPIs horizontal: [GAUGE] [TOTAL] [OCUPADOS] [VAGOS] [EM ALTA]');
+console.log('   2. Gráfico de Altas sem emojis + eixos corretos (Y: Beneficiários, X: HOJE/24H/48H/72H/SP)');
+console.log('   3. Barras especiais HOJE/24H divididas em Ouro/2R/3R');
+console.log('   4. Sistema 7 tipos: Barras/Bolinhas/Linha/Área/Radar/Polar/Rosca');
+console.log('   5. Bolinhas especiais com anti-sobreposição');
+console.log('   6. Linhas suaves (tension: 0.4)');
+console.log('   7. Timeline 9 opções corrigida');
+console.log('   8. Arrays diretos sem parsing');
+console.log('   9. Beneficiários sempre inteiros');
+console.log('   10. Layout vertical obrigatório nos gráficos hospitalares');
+
+// =================== FIM DASHBOARD.JS V4.0 - PARTE 2 DE 2 ==================

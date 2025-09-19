@@ -442,24 +442,30 @@ function renderAltasHospital(hospitalId) {
                     label: 'Ouro',
                     data: dados['Ouro'],
                     backgroundColor: '#fbbf24',
-                    borderWidth: 0
+                    borderWidth: 0,
+                    barPercentage: 0.6,
+                    categoryPercentage: 0.8
                 },
                 {
                     label: '2R',
                     data: dados['2R'],
                     backgroundColor: '#3b82f6',
-                    borderWidth: 0
+                    borderWidth: 0,
+                    barPercentage: 0.6,
+                    categoryPercentage: 0.8
                 },
                 {
                     label: '3R',
                     data: dados['3R'],
                     backgroundColor: '#8b5cf6',
-                    borderWidth: 0
+                    borderWidth: 0,
+                    barPercentage: 0.6,
+                    categoryPercentage: 0.8
                 }
             ]
         },
         options: {
-            responsive: true,
+            responsive: false,
             maintainAspectRatio: false,
             plugins: {
                 legend: {
@@ -499,6 +505,7 @@ function renderAltasHospital(hospitalId) {
                 y: {
                     stacked: true,
                     beginAtZero: true,
+                    max: Math.max(...Object.values(dados).flat()) + 1,
                     title: {
                         display: true,
                         text: 'Beneficiários',
@@ -551,7 +558,7 @@ function renderConcessoesHospital(hospitalId, type = 'scatter') {
     
     if (!window.chartInstances) window.chartInstances = {};
     
-    // Processar dados localmente
+    // Processar dados localmente - GARANTIR NÚMEROS INTEIROS
     const concessoesCount = {};
     
     hospital.leitos.forEach(leito => {
@@ -562,7 +569,8 @@ function renderConcessoesHospital(hospitalId, type = 'scatter') {
             
             concessoesList.forEach(concessao => {
                 if (concessao && concessao.trim()) {
-                    concessoesCount[concessao.trim()] = (concessoesCount[concessao.trim()] || 0) + 1;
+                    const key = concessao.trim();
+                    concessoesCount[key] = (concessoesCount[key] || 0) + 1; // SEMPRE +1
                 }
             });
         }
@@ -577,86 +585,183 @@ function renderConcessoesHospital(hospitalId, type = 'scatter') {
     }
     
     const labels = concessoesOrdenadas.map(([nome]) => nome);
-    const valores = concessoesOrdenadas.map(([, count]) => count);
+    const valores = concessoesOrdenadas.map(([, count]) => count); // JÁ SÃO INTEIROS
     
     const ctx = canvas.getContext('2d');
     
-    let chartConfig = {
-        type: type === 'scatter' ? 'scatter' : type,
-        data: {
-            labels: labels,
-            datasets: [{
-                label: 'Beneficiários',
-                data: type === 'scatter' ? 
-                    valores.map((value, index) => ({
-                        x: index + 1, // *** CORREÇÃO: X como índice simples ***
-                        y: Math.round(value) // *** CORREÇÃO: Y sempre número inteiro ***
-                    })) : 
-                    valores.map(v => Math.round(v)), // *** CORREÇÃO: Todos os valores inteiros ***
-                backgroundColor: '#007A53',
-                borderColor: '#007A53',
-                borderWidth: type === 'line' ? 2 : 0,
-                fill: type === 'area',
-                tension: (type === 'line' || type === 'area') ? 0.4 : 0,
-                pointRadius: type === 'scatter' ? 8 : 4
-            }]
-        },
-        options: {
-            responsive: false,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { display: false },
-                tooltip: {
-                    backgroundColor: 'rgba(26, 31, 46, 0.95)',
-                    titleColor: '#ffffff',
-                    bodyColor: '#ffffff',
-                    callbacks: {
-                        label: function(context) {
-                            // *** CORREÇÃO: TOOLTIP SEMPRE MOSTRA NÚMEROS INTEIROS ***
-                            const value = Math.round(context.parsed.y || context.parsed);
-                            return `${value} beneficiário${value !== 1 ? 's' : ''}`;
+    const ctx = canvas.getContext('2d');
+    
+    // *** CORREÇÃO: CONFIGURAÇÃO CORRETA PARA CADA TIPO ***
+    let chartConfig;
+    
+    if (type === 'scatter') {
+        chartConfig = {
+            type: 'scatter',
+            data: {
+                datasets: [{
+                    label: 'Concessões',
+                    data: valores.map((value, index) => ({
+                        x: index + 1,
+                        y: value // JÁ É INTEIRO
+                    })),
+                    backgroundColor: '#007A53',
+                    borderColor: '#007A53',
+                    pointRadius: 8
+                }]
+            },
+            options: {
+                responsive: false,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: 'rgba(26, 31, 46, 0.95)',
+                        titleColor: '#ffffff',
+                        bodyColor: '#ffffff',
+                        callbacks: {
+                            label: function(context) {
+                                return `${context.parsed.y} beneficiário${context.parsed.y !== 1 ? 's' : ''}`;
+                            }
                         }
                     }
-                }
-            },
-            scales: {
-                x: {
-                    type: type === 'scatter' ? 'linear' : 'category',
-                    title: {
-                        display: type === 'scatter',
-                        text: 'Concessões',
-                        color: '#e2e8f0'
-                    },
-                    ticks: { 
-                        color: '#e2e8f0',
-                        // *** CORREÇÃO: SEMPRE NÚMEROS INTEIROS ***
-                        stepSize: 1,
-                        callback: function(value) {
-                            return Number.isInteger(value) ? value : '';
-                        }
-                    },
-                    grid: { color: 'rgba(255, 255, 255, 0.1)' }
                 },
-                y: {
-                    beginAtZero: true,
-                    title: {
-                        display: true,
-                        text: 'Beneficiários',
-                        color: '#e2e8f0'
+                scales: {
+                    x: {
+                        type: 'linear',
+                        title: { display: true, text: 'Concessões', color: '#e2e8f0' },
+                        ticks: { 
+                            stepSize: 1,
+                            color: '#e2e8f0',
+                            callback: function(value) {
+                                return Number.isInteger(value) ? value : '';
+                            }
+                        },
+                        grid: { color: 'rgba(255, 255, 255, 0.1)' }
                     },
-                    ticks: { 
-                        stepSize: 1, // *** CORREÇÃO: STEP SIZE 1 ***
-                        color: '#e2e8f0',
-                        callback: function(value) {
-                            // *** CORREÇÃO: APENAS NÚMEROS INTEIROS NO EIXO ***
-                            return Number.isInteger(value) && value >= 0 ? value : '';
-                        }
-                    },
-                    grid: { color: 'rgba(255, 255, 255, 0.05)' }
+                    y: {
+                        beginAtZero: true,
+                        max: Math.max(...valores) + 1,
+                        title: { display: true, text: 'Beneficiários', color: '#e2e8f0' },
+                        ticks: { 
+                            stepSize: 1,
+                            color: '#e2e8f0',
+                            callback: function(value) {
+                                return Number.isInteger(value) && value >= 0 ? value : '';
+                            }
+                        },
+                        grid: { color: 'rgba(255, 255, 255, 0.05)' }
+                    }
                 }
             }
-        }
-    };
+        };
+    } else if (type === 'bar') {
+        chartConfig = {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Beneficiários',
+                    data: valores,
+                    backgroundColor: '#007A53',
+                    borderColor: '#007A53',
+                    borderWidth: 1,
+                    barPercentage: 0.6,
+                    categoryPercentage: 0.8
+                }]
+            },
+            options: {
+                responsive: false,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return `${context.parsed.y} beneficiário${context.parsed.y !== 1 ? 's' : ''}`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        ticks: { color: '#e2e8f0', maxRotation: 45 },
+                        grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        max: Math.max(...valores) + 1,
+                        title: { display: true, text: 'Beneficiários', color: '#e2e8f0' },
+                        ticks: { 
+                            stepSize: 1,
+                            color: '#e2e8f0',
+                            callback: function(value) {
+                                return Number.isInteger(value) ? value : '';
+                            }
+                        },
+                        grid: { color: 'rgba(255, 255, 255, 0.05)' }
+                    }
+                }
+            }
+        };
+    } else if (type === 'line') {
+        chartConfig = {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Beneficiários',
+                    data: valores,
+                    backgroundColor: 'rgba(0, 122, 83, 0.2)',
+                    borderColor: '#007A53',
+                    borderWidth: 2,
+                    fill: false,
+                    tension: 0.4,
+                    pointRadius: 4
+                }]
+            },
+            options: {
+                responsive: false,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: Math.max(...valores) + 1,
+                        ticks: { stepSize: 1 }
+                    }
+                }
+            }
+        };
+    } else if (type === 'area') {
+        chartConfig = {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Beneficiários',
+                    data: valores,
+                    backgroundColor: 'rgba(0, 122, 83, 0.3)',
+                    borderColor: '#007A53',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 4
+                }]
+            },
+            options: {
+                responsive: false,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: Math.max(...valores) + 1,
+                        ticks: { stepSize: 1 }
+                    }
+                }
+            }
+        };
+    }
     
     window.chartInstances[chartKey] = new Chart(ctx, chartConfig);
     logInfo(`Gráfico de concessões LOCAL renderizado para ${hospitalId}: ${type}`);
@@ -689,7 +794,7 @@ function renderLinhasHospital(hospitalId, type = 'scatter') {
     
     if (!window.chartInstances) window.chartInstances = {};
     
-    // Processar dados localmente
+    // Processar dados localmente - GARANTIR NÚMEROS INTEIROS
     const linhasCount = {};
     
     hospital.leitos.forEach(leito => {
@@ -700,7 +805,8 @@ function renderLinhasHospital(hospitalId, type = 'scatter') {
             
             linhasList.forEach(linha => {
                 if (linha && linha.trim()) {
-                    linhasCount[linha.trim()] = (linhasCount[linha.trim()] || 0) + 1;
+                    const key = linha.trim();
+                    linhasCount[key] = (linhasCount[key] || 0) + 1; // SEMPRE +1
                 }
             });
         }
@@ -715,83 +821,183 @@ function renderLinhasHospital(hospitalId, type = 'scatter') {
     }
     
     const labels = linhasOrdenadas.map(([nome]) => nome);
-    const valores = linhasOrdenadas.map(([, count]) => count);
+    const valores = linhasOrdenadas.map(([, count]) => count); // JÁ SÃO INTEIROS
     
     const ctx = canvas.getContext('2d');
     
-    let chartConfig = {
-        type: type === 'scatter' ? 'scatter' : type,
-        data: {
-            labels: labels,
-            datasets: [{
-                label: 'Beneficiários',
-                data: type === 'scatter' ? 
-                    valores.map((value, index) => ({
+    const ctx = canvas.getContext('2d');
+    
+    // *** CORREÇÃO: CONFIGURAÇÃO CORRETA PARA CADA TIPO DE GRÁFICO ***
+    let chartConfig;
+    
+    if (type === 'scatter') {
+        chartConfig = {
+            type: 'scatter',
+            data: {
+                datasets: [{
+                    label: 'Linhas de Cuidado',
+                    data: valores.map((value, index) => ({
                         x: index + 1,
-                        y: Math.round(value)
-                    })) : 
-                    valores.map(v => Math.round(v)),
-                backgroundColor: '#ED0A72',
-                borderColor: '#ED0A72',
-                borderWidth: type === 'line' ? 2 : 0,
-                fill: type === 'area',
-                tension: (type === 'line' || type === 'area') ? 0.4 : 0,
-                pointRadius: type === 'scatter' ? 8 : 4
-            }]
-        },
-        options: {
-            responsive: false,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { display: false },
-                tooltip: {
-                    backgroundColor: 'rgba(26, 31, 46, 0.95)',
-                    titleColor: '#ffffff',
-                    bodyColor: '#ffffff',
-                    callbacks: {
-                        label: function(context) {
-                            const value = Math.round(context.parsed.y || context.parsed);
-                            return `${value} beneficiário${value !== 1 ? 's' : ''}`;
+                        y: value // JÁ É INTEIRO
+                    })),
+                    backgroundColor: '#ED0A72',
+                    borderColor: '#ED0A72',
+                    pointRadius: 8
+                }]
+            },
+            options: {
+                responsive: false,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: 'rgba(26, 31, 46, 0.95)',
+                        titleColor: '#ffffff',
+                        bodyColor: '#ffffff',
+                        callbacks: {
+                            label: function(context) {
+                                return `${context.parsed.y} beneficiário${context.parsed.y !== 1 ? 's' : ''}`;
+                            }
                         }
                     }
-                }
-            },
-            scales: {
-                x: {
-                    type: type === 'scatter' ? 'linear' : 'category',
-                    title: {
-                        display: type === 'scatter',
-                        text: 'Linhas de Cuidado',
-                        color: '#e2e8f0'
-                    },
-                    ticks: { 
-                        color: '#e2e8f0',
-                        stepSize: 1,
-                        callback: function(value) {
-                            return Number.isInteger(value) ? value : '';
-                        }
-                    },
-                    grid: { color: 'rgba(255, 255, 255, 0.1)' }
                 },
-                y: {
-                    beginAtZero: true,
-                    title: {
-                        display: true,
-                        text: 'Beneficiários',
-                        color: '#e2e8f0'
+                scales: {
+                    x: {
+                        type: 'linear',
+                        title: { display: true, text: 'Linhas de Cuidado', color: '#e2e8f0' },
+                        ticks: { 
+                            stepSize: 1,
+                            color: '#e2e8f0',
+                            callback: function(value) {
+                                return Number.isInteger(value) ? value : '';
+                            }
+                        },
+                        grid: { color: 'rgba(255, 255, 255, 0.1)' }
                     },
-                    ticks: { 
-                        stepSize: 1,
-                        color: '#e2e8f0',
-                        callback: function(value) {
-                            return Number.isInteger(value) && value >= 0 ? value : '';
-                        }
-                    },
-                    grid: { color: 'rgba(255, 255, 255, 0.05)' }
+                    y: {
+                        beginAtZero: true,
+                        max: Math.max(...valores) + 1,
+                        title: { display: true, text: 'Beneficiários', color: '#e2e8f0' },
+                        ticks: { 
+                            stepSize: 1,
+                            color: '#e2e8f0',
+                            callback: function(value) {
+                                return Number.isInteger(value) && value >= 0 ? value : '';
+                            }
+                        },
+                        grid: { color: 'rgba(255, 255, 255, 0.05)' }
+                    }
                 }
             }
-        }
-    };
+        };
+    } else if (type === 'bar') {
+        chartConfig = {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Beneficiários',
+                    data: valores,
+                    backgroundColor: '#ED0A72',
+                    borderColor: '#ED0A72',
+                    borderWidth: 1,
+                    barPercentage: 0.6,
+                    categoryPercentage: 0.8
+                }]
+            },
+            options: {
+                responsive: false,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return `${context.parsed.y} beneficiário${context.parsed.y !== 1 ? 's' : ''}`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        ticks: { color: '#e2e8f0', maxRotation: 45 },
+                        grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        max: Math.max(...valores) + 1,
+                        title: { display: true, text: 'Beneficiários', color: '#e2e8f0' },
+                        ticks: { 
+                            stepSize: 1,
+                            color: '#e2e8f0',
+                            callback: function(value) {
+                                return Number.isInteger(value) ? value : '';
+                            }
+                        },
+                        grid: { color: 'rgba(255, 255, 255, 0.05)' }
+                    }
+                }
+            }
+        };
+    } else if (type === 'line') {
+        chartConfig = {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Beneficiários',
+                    data: valores,
+                    backgroundColor: 'rgba(237, 10, 114, 0.2)',
+                    borderColor: '#ED0A72',
+                    borderWidth: 2,
+                    fill: false,
+                    tension: 0.4,
+                    pointRadius: 4
+                }]
+            },
+            options: {
+                responsive: false,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: Math.max(...valores) + 1,
+                        ticks: { stepSize: 1 }
+                    }
+                }
+            }
+        };
+    } else if (type === 'area') {
+        chartConfig = {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Beneficiários',
+                    data: valores,
+                    backgroundColor: 'rgba(237, 10, 114, 0.3)',
+                    borderColor: '#ED0A72',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 4
+                }]
+            },
+            options: {
+                responsive: false,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: Math.max(...valores) + 1,
+                        ticks: { stepSize: 1 }
+                    }
+                }
+            }
+        };
+    }
     
     window.chartInstances[chartKey] = new Chart(ctx, chartConfig);
     logInfo(`Gráfico de linhas LOCAL renderizado para ${hospitalId}: ${type}`);

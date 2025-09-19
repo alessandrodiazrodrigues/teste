@@ -452,10 +452,12 @@ function renderAltasHospital(hospitalId) {
         }
     });
     
-    // CALCULAR VALOR MÁXIMO PARA EIXO Y +1
+    // CALCULAR VALOR MÁXIMO PARA EIXO Y +1 (REFORÇADO)
     const todosDados = [...dados['Ouro'], ...dados['2R'], ...dados['3R']];
-    const valorMaximo = Math.max(...todosDados);
-    const limiteSuperior = valorMaximo + 1;
+    const valorMaximo = Math.max(...todosDados, 0); // Garantir pelo menos 0
+    const limiteSuperior = valorMaximo + 1; // SEMPRE +1
+    
+    logInfo(`Gráfico Altas ${hospitalId}: max=${valorMaximo}, limite=${limiteSuperior}`);
     
     const ctx = canvas.getContext('2d');
     window.chartInstances[chartKey] = new Chart(ctx, {
@@ -527,8 +529,9 @@ function renderAltasHospital(hospitalId) {
                 y: {
                     stacked: true,
                     beginAtZero: true,
-                    // EIXO Y ATÉ VALOR MÁXIMO + 1
+                    // EIXO Y SEMPRE +1 (FORÇADO)
                     max: limiteSuperior,
+                    min: 0,
                     title: {
                         display: true,
                         text: 'Beneficiários',
@@ -540,7 +543,7 @@ function renderAltasHospital(hospitalId) {
                         color: '#e2e8f0',
                         font: { size: 11 },
                         callback: function(value) {
-                            return Number.isInteger(value) ? value : '';
+                            return Number.isInteger(value) && value >= 0 ? value : '';
                         }
                     },
                     grid: {
@@ -611,10 +614,12 @@ function renderConcessoesHospital(hospitalId, type = 'bar') {
     
     if (concessoesOrdenadas.length === 0) return;
     
-    // CALCULAR VALOR MÁXIMO PARA EIXO Y +1
+    // CALCULAR VALOR MÁXIMO PARA EIXO Y +1 (REFORÇADO)
     const todosValores = concessoesOrdenadas.flatMap(([, dados]) => dados);
-    const valorMaximo = Math.max(...todosValores);
-    const limiteSuperior = valorMaximo + 1;
+    const valorMaximo = Math.max(...todosValores, 0); // Garantir pelo menos 0
+    const limiteSuperior = valorMaximo + 1; // SEMPRE +1
+    
+    logInfo(`Gráfico Concessões ${hospitalId}: max=${valorMaximo}, limite=${limiteSuperior}`);
     
     // CRIAR UMA DATASET POR CONCESSÃO
     const datasets = concessoesOrdenadas.map(([nome, dados]) => {
@@ -623,7 +628,7 @@ function renderConcessoesHospital(hospitalId, type = 'bar') {
         if (type === 'scatter') {
             return {
                 label: nome,
-                data: dados.map((value, index) => ({ x: index, y: value })),
+                data: dados, // *** USAR DADOS DIRETOS PARA CATEGORIAS ***
                 backgroundColor: cor,
                 pointRadius: 8,
                 showLine: false
@@ -678,9 +683,22 @@ function renderConcessoesHospital(hospitalId, type = 'bar') {
                     align: 'start',
                     labels: {
                         color: '#ffffff',
-                        padding: 8,
+                        padding: 15, // *** AUMENTAR PADDING PARA FORÇAR QUEBRA ***
                         font: { size: 11, weight: 500 },
-                        usePointStyle: true
+                        usePointStyle: true,
+                        boxWidth: 12,
+                        boxHeight: 12,
+                        generateLabels: function(chart) {
+                            // Forçar quebra de linha entre legendas
+                            return chart.data.datasets.map((dataset, i) => ({
+                                text: dataset.label + '\n', // *** QUEBRA MANUAL ***
+                                fillStyle: dataset.backgroundColor,
+                                strokeStyle: dataset.borderColor,
+                                lineWidth: 0,
+                                hidden: !chart.isDatasetVisible(i),
+                                index: i
+                            }));
+                        }
                     }
                 },
                 tooltip: {
@@ -697,7 +715,7 @@ function renderConcessoesHospital(hospitalId, type = 'bar') {
             },
             scales: {
                 x: {
-                    type: type === 'scatter' ? 'linear' : 'category',
+                    type: 'category', // *** SEMPRE CATEGORY PARA MOSTRAR LABELS ***
                     stacked: type === 'bar',
                     ticks: { 
                         color: '#e2e8f0',
@@ -709,7 +727,9 @@ function renderConcessoesHospital(hospitalId, type = 'bar') {
                 y: {
                     beginAtZero: true,
                     stacked: type === 'bar',
-                    max: limiteSuperior, // +1
+                    // EIXO Y SEMPRE +1 (FORÇADO)
+                    max: limiteSuperior,
+                    min: 0,
                     title: {
                         display: true,
                         text: 'Beneficiários',
@@ -857,9 +877,22 @@ function renderLinhasHospital(hospitalId, type = 'bar') {
                     align: 'start',
                     labels: {
                         color: '#ffffff',
-                        padding: 8,
+                        padding: 15, // *** AUMENTAR PADDING PARA FORÇAR QUEBRA ***
                         font: { size: 11, weight: 500 },
-                        usePointStyle: true
+                        usePointStyle: true,
+                        boxWidth: 12,
+                        boxHeight: 12,
+                        generateLabels: function(chart) {
+                            // Forçar quebra de linha entre legendas
+                            return chart.data.datasets.map((dataset, i) => ({
+                                text: dataset.label + '\n', // *** QUEBRA MANUAL ***
+                                fillStyle: dataset.backgroundColor,
+                                strokeStyle: dataset.borderColor,
+                                lineWidth: 0,
+                                hidden: !chart.isDatasetVisible(i),
+                                index: i
+                            }));
+                        }
                     }
                 },
                 tooltip: {
@@ -1112,6 +1145,7 @@ function getHospitalCSS() {
                 position: relative;
                 height: 400px;
                 width: 100%;
+                max-width: 100%; /* *** FORÇAR LARGURA IGUAL ****/
                 background: rgba(0, 0, 0, 0.2);
                 border-radius: 8px;
                 padding: 15px;
@@ -1124,6 +1158,17 @@ function getHospitalCSS() {
                 max-height: 370px !important;
                 max-width: calc(100% - 30px) !important;
                 object-fit: contain;
+            }
+            
+            /* *** GARANTIR LARGURA UNIFORME DOS GRÁFICOS *** */
+            .grafico-item {
+                width: 100%;
+                max-width: 100%;
+                background: rgba(255, 255, 255, 0.03);
+                border-radius: 12px;
+                padding: 20px;
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                box-sizing: border-box;
             }
             
             /* RESPONSIVIDADE */

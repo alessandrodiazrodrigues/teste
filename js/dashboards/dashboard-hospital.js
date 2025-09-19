@@ -186,9 +186,9 @@ window.renderDashboardHospitalar = function() {
                 text.textContent = 'ESCURO';
             }
             
-            // Re-renderizar todos os gráficos
+            // Re-renderizar todos os gráficos (exceto gauge)
             hospitaisComDados.forEach(hospitalId => {
-                renderGaugeHospital(hospitalId);
+                // Gauge não muda com o fundo
                 renderAltasHospital(hospitalId);
                 renderConcessoesHospital(hospitalId, window.graficosState[hospitalId]?.concessoes || 'bar');
                 renderLinhasHospital(hospitalId, window.graficosState[hospitalId]?.linhas || 'bar');
@@ -205,7 +205,7 @@ window.renderDashboardHospitalar = function() {
         }
         
         setTimeout(() => {
-            // Event listeners para botões de tipos de gráficos (sem toggle)
+            // Event listeners para botões de tipos de gráficos
             document.querySelectorAll('[data-hospital][data-chart][data-type]').forEach(btn => {
                 btn.addEventListener('click', (e) => {
                     const hospital = e.target.dataset.hospital;
@@ -218,10 +218,12 @@ window.renderDashboardHospitalar = function() {
                     e.target.classList.add('active');
                     
                     // Atualizar state
-                    if (!window.graficosState[hospital]) window.graficosState[hospital] = {};
+                    if (!window.graficosState[hospital]) {
+                        window.graficosState[hospital] = { concessoes: 'bar', linhas: 'bar' };
+                    }
                     window.graficosState[hospital][chart] = type;
                     
-                    // Renderizar gráfico
+                    // Renderizar gráfico com o tipo correto
                     if (chart === 'concessoes') {
                         renderConcessoesHospital(hospital, type);
                     } else if (chart === 'linhas') {
@@ -375,7 +377,7 @@ function calcularKPIsHospital(hospitalId) {
     return { ocupacao, total, ocupados, vagos, altas };
 }
 
-// Plugin para fundo branco/escuro nos gráficos
+// Plugin para fundo branco/escuro nos gráficos (NÃO usado no gauge)
 const backgroundPlugin = {
     id: 'customBackground',
     beforeDraw: (chart) => {
@@ -387,7 +389,7 @@ const backgroundPlugin = {
     }
 };
 
-// Gauge do hospital
+// Gauge do hospital (SEM plugin de background)
 function renderGaugeHospital(hospitalId) {
     const canvas = document.getElementById(`gauge${hospitalId}`);
     if (!canvas || typeof Chart === 'undefined') return;
@@ -426,8 +428,8 @@ function renderGaugeHospital(hospitalId) {
                 },
                 rotation: -90,
                 circumference: 180
-            },
-            plugins: [backgroundPlugin]
+            }
+            // NÃO adicionar plugins aqui
         });
     } catch (error) {
         logError(`Erro ao renderizar gauge ${hospitalId}:`, error);
@@ -519,15 +521,7 @@ function renderAltasHospital(hospitalId) {
                         usePointStyle: true,
                         pointStyle: 'rect',
                         boxWidth: 12,
-                        boxHeight: 12,
-                        generateLabels: function(chart) {
-                            const original = Chart.defaults.plugins.legend.labels.generateLabels;
-                            const labels = original.call(this, chart);
-                            labels.forEach(label => {
-                                label.lineWidth = 0;
-                            });
-                            return labels;
-                        }
+                        boxHeight: 12
                     }
                 },
                 tooltip: {
@@ -572,57 +566,10 @@ function renderAltasHospital(hospitalId) {
                     },
                     grid: { color: corGrid }
                 }
-            },
-            layout: {
-                padding: {
-                    bottom: 10
-                }
             }
         },
         plugins: [backgroundPlugin]
     });
-}
-
-// Função para aplicar jitter em gráficos scatter
-function aplicarJitterScatter(datasets, categorias) {
-    // Detectar sobreposições por categoria
-    categorias.forEach((cat, catIndex) => {
-        const pontosNaCategoria = [];
-        
-        datasets.forEach((dataset, dsIndex) => {
-            if (dataset.data[catIndex] && dataset.data[catIndex] > 0) {
-                pontosNaCategoria.push({
-                    datasetIndex: dsIndex,
-                    valor: dataset.data[catIndex]
-                });
-            }
-        });
-        
-        // Se há mais de um ponto na mesma categoria, aplicar jitter
-        if (pontosNaCategoria.length > 1) {
-            const angleStep = (2 * Math.PI) / pontosNaCategoria.length;
-            pontosNaCategoria.forEach((ponto, i) => {
-                const angle = i * angleStep;
-                const jitterX = Math.cos(angle) * 0.15; // Pequeno deslocamento horizontal
-                const jitterY = Math.sin(angle) * 0.05; // Pequeno deslocamento vertical
-                
-                // Converter para formato scatter com jitter
-                datasets[ponto.datasetIndex].data[catIndex] = {
-                    x: catIndex + jitterX,
-                    y: ponto.valor + jitterY
-                };
-            });
-        } else if (pontosNaCategoria.length === 1) {
-            // Converter para formato scatter sem jitter
-            const ponto = pontosNaCategoria[0];
-            datasets[ponto.datasetIndex].data[catIndex] = {
-                x: catIndex,
-                y: ponto.valor
-            };
-        }
-    });
-    
-    return datasets;
 }
 
 // Gráfico de Concessões
@@ -682,13 +629,20 @@ function renderConcessoesHospital(hospitalId, type = 'bar') {
     const valorMaximo = Math.max(...todosValores, 0);
     const limiteSuperior = valorMaximo + 1;
     
-    let datasets = concessoesOrdenadas.map(([nome, dados]) => {
+    const datasets = concessoesOrdenadas.map(([nome, dados]) => {
         const cor = CORES_CONCESSOES[nome] || '#007A53';
         
         if (type === 'scatter') {
+            // Para scatter, criar pontos onde há valores
+            const scatterData = [];
+            dados.forEach((valor, index) => {
+                if (valor > 0) {
+                    scatterData.push({ x: index, y: valor });
+                }
+            });
             return {
                 label: nome,
-                data: dados.map(v => v > 0 ? v : null),
+                data: scatterData,
                 backgroundColor: cor,
                 pointRadius: 8,
                 showLine: false
@@ -725,26 +679,97 @@ function renderConcessoesHospital(hospitalId, type = 'bar') {
         }
     });
     
-    // Aplicar jitter se for scatter
-    if (type === 'scatter') {
-        datasets = aplicarJitterScatter(datasets, categorias);
-    }
-    
     const corTexto = window.fundoBranco ? '#000000' : '#ffffff';
     const corGrid = window.fundoBranco ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.1)';
     
     const ctx = canvas.getContext('2d');
+    
+    // Configurações específicas para scatter
+    const scatterOptions = type === 'scatter' ? {
+        scales: {
+            x: {
+                type: 'linear',
+                position: 'bottom',
+                min: -0.5,
+                max: 4.5,
+                ticks: {
+                    stepSize: 1,
+                    color: corTexto,
+                    font: { size: 12, weight: 600 },
+                    callback: function(value) {
+                        const index = Math.round(value);
+                        return categorias[index] || '';
+                    }
+                },
+                grid: { color: corGrid }
+            },
+            y: {
+                beginAtZero: true,
+                max: limiteSuperior,
+                min: 0,
+                title: {
+                    display: true,
+                    text: 'Beneficiários',
+                    color: corTexto,
+                    font: { size: 12, weight: 600 }
+                },
+                ticks: {
+                    stepSize: 1,
+                    color: corTexto,
+                    font: { size: 11 },
+                    callback: function(value) {
+                        return Number.isInteger(value) && value >= 0 ? value : '';
+                    }
+                },
+                grid: { color: corGrid }
+            }
+        }
+    } : {
+        scales: {
+            x: {
+                stacked: false,
+                ticks: {
+                    color: corTexto,
+                    font: { size: 12, weight: 600 },
+                    maxRotation: 0
+                },
+                grid: { color: corGrid }
+            },
+            y: {
+                beginAtZero: true,
+                stacked: false,
+                max: limiteSuperior,
+                min: 0,
+                title: {
+                    display: true,
+                    text: 'Beneficiários',
+                    color: corTexto,
+                    font: { size: 12, weight: 600 }
+                },
+                ticks: {
+                    stepSize: 1,
+                    color: corTexto,
+                    font: { size: 11 },
+                    callback: function(value) {
+                        return Number.isInteger(value) && value >= 0 ? value : '';
+                    }
+                },
+                grid: { color: corGrid }
+            }
+        }
+    };
+    
     window.chartInstances[chartKey] = new Chart(ctx, {
         type: type === 'scatter' ? 'scatter' : type === 'area' ? 'line' : type,
         data: {
-            labels: categorias,
+            labels: type === 'scatter' ? undefined : categorias,
             datasets: datasets
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
-                legend: { 
+                legend: {
                     display: true,
                     position: 'bottom',
                     align: 'start',
@@ -755,15 +780,7 @@ function renderConcessoesHospital(hospitalId, type = 'bar') {
                         usePointStyle: true,
                         pointStyle: 'circle',
                         boxWidth: 12,
-                        boxHeight: 12,
-                        generateLabels: function(chart) {
-                            const original = Chart.defaults.plugins.legend.labels.generateLabels;
-                            const labels = original.call(this, chart);
-                            labels.forEach(label => {
-                                label.lineWidth = 0;
-                            });
-                            return labels;
-                        }
+                        boxHeight: 12
                     }
                 },
                 tooltip: {
@@ -772,66 +789,13 @@ function renderConcessoesHospital(hospitalId, type = 'bar') {
                     bodyColor: '#ffffff',
                     callbacks: {
                         label: function(context) {
-                            const value = type === 'scatter' ? 
-                                Math.round(context.parsed.y) : 
-                                context.parsed.y;
+                            const value = context.parsed.y;
                             return `${context.dataset.label}: ${value} beneficiário${value !== 1 ? 's' : ''}`;
                         }
                     }
                 }
             },
-            scales: {
-                x: type === 'scatter' ? {
-                    type: 'linear',
-                    position: 'bottom',
-                    min: -0.5,
-                    max: 4.5,
-                    ticks: {
-                        stepSize: 1,
-                        color: corTexto,
-                        font: { size: 12, weight: 600 },
-                        callback: function(value) {
-                            return categorias[Math.round(value)] || '';
-                        }
-                    },
-                    grid: { color: corGrid }
-                } : {
-                    type: 'category',
-                    stacked: false,
-                    ticks: { 
-                        color: corTexto,
-                        font: { size: 12, weight: 600 },
-                        maxRotation: 0
-                    },
-                    grid: { color: corGrid }
-                },
-                y: {
-                    beginAtZero: true,
-                    stacked: false,
-                    max: limiteSuperior,
-                    min: 0,
-                    title: {
-                        display: true,
-                        text: 'Beneficiários',
-                        color: corTexto,
-                        font: { size: 12, weight: 600 }
-                    },
-                    ticks: { 
-                        stepSize: 1,
-                        color: corTexto,
-                        font: { size: 11 },
-                        callback: function(value) {
-                            return Number.isInteger(value) && value >= 0 && value <= limiteSuperior ? value : '';
-                        }
-                    },
-                    grid: { color: corGrid }
-                }
-            },
-            layout: {
-                padding: {
-                    bottom: 10
-                }
-            }
+            ...scatterOptions
         },
         plugins: [backgroundPlugin]
     });
@@ -894,13 +858,20 @@ function renderLinhasHospital(hospitalId, type = 'bar') {
     const valorMaximo = Math.max(...todosValores);
     const limiteSuperior = valorMaximo + 1;
     
-    let datasets = linhasOrdenadas.map(([nome, dados]) => {
+    const datasets = linhasOrdenadas.map(([nome, dados]) => {
         const cor = CORES_LINHAS[nome] || '#ED0A72';
         
         if (type === 'scatter') {
+            // Para scatter, criar pontos onde há valores
+            const scatterData = [];
+            dados.forEach((valor, index) => {
+                if (valor > 0) {
+                    scatterData.push({ x: index, y: valor });
+                }
+            });
             return {
                 label: nome,
-                data: dados.map(v => v > 0 ? v : null),
+                data: scatterData,
                 backgroundColor: cor,
                 pointRadius: 8,
                 showLine: false
@@ -937,26 +908,97 @@ function renderLinhasHospital(hospitalId, type = 'bar') {
         }
     });
     
-    // Aplicar jitter se for scatter
-    if (type === 'scatter') {
-        datasets = aplicarJitterScatter(datasets, categorias);
-    }
-    
     const corTexto = window.fundoBranco ? '#000000' : '#ffffff';
     const corGrid = window.fundoBranco ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.1)';
     
     const ctx = canvas.getContext('2d');
+    
+    // Configurações específicas para scatter
+    const scatterOptions = type === 'scatter' ? {
+        scales: {
+            x: {
+                type: 'linear',
+                position: 'bottom',
+                min: -0.5,
+                max: 4.5,
+                ticks: {
+                    stepSize: 1,
+                    color: corTexto,
+                    font: { size: 12, weight: 600 },
+                    callback: function(value) {
+                        const index = Math.round(value);
+                        return categorias[index] || '';
+                    }
+                },
+                grid: { color: corGrid }
+            },
+            y: {
+                beginAtZero: true,
+                max: limiteSuperior,
+                min: 0,
+                title: {
+                    display: true,
+                    text: 'Beneficiários',
+                    color: corTexto,
+                    font: { size: 12, weight: 600 }
+                },
+                ticks: {
+                    stepSize: 1,
+                    color: corTexto,
+                    font: { size: 11 },
+                    callback: function(value) {
+                        return Number.isInteger(value) && value >= 0 ? value : '';
+                    }
+                },
+                grid: { color: corGrid }
+            }
+        }
+    } : {
+        scales: {
+            x: {
+                stacked: false,
+                ticks: {
+                    color: corTexto,
+                    font: { size: 12, weight: 600 },
+                    maxRotation: 0
+                },
+                grid: { color: corGrid }
+            },
+            y: {
+                beginAtZero: true,
+                stacked: false,
+                max: limiteSuperior,
+                min: 0,
+                title: {
+                    display: true,
+                    text: 'Beneficiários',
+                    color: corTexto,
+                    font: { size: 12, weight: 600 }
+                },
+                ticks: {
+                    stepSize: 1,
+                    color: corTexto,
+                    font: { size: 11 },
+                    callback: function(value) {
+                        return Number.isInteger(value) && value >= 0 ? value : '';
+                    }
+                },
+                grid: { color: corGrid }
+            }
+        }
+    };
+    
     window.chartInstances[chartKey] = new Chart(ctx, {
         type: type === 'scatter' ? 'scatter' : type === 'area' ? 'line' : type,
         data: {
-            labels: categorias,
+            labels: type === 'scatter' ? undefined : categorias,
             datasets: datasets
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
-                legend: { 
+                legend: {
                     display: true,
                     position: 'bottom',
                     align: 'start',
@@ -967,15 +1009,7 @@ function renderLinhasHospital(hospitalId, type = 'bar') {
                         usePointStyle: true,
                         pointStyle: 'circle',
                         boxWidth: 12,
-                        boxHeight: 12,
-                        generateLabels: function(chart) {
-                            const original = Chart.defaults.plugins.legend.labels.generateLabels;
-                            const labels = original.call(this, chart);
-                            labels.forEach(label => {
-                                label.lineWidth = 0;
-                            });
-                            return labels;
-                        }
+                        boxHeight: 12
                     }
                 },
                 tooltip: {
@@ -984,66 +1018,13 @@ function renderLinhasHospital(hospitalId, type = 'bar') {
                     bodyColor: '#ffffff',
                     callbacks: {
                         label: function(context) {
-                            const value = type === 'scatter' ? 
-                                Math.round(context.parsed.y) : 
-                                context.parsed.y;
+                            const value = context.parsed.y;
                             return `${context.dataset.label}: ${value} beneficiário${value !== 1 ? 's' : ''}`;
                         }
                     }
                 }
             },
-            scales: {
-                x: type === 'scatter' ? {
-                    type: 'linear',
-                    position: 'bottom',
-                    min: -0.5,
-                    max: 4.5,
-                    ticks: {
-                        stepSize: 1,
-                        color: corTexto,
-                        font: { size: 12, weight: 600 },
-                        callback: function(value) {
-                            return categorias[Math.round(value)] || '';
-                        }
-                    },
-                    grid: { color: corGrid }
-                } : {
-                    type: 'category',
-                    stacked: false,
-                    ticks: { 
-                        color: corTexto,
-                        font: { size: 12, weight: 600 },
-                        maxRotation: 0
-                    },
-                    grid: { color: corGrid }
-                },
-                y: {
-                    beginAtZero: true,
-                    stacked: false,
-                    max: limiteSuperior,
-                    min: 0,
-                    title: {
-                        display: true,
-                        text: 'Beneficiários',
-                        color: corTexto,
-                        font: { size: 12, weight: 600 }
-                    },
-                    ticks: { 
-                        stepSize: 1,
-                        color: corTexto,
-                        font: { size: 11 },
-                        callback: function(value) {
-                            return Number.isInteger(value) && value >= 0 && value <= limiteSuperior ? value : '';
-                        }
-                    },
-                    grid: { color: corGrid }
-                }
-            },
-            layout: {
-                padding: {
-                    bottom: 10
-                }
-            }
+            ...scatterOptions
         },
         plugins: [backgroundPlugin]
     });
@@ -1257,20 +1238,6 @@ function getHospitalCSS() {
                 width: 100% !important;
                 height: 100% !important;
                 max-height: 370px !important;
-            }
-            
-            /* Forçar legendas uma por linha */
-            .chartjs-legend {
-                display: flex !important;
-                flex-direction: column !important;
-                align-items: flex-start !important;
-            }
-            
-            .chartjs-legend li {
-                display: flex !important;
-                align-items: center !important;
-                margin-bottom: 8px !important;
-                width: auto !important;
             }
             
             @media (max-width: 1200px) {

@@ -8,6 +8,9 @@ window.graficosState = {
     H4: { concessoes: 'bar', linhas: 'bar', preditivos: 'bar' }
 };
 
+// *** ESTADO GLOBAL PARA FUNDO BRANCO ***
+window.fundoBranco = false;
+
 // *** PALETA DE CORES PANTONE PARA CONCESSÕES ***
 const CORES_CONCESSOES = {
     'Transição Domiciliar': '#007A53',
@@ -169,9 +172,32 @@ window.renderDashboardHospitalar = function() {
                     const chart = e.target.dataset.chart;
                     const type = e.target.dataset.type;
                     
-                    // Atualizar botão ativo
+                    // *** CORREÇÃO: BOTÃO FUNDO BRANCO ***
+                    if (type === 'toggle-bg') {
+                        window.fundoBranco = !window.fundoBranco;
+                        
+                        // Atualizar visual do botão
+                        const botao = e.target;
+                        if (window.fundoBranco) {
+                            botao.classList.add('active');
+                            botao.textContent = '☀️ CLARO';
+                        } else {
+                            botao.classList.remove('active');
+                            botao.textContent = '🌙 ESCURO';
+                        }
+                        
+                        // Re-renderizar todos os gráficos do hospital
+                        renderAltasHospital(hospital);
+                        renderConcessoesHospital(hospital, window.graficosState[hospital]?.concessoes || 'bar');
+                        renderLinhasHospital(hospital, window.graficosState[hospital]?.linhas || 'bar');
+                        
+                        logInfo(`Fundo alterado para: ${window.fundoBranco ? 'branco' : 'escuro'}`);
+                        return;
+                    }
+                    
+                    // Atualizar botão ativo (apenas para botões de tipo de gráfico)
                     const grupo = e.target.parentElement;
-                    grupo.querySelectorAll('.chart-btn').forEach(b => b.classList.remove('active'));
+                    grupo.querySelectorAll('.chart-btn:not([data-type="toggle-bg"])').forEach(b => b.classList.remove('active'));
                     e.target.classList.add('active');
                     
                     // Atualizar state
@@ -257,13 +283,16 @@ function renderHospitalSection(hospitalId) {
                 <div class="grafico-item">
                     <div class="chart-header">
                         <h4>Análise Preditiva de Altas em ${new Date().toLocaleDateString('pt-BR')}</h4>
+                        <div class="chart-controls">
+                            <button class="chart-btn toggle-btn" data-hospital="${hospitalId}" data-chart="altas" data-type="toggle-bg">🌙 ESCURO</button>
+                        </div>
                     </div>
                     <div class="chart-container">
                         <canvas id="graficoAltas${hospitalId}" width="800" height="400"></canvas>
                     </div>
                 </div>
                 
-                <!-- Gráfico de Concessões - APENAS 4 TIPOS -->
+                <!-- Gráfico de Concessões - APENAS 4 TIPOS + BOTÃO FUNDO -->
                 <div class="grafico-item">
                     <div class="chart-header">
                         <h4>Concessões Previstas em ${new Date().toLocaleDateString('pt-BR')}</h4>
@@ -272,6 +301,7 @@ function renderHospitalSection(hospitalId) {
                             <button class="chart-btn" data-hospital="${hospitalId}" data-chart="concessoes" data-type="scatter">Bolinhas</button>
                             <button class="chart-btn" data-hospital="${hospitalId}" data-chart="concessoes" data-type="line">Linha</button>
                             <button class="chart-btn" data-hospital="${hospitalId}" data-chart="concessoes" data-type="area">Área</button>
+                            <button class="chart-btn toggle-btn" data-hospital="${hospitalId}" data-chart="concessoes" data-type="toggle-bg">🌙 ESCURO</button>
                         </div>
                     </div>
                     <div class="chart-container">
@@ -279,7 +309,7 @@ function renderHospitalSection(hospitalId) {
                     </div>
                 </div>
                 
-                <!-- Gráfico de Linhas - APENAS 4 TIPOS -->
+                <!-- Gráfico de Linhas - APENAS 4 TIPOS + BOTÃO FUNDO -->
                 <div class="grafico-item">
                     <div class="chart-header">
                         <h4>Linhas de Cuidado em ${new Date().toLocaleDateString('pt-BR')}</h4>
@@ -288,6 +318,7 @@ function renderHospitalSection(hospitalId) {
                             <button class="chart-btn" data-hospital="${hospitalId}" data-chart="linhas" data-type="scatter">Bolinhas</button>
                             <button class="chart-btn" data-hospital="${hospitalId}" data-chart="linhas" data-type="line">Linha</button>
                             <button class="chart-btn" data-hospital="${hospitalId}" data-chart="linhas" data-type="area">Área</button>
+                            <button class="chart-btn toggle-btn" data-hospital="${hospitalId}" data-chart="linhas" data-type="toggle-bg">🌙 ESCURO</button>
                         </div>
                     </div>
                     <div class="chart-container">
@@ -462,6 +493,12 @@ function renderAltasHospital(hospitalId) {
     logInfo(`Gráfico Altas ${hospitalId}: max=${valorMaximo}, limite=${limiteSuperior}`);
     
     const ctx = canvas.getContext('2d');
+    
+    // *** CORES DINÂMICAS BASEADAS NO FUNDO ***
+    const corTexto = window.fundoBranco ? '#000000' : '#ffffff';
+    const corGrid = window.fundoBranco ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.1)';
+    const corFundo = window.fundoBranco ? '#ffffff' : 'transparent';
+    
     window.chartInstances[chartKey] = new Chart(ctx, {
         type: 'bar',
         data: {
@@ -508,6 +545,7 @@ function renderAltasHospital(hospitalId) {
         options: {
             responsive: true,
             maintainAspectRatio: false,
+            backgroundColor: corFundo,
             // BARRAS MAIS FINAS
             barPercentage: 0.6,
             categoryPercentage: 0.8,
@@ -521,7 +559,7 @@ function renderAltasHospital(hospitalId) {
                     // *** FORÇAR UMA LEGENDA POR LINHA ***
                     maxWidth: 150,
                     labels: {
-                        color: '#ffffff',
+                        color: corTexto,
                         padding: 25, // Maior espaçamento vertical
                         font: { size: 13, weight: 600 }, // *** FONTE 15% MAIOR ***
                         usePointStyle: true,
@@ -545,12 +583,12 @@ function renderAltasHospital(hospitalId) {
                 x: {
                     stacked: true,
                     ticks: {
-                        color: '#e2e8f0',
+                        color: corTexto,
                         font: { size: 12, weight: 600 },
                         maxRotation: 0
                     },
                     grid: {
-                        color: 'rgba(255, 255, 255, 0.1)'
+                        color: corGrid
                     }
                 },
                 y: {
@@ -562,19 +600,19 @@ function renderAltasHospital(hospitalId) {
                     title: {
                         display: true,
                         text: 'Beneficiários',
-                        color: '#e2e8f0',
+                        color: corTexto,
                         font: { size: 12, weight: 600 }
                     },
                     ticks: {
                         stepSize: 1,
-                        color: '#e2e8f0',
+                        color: corTexto,
                         font: { size: 11 },
                         callback: function(value) {
                             return Number.isInteger(value) && value >= 0 ? value : '';
                         }
                     },
                     grid: {
-                        color: 'rgba(255, 255, 255, 0.05)'
+                        color: corGrid
                     }
                 }
             }
@@ -653,18 +691,9 @@ function renderConcessoesHospital(hospitalId, type = 'bar') {
         const cor = CORES_CONCESSOES[nome] || '#007A53';
         
         if (type === 'scatter') {
-            // *** PARA SCATTER: MAPEAR VALORES > 0 PARA POSIÇÕES CORRETAS ***
-            const pontosValidos = [];
-            dados.forEach((value, timelineIndex) => {
-                if (value > 0) { // Só adicionar se valor > 0
-                    pontosValidos.push(value); // Para gráfico category, usar valor direto
-                }
-            });
-            
-            // Se não há pontos válidos, retornar dataset vazio mas visível na legenda
             return {
                 label: nome,
-                data: pontosValidos.length > 0 ? dados.map(v => v > 0 ? v : null) : [],
+                data: dados.map(v => v > 0 ? v : null), // *** CORREÇÃO: NULL PARA ZEROS ***
                 backgroundColor: cor,
                 pointRadius: 8,
                 showLine: false,
@@ -704,6 +733,11 @@ function renderConcessoesHospital(hospitalId, type = 'bar') {
     
     const ctx = canvas.getContext('2d');
     
+    // *** CORES DINÂMICAS BASEADAS NO FUNDO ***
+    const corTexto = window.fundoBranco ? '#000000' : '#ffffff';
+    const corGrid = window.fundoBranco ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.1)';
+    const corFundo = window.fundoBranco ? '#ffffff' : 'transparent';
+    
     window.chartInstances[chartKey] = new Chart(ctx, {
         type: type === 'scatter' ? 'scatter' : type === 'area' ? 'line' : type,
         data: {
@@ -713,6 +747,7 @@ function renderConcessoesHospital(hospitalId, type = 'bar') {
         options: {
             responsive: false,
             maintainAspectRatio: false,
+            backgroundColor: corFundo,
             // *** FORÇAR MESMA PROPORÇÃO DOS OUTROS GRÁFICOS ***
             aspectRatio: 2,
             plugins: {
@@ -723,7 +758,7 @@ function renderConcessoesHospital(hospitalId, type = 'bar') {
                     // *** FORÇAR UMA LEGENDA POR LINHA ***
                     maxWidth: 150,
                     labels: {
-                        color: '#ffffff', // *** FONTE BRANCA FORÇADA ***
+                        color: corTexto,
                         padding: 25, // Maior espaçamento vertical
                         font: { size: 13, weight: 500 }, // *** FONTE 15% MAIOR ***
                         usePointStyle: true,
@@ -746,14 +781,14 @@ function renderConcessoesHospital(hospitalId, type = 'bar') {
             },
             scales: {
                 x: {
-                    type: 'category', // *** SEMPRE CATEGORY PARA MOSTRAR LABELS ***
+                    type: 'category',
                     stacked: false, // *** BARRAS AGRUPADAS, NÃO EMPILHADAS ***
                     ticks: { 
-                        color: '#e2e8f0',
+                        color: corTexto,
                         font: { size: 12, weight: 600 },
                         maxRotation: 0
                     },
-                    grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                    grid: { color: corGrid }
                 },
                 y: {
                     beginAtZero: true,
@@ -765,19 +800,19 @@ function renderConcessoesHospital(hospitalId, type = 'bar') {
                     title: {
                         display: true,
                         text: 'Beneficiários',
-                        color: '#e2e8f0',
+                        color: corTexto,
                         font: { size: 12, weight: 600 }
                     },
                     ticks: { 
                         stepSize: 1,
                         max: limiteSuperior, // Tripla garantia
-                        color: '#e2e8f0',
+                        color: corTexto,
                         font: { size: 11 },
                         callback: function(value) {
                             return Number.isInteger(value) && value >= 0 && value <= limiteSuperior ? value : '';
                         }
                     },
-                    grid: { color: 'rgba(255, 255, 255, 0.05)' }
+                    grid: { color: corGrid }
                 }
             }
         }
@@ -855,10 +890,11 @@ function renderLinhasHospital(hospitalId, type = 'bar') {
         if (type === 'scatter') {
             return {
                 label: nome,
-                data: dados.map((value, index) => ({ x: index, y: value })),
+                data: dados.map(v => v > 0 ? v : null), // *** CORREÇÃO: NULL PARA ZEROS ***
                 backgroundColor: cor,
                 pointRadius: 8,
-                showLine: false
+                showLine: false,
+                spanGaps: false
             };
         } else if (type === 'line') {
             return {
@@ -894,6 +930,11 @@ function renderLinhasHospital(hospitalId, type = 'bar') {
     
     const ctx = canvas.getContext('2d');
     
+    // *** CORES DINÂMICAS BASEADAS NO FUNDO ***
+    const corTexto = window.fundoBranco ? '#000000' : '#ffffff';
+    const corGrid = window.fundoBranco ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.1)';
+    const corFundo = window.fundoBranco ? '#ffffff' : 'transparent';
+    
     window.chartInstances[chartKey] = new Chart(ctx, {
         type: type === 'scatter' ? 'scatter' : type === 'area' ? 'line' : type,
         data: {
@@ -903,6 +944,7 @@ function renderLinhasHospital(hospitalId, type = 'bar') {
         options: {
             responsive: false,
             maintainAspectRatio: false,
+            backgroundColor: corFundo,
             // *** FORÇAR MESMA PROPORÇÃO DOS OUTROS GRÁFICOS ***
             aspectRatio: 2,
             plugins: {
@@ -913,7 +955,7 @@ function renderLinhasHospital(hospitalId, type = 'bar') {
                     // *** FORÇAR UMA LEGENDA POR LINHA ***
                     maxWidth: 150,
                     labels: {
-                        color: '#ffffff', // *** FONTE BRANCA FORÇADA ***
+                        color: corTexto,
                         padding: 25, // Maior espaçamento vertical
                         font: { size: 13, weight: 500 }, // *** FONTE 15% MAIOR ***
                         usePointStyle: true,
@@ -936,18 +978,18 @@ function renderLinhasHospital(hospitalId, type = 'bar') {
             },
             scales: {
                 x: {
-                    type: type === 'scatter' ? 'linear' : 'category',
-                    stacked: type === 'bar',
+                    type: 'category',
+                    stacked: false, // *** CORREÇÃO: BARRAS AGRUPADAS ***
                     ticks: { 
-                        color: '#e2e8f0',
+                        color: corTexto,
                         font: { size: 12, weight: 600 },
                         maxRotation: 0
                     },
-                    grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                    grid: { color: corGrid }
                 },
                 y: {
                     beginAtZero: true,
-                    stacked: type === 'bar',
+                    stacked: false, // *** CORREÇÃO: BARRAS AGRUPADAS ***
                     // *** FORÇAR EIXO Y SEMPRE +1 (CRÍTICO) ***
                     max: limiteSuperior,
                     min: 0,
@@ -955,19 +997,19 @@ function renderLinhasHospital(hospitalId, type = 'bar') {
                     title: {
                         display: true,
                         text: 'Beneficiários',
-                        color: '#e2e8f0',
+                        color: corTexto,
                         font: { size: 12, weight: 600 }
                     },
                     ticks: { 
                         stepSize: 1,
                         max: limiteSuperior, // Tripla garantia
-                        color: '#e2e8f0',
+                        color: corTexto,
                         font: { size: 11 },
                         callback: function(value) {
                             return Number.isInteger(value) && value >= 0 && value <= limiteSuperior ? value : '';
                         }
                     },
-                    grid: { color: 'rgba(255, 255, 255, 0.05)' }
+                    grid: { color: corGrid }
                 }
             }
         }
@@ -1144,6 +1186,7 @@ function getHospitalCSS() {
                 display: flex;
                 gap: 6px;
                 flex-wrap: wrap;
+                align-items: center;
             }
             
             .chart-btn {
@@ -1170,6 +1213,21 @@ function getHospitalCSS() {
                 border-color: #60a5fa;
                 color: white;
                 box-shadow: 0 2px 8px rgba(96, 165, 250, 0.3);
+            }
+            
+            /* *** BOTÃO TOGGLE FUNDO ****/
+            .toggle-btn {
+                margin-left: 10px;
+                border-left: 2px solid rgba(255, 255, 255, 0.3);
+                padding-left: 15px;
+                background: rgba(255, 255, 255, 0.05);
+                font-size: 10px;
+            }
+            
+            .toggle-btn.active {
+                background: #f59e0b;
+                border-color: #f59e0b;
+                color: #000000;
             }
             
             .chart-container {
@@ -1237,4 +1295,4 @@ function getHospitalCSS() {
     `;
 }
 
-console.log('Dashboard Hospitalar V4.0 RESTAURADO - Apenas concessões e linhas corrigidas');
+console.log('Dashboard Hospitalar V4.0 FINAL - Barras agrupadas + Bolinhas sem zero + Botão fundo branco');

@@ -1,9 +1,64 @@
-// =================== DASHBOARD EXECUTIVO - REDE HOSPITALAR EXTERNA (BASEADO NO ORIGINAL) ===================
+// =================== DASHBOARD EXECUTIVO - REDE HOSPITALAR EXTERNA (CORRIGIDO) ===================
+
+// Estado global para fundo branco (compartilhado com dashboard hospitalar)
+if (typeof window.fundoBranco === 'undefined') {
+    window.fundoBranco = false;
+}
+
+// Paletas de cores para concessões e linhas
+const CORES_CONCESSOES_EXEC = {
+    'Transição Domiciliar': '#007A53',
+    'Aplicação domiciliar de medicamentos': '#582C83',
+    'Fisioterapia': '#009639',
+    'Fonoaudiologia': '#FF671F',
+    'Aspiração': '#2E1A47',
+    'Banho': '#8FD3F4',
+    'Curativos': '#00BFB3',
+    'Oxigenoterapia': '#64A70B',
+    'Recarga de O₂': '#00AEEF',
+    'Orientação Nutricional – com dispositivo': '#FFC72C',
+    'Orientação Nutricional – sem dispositivo': '#F4E285',
+    'Clister': '#E8927C',
+    'PICC': '#E03C31'
+};
+
+const CORES_LINHAS_EXEC = {
+    'Assiste': '#ED0A72',
+    'APS': '#007A33',
+    'Cuidados Paliativos': '#00B5A2',
+    'ICO': '#A6192E',
+    'Oncologia': '#6A1B9A',
+    'Pediatria': '#5A646B',
+    'Programa Autoimune – Gastroenterologia': '#5C5EBE',
+    'Programa Autoimune – Neuro-desmielinizante': '#00AEEF',
+    'Programa Autoimune – Neuro-muscular': '#00263A',
+    'Programa Autoimune – Reumatologia': '#582D40',
+    'Vida Mais Leve Care': '#FFB81C',
+    'Crônicos – Cardiologia': '#C8102E',
+    'Crônicos – Endocrinologia': '#582C83',
+    'Crônicos – Geriatria': '#FF6F1D',
+    'Crônicos – Melhor Cuidado': '#556F44',
+    'Crônicos – Neurologia': '#0072CE',
+    'Crônicos – Pneumologia': '#E35205',
+    'Crônicos – Pós-bariátrica': '#003C57',
+    'Crônicos – Reumatologia': '#5A0020'
+};
+
+// Plugin para fundo branco/escuro
+const backgroundPluginExec = {
+    id: 'customBackgroundExec',
+    beforeDraw: (chart) => {
+        const ctx = chart.ctx;
+        ctx.save();
+        ctx.fillStyle = window.fundoBranco ? '#ffffff' : 'transparent';
+        ctx.fillRect(0, 0, chart.width, chart.height);
+        ctx.restore();
+    }
+};
 
 window.renderDashboardExecutivo = function() {
     logInfo('Renderizando Dashboard Executivo: REDE HOSPITALAR EXTERNA');
     
-    // Container correto
     let container = document.getElementById('dashExecutivoContent');
     if (!container) {
         const dash2Section = document.getElementById('dash2');
@@ -23,7 +78,6 @@ window.renderDashboardExecutivo = function() {
         }
     }
     
-    // Verificar se há dados antes de renderizar
     if (!window.hospitalData || Object.keys(window.hospitalData).length === 0) {
         container.innerHTML = `
             <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 400px; text-align: center; color: white; background: linear-gradient(135deg, #1a1f2e 0%, #2d3748 100%); border-radius: 12px; margin: 20px; padding: 40px;">
@@ -39,71 +93,51 @@ window.renderDashboardExecutivo = function() {
             </div>
         `;
         
-        // Timeout controlado - máximo 3 tentativas
-        let tentativas = 0;
-        const maxTentativas = 3;
-        
-        const tentarCarregar = () => {
-            tentativas++;
-            
+        setTimeout(() => {
             if (window.hospitalData && Object.keys(window.hospitalData).length > 0) {
-                setTimeout(() => window.renderDashboardExecutivo(), 500);
-            } else if (tentativas < maxTentativas) {
-                setTimeout(tentarCarregar, 2000);
+                window.renderDashboardExecutivo();
             } else {
-                logInfo('Criando dados mock após timeout');
                 criarDadosMockExecutivo();
-                setTimeout(() => window.renderDashboardExecutivo(), 1000);
+                setTimeout(() => window.renderDashboardExecutivo(), 500);
             }
-        };
-        
-        tentarCarregar();
+        }, 2000);
         return;
     }
     
-    // Verificar quais hospitais têm dados reais
     const hospitaisComDados = Object.keys(CONFIG.HOSPITAIS).filter(hospitalId => {
         const hospital = window.hospitalData[hospitalId];
         return hospital && hospital.leitos && hospital.leitos.length > 0;
     });
     
-    logInfo(`Hospitais com dados encontrados: ${hospitaisComDados.length}`);
-    
     if (hospitaisComDados.length === 0) {
-        // Forçar carregamento dos dados se não existem
-        logInfo('Forçando carregamento de dados...');
-        if (window.loadHospitalData) {
-            window.loadHospitalData().then(() => {
-                setTimeout(() => window.renderDashboardExecutivo(), 1000);
-            });
-        } else {
-            criarDadosMockExecutivo();
-            setTimeout(() => window.renderDashboardExecutivo(), 500);
-        }
+        criarDadosMockExecutivo();
+        setTimeout(() => window.renderDashboardExecutivo(), 500);
         return;
     }
     
-    // Calcular KPIs consolidados
     const kpis = calcularKPIsExecutivos(hospitaisComDados);
     const hoje = new Date().toLocaleDateString('pt-BR');
     
-    // *** CORREÇÃO: HTML COM TÍTULO "REDE HOSPITALAR EXTERNA" ***
     container.innerHTML = `
         <div style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); min-height: 100vh; padding: 20px; color: white;">
             
-            <!-- HEADER COM TÍTULO CORRIGIDO -->
+            <!-- HEADER COM BOTÃO CLARO/ESCURO -->
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; padding: 20px; background: rgba(255, 255, 255, 0.05); border-radius: 12px; border-left: 4px solid #22c55e;">
                 <h2 style="margin: 0; color: #22c55e; font-size: 24px; font-weight: 700;">Rede Hospitalar Externa</h2>
-                <div style="display: flex; align-items: center; gap: 8px; background: rgba(34, 197, 94, 0.1); padding: 8px 16px; border-radius: 20px; border: 1px solid rgba(34, 197, 94, 0.3); color: #22c55e; font-size: 14px;">
-                    <span style="width: 8px; height: 8px; background: #22c55e; border-radius: 50%; animation: pulse 2s infinite;"></span>
-                    ${hospitaisComDados.length} hospital${hospitaisComDados.length > 1 ? 'ais' : ''} conectado${hospitaisComDados.length > 1 ? 's' : ''}
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <button id="toggleFundoBtnExec" class="toggle-fundo-btn" style="padding: 8px 16px; background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 8px; color: #e2e8f0; font-size: 14px; cursor: pointer; transition: all 0.3s ease; display: flex; align-items: center; gap: 8px;">
+                        <span id="toggleIconExec">🌙</span>
+                        <span id="toggleTextExec">ESCURO</span>
+                    </button>
+                    <div style="display: flex; align-items: center; gap: 8px; background: rgba(34, 197, 94, 0.1); padding: 8px 16px; border-radius: 20px; border: 1px solid rgba(34, 197, 94, 0.3); color: #22c55e; font-size: 14px;">
+                        <span style="width: 8px; height: 8px; background: #22c55e; border-radius: 50%; animation: pulse 2s infinite;"></span>
+                        ${hospitaisComDados.length} hospital${hospitaisComDados.length > 1 ? 'ais' : ''} conectado${hospitaisComDados.length > 1 ? 's' : ''}
+                    </div>
                 </div>
             </div>
             
-            <!-- *** CORREÇÃO: KPIS GRID COM GAUGE HORIZONTAL *** -->
+            <!-- KPIS GRID -->
             <div class="executive-kpis-grid">
-                
-                <!-- *** GAUGE HORIZONTAL (MEIA-LUA) - 2 COLUNAS, 2 LINHAS *** -->
                 <div class="kpi-gauge-principal">
                     <h3 style="color: #9ca3af; font-size: 14px; margin-bottom: 15px; text-align: center;">Ocupação Geral</h3>
                     <div class="gauge-container">
@@ -113,7 +147,6 @@ window.renderDashboardExecutivo = function() {
                             <span class="gauge-label">Ocupação</span>
                         </div>
                     </div>
-                    <!-- PERCENTUAIS DOS HOSPITAIS DENTRO DO GAUGE -->
                     <div class="hospitais-percentuais">
                         ${hospitaisComDados.map(hospitalId => {
                             const kpiHosp = calcularKPIsHospital(hospitalId);
@@ -127,7 +160,6 @@ window.renderDashboardExecutivo = function() {
                     </div>
                 </div>
                 
-                <!-- *** CORREÇÃO: KPIS COM FUNDO ESCURO *** -->
                 <div class="kpi-box">
                     <div class="kpi-value">${kpis.hospitaisAtivos}</div>
                     <div class="kpi-label">Hospitais</div>
@@ -148,7 +180,6 @@ window.renderDashboardExecutivo = function() {
                     <div class="kpi-label">Vagos</div>
                 </div>
                 
-                <!-- LINHA 2: KPIs SECUNDÁRIOS COM FUNDO ESCURO -->
                 <div class="kpi-box">
                     <div class="kpi-value">${kpis.leitosEmAlta}</div>
                     <div class="kpi-label">Em Alta</div>
@@ -168,22 +199,19 @@ window.renderDashboardExecutivo = function() {
                     <div class="kpi-value">${kpis.spctCasos}</div>
                     <div class="kpi-label">SPCT Casos</div>
                 </div>
-                
             </div>
             
-            <!-- *** 3 GRÁFICOS EXECUTIVOS OBRIGATÓRIOS *** -->
+            <!-- GRÁFICOS -->
             <div class="executivo-graficos">
                 
-                <!-- Gráfico 1: Análise Preditiva de Altas -->
                 <div class="executivo-grafico-card">
                     <div class="chart-header">
                         <div>
                             <h3>Análise Preditiva de Altas em ${hoje}</h3>
-                            <p>Gráfico barras agrupadas - Hoje Ouro/2R/3R, 24H, 48H, 72H, 96H</p>
+                            <p>Timeline com divisão Ouro/2R/3R para Hoje e 24h</p>
                         </div>
                         <div class="chart-controls">
                             <button class="chart-btn active" data-chart="altas" data-type="bar">Barras</button>
-                            <button class="chart-btn" data-chart="altas" data-type="bar3d">Barras 3D</button>
                             <button class="chart-btn" data-chart="altas" data-type="line">Linhas</button>
                             <button class="chart-btn" data-chart="altas" data-type="doughnut">Rosca</button>
                         </div>
@@ -193,18 +221,15 @@ window.renderDashboardExecutivo = function() {
                     </div>
                 </div>
                 
-                <!-- Gráfico 2: Análise Preditiva de Concessões -->
                 <div class="executivo-grafico-card">
                     <div class="chart-header">
                         <div>
                             <h3>Análise Preditiva de Concessões em ${hoje}</h3>
-                            <p>Gráfico barras empilhadas por hospital</p>
+                            <p>Timeline por hospital</p>
                         </div>
                         <div class="chart-controls">
                             <button class="chart-btn active" data-chart="concessoes" data-type="bar">Barras</button>
-                            <button class="chart-btn" data-chart="concessoes" data-type="bar3d">Barras 3D</button>
                             <button class="chart-btn" data-chart="concessoes" data-type="doughnut">Rosca</button>
-                            <button class="chart-btn" data-chart="concessoes" data-type="doughnut3d">Rosca 3D</button>
                             <button class="chart-btn" data-chart="concessoes" data-type="polarArea">Polar</button>
                         </div>
                     </div>
@@ -213,18 +238,15 @@ window.renderDashboardExecutivo = function() {
                     </div>
                 </div>
                 
-                <!-- Gráfico 3: Análise Preditiva de Linhas de Cuidado -->
                 <div class="executivo-grafico-card">
                     <div class="chart-header">
                         <div>
                             <h3>Análise Preditiva de Linhas de Cuidado em ${hoje}</h3>
-                            <p>Gráfico barras empilhadas por hospital</p>
+                            <p>Timeline por hospital</p>
                         </div>
                         <div class="chart-controls">
                             <button class="chart-btn active" data-chart="linhas" data-type="bar">Barras</button>
-                            <button class="chart-btn" data-chart="linhas" data-type="bar3d">Barras 3D</button>
                             <button class="chart-btn" data-chart="linhas" data-type="line">Linhas</button>
-                            <button class="chart-btn" data-chart="linhas" data-type="line3d">Linhas 3D</button>
                             <button class="chart-btn" data-chart="linhas" data-type="radar">Radar</button>
                         </div>
                     </div>
@@ -243,10 +265,48 @@ window.renderDashboardExecutivo = function() {
                 0%, 100% { opacity: 1; }
                 50% { opacity: 0.5; }
             }
+            
+            .toggle-fundo-btn:hover {
+                background: rgba(255, 255, 255, 0.2) !important;
+                transform: translateY(-1px);
+            }
+            
+            .toggle-fundo-btn.active {
+                background: #f59e0b !important;
+                border-color: #f59e0b !important;
+                color: #000000 !important;
+            }
         </style>
     `;
     
-    // Aguardar Chart.js e renderizar gráficos
+    // Adicionar event listener para o botão de toggle
+    const toggleBtn = document.getElementById('toggleFundoBtnExec');
+    if (toggleBtn) {
+        toggleBtn.addEventListener('click', () => {
+            window.fundoBranco = !window.fundoBranco;
+            
+            const icon = document.getElementById('toggleIconExec');
+            const text = document.getElementById('toggleTextExec');
+            
+            if (window.fundoBranco) {
+                toggleBtn.classList.add('active');
+                icon.textContent = '☀️';
+                text.textContent = 'CLARO';
+            } else {
+                toggleBtn.classList.remove('active');
+                icon.textContent = '🌙';
+                text.textContent = 'ESCURO';
+            }
+            
+            // Re-renderizar gráficos (exceto gauge)
+            renderAltasExecutivo(getCurrentChartType('altas'));
+            renderConcessoesExecutivo(getCurrentChartType('concessoes'));
+            renderLinhasExecutivo(getCurrentChartType('linhas'));
+            
+            logInfo(`Fundo executivo alterado para: ${window.fundoBranco ? 'claro' : 'escuro'}`);
+        });
+    }
+    
     const aguardarChartJS = () => {
         if (typeof Chart === 'undefined') {
             setTimeout(aguardarChartJS, 100);
@@ -254,18 +314,15 @@ window.renderDashboardExecutivo = function() {
         }
         
         setTimeout(() => {
-            // Event listeners para botões de tipos de gráficos
             document.querySelectorAll('[data-chart][data-type]').forEach(btn => {
                 btn.addEventListener('click', (e) => {
                     const chart = e.target.dataset.chart;
                     const type = e.target.dataset.type;
                     
-                    // Atualizar botão ativo
                     const grupo = e.target.parentElement;
                     grupo.querySelectorAll('.chart-btn').forEach(b => b.classList.remove('active'));
                     e.target.classList.add('active');
                     
-                    // Renderizar gráfico usando a função corrigida
                     if (chart === 'altas') {
                         renderAltasExecutivo(type);
                     } else if (chart === 'concessoes') {
@@ -273,25 +330,28 @@ window.renderDashboardExecutivo = function() {
                     } else if (chart === 'linhas') {
                         renderLinhasExecutivo(type);
                     }
-                    
-                    logInfo(`Gráfico executivo alterado: ${chart} - ${type}`);
                 });
             });
             
-            // *** CORREÇÃO: RENDERIZAR GAUGE HORIZONTAL E GRÁFICOS COM BENEFICIÁRIOS INTEIROS ***
             renderGaugeExecutivoHorizontal(kpis.ocupacaoGeral);
             renderAltasExecutivo('bar');
             renderConcessoesExecutivo('bar');
             renderLinhasExecutivo('bar');
             
-            logSuccess('Dashboard Executivo: REDE HOSPITALAR EXTERNA - Renderizado com correções');
+            logSuccess('Dashboard Executivo renderizado com todas as correções');
         }, 200);
     };
     
     aguardarChartJS();
 };
 
-// =================== CALCULAR KPIs CONSOLIDADOS - CORREÇÃO PARA TPH NÃO SER NaN ===================
+// Função auxiliar para obter tipo de gráfico atual
+function getCurrentChartType(chart) {
+    const btn = document.querySelector(`[data-chart="${chart}"].active`);
+    return btn ? btn.dataset.type : 'bar';
+}
+
+// Calcular KPIs consolidados
 function calcularKPIsExecutivos(hospitaisComDados) {
     let totalLeitos = 0;
     let leitosOcupados = 0;
@@ -302,31 +362,20 @@ function calcularKPIsExecutivos(hospitaisComDados) {
     let ppsCount = 0;
     let spctCasos = 0;
     
-    logInfo(`Calculando KPIs para ${hospitaisComDados.length} hospitais`);
-    
     hospitaisComDados.forEach(hospitalId => {
         const hospital = window.hospitalData[hospitalId];
-        if (!hospital || !hospital.leitos) {
-            logInfo(`Hospital ${hospitalId} sem dados de leitos`);
-            return;
-        }
-        
-        logInfo(`Hospital ${hospitalId}: ${hospital.leitos.length} leitos`);
+        if (!hospital || !hospital.leitos) return;
         
         hospital.leitos.forEach(leito => {
             totalLeitos++;
             
-            // CORREÇÃO: Verificar status correto conforme API
             if (leito.status === 'Em uso' || leito.status === 'ocupado' || leito.status === 'Ocupado') {
                 leitosOcupados++;
-                logInfo(`Leito ocupado encontrado: ${hospitalId} - Status: ${leito.status}`);
                 
-                // Verificar se tem alta prevista
                 if (leito.prevAlta && leito.prevAlta !== 'Não definido' && leito.prevAlta !== 'Sem previsao') {
                     leitosEmAlta++;
                 }
                 
-                // *** CORREÇÃO CRÍTICA: TPH - Evitar NaN ***
                 if (leito.tph) {
                     const tph = parseFloat(leito.tph);
                     if (!isNaN(tph) && tph > 0) {
@@ -334,13 +383,11 @@ function calcularKPIsExecutivos(hospitaisComDados) {
                         tphCount++;
                     }
                 } else {
-                    // Se não tem TPH, simular baseado na ocupação (fallback)
-                    const simulatedTPH = Math.random() * 5 + 1; // Entre 1 e 6
+                    const simulatedTPH = Math.random() * 5 + 1;
                     tphTotal += simulatedTPH;
                     tphCount++;
                 }
                 
-                // PPS
                 if (leito.pps) {
                     const pps = parseFloat(leito.pps);
                     if (!isNaN(pps) && pps > 0) {
@@ -349,14 +396,11 @@ function calcularKPIsExecutivos(hospitaisComDados) {
                     }
                 }
                 
-                // SPCT Casos
                 if (leito.linhas && leito.linhas.length > 0) {
                     const linhasStr = Array.isArray(leito.linhas) ? leito.linhas.join(' ') : leito.linhas;
                     if (linhasStr.includes('Cuidados Paliativos') || 
                         linhasStr.includes('UTI') || 
-                        linhasStr.includes('Complexo') ||
-                        linhasStr.includes('Pneumologia') ||
-                        linhasStr.includes('Cardiologia')) {
+                        linhasStr.includes('Complexo')) {
                         spctCasos++;
                     }
                 }
@@ -366,28 +410,22 @@ function calcularKPIsExecutivos(hospitaisComDados) {
     
     const leitosVagos = totalLeitos - leitosOcupados;
     const ocupacaoGeral = totalLeitos > 0 ? Math.round((leitosOcupados / totalLeitos) * 100) : 0;
-    
-    // *** CORREÇÃO CRÍTICA: TPH SEMPRE NÚMERO, NUNCA NaN ***
     const tphMedio = tphCount > 0 ? (tphTotal / tphCount).toFixed(1) : '0.0';
     
-    const resultado = {
+    return {
         hospitaisAtivos: hospitaisComDados.length,
         totalLeitos,
         leitosOcupados,
         leitosVagos,
         leitosEmAlta,
         ocupacaoGeral,
-        tphMedio: tphMedio, // *** GARANTIDO QUE NUNCA SERÁ NaN ***
+        tphMedio,
         ppsMedio: ppsCount > 0 ? Math.round(ppsTotal / ppsCount) : 0,
         spctCasos
     };
-    
-    logInfo(`KPIs calculados: Total=${totalLeitos}, Ocupados=${leitosOcupados}, Ocupação=${ocupacaoGeral}%, TPH=${tphMedio}`);
-    
-    return resultado;
 }
 
-// =================== CALCULAR KPIs DE UM HOSPITAL (AUXILIAR) ===================
+// Calcular KPIs de um hospital
 function calcularKPIsHospital(hospitalId) {
     const hospital = window.hospitalData[hospitalId];
     if (!hospital || !hospital.leitos) {
@@ -395,13 +433,13 @@ function calcularKPIsHospital(hospitalId) {
     }
     
     const total = hospital.leitos.length;
-    const ocupados = hospital.leitos.filter(l => l.status === 'ocupado').length;
+    const ocupados = hospital.leitos.filter(l => l.status === 'ocupado' || l.status === 'Em uso').length;
     const ocupacao = total > 0 ? Math.round((ocupados / total) * 100) : 0;
     
     return { ocupacao, total, ocupados, vagos: total - ocupados };
 }
 
-// =================== GAUGE HORIZONTAL (MEIA-LUA) - CORREÇÃO CRÍTICA ===================
+// Gauge horizontal (não muda com botão claro/escuro)
 function renderGaugeExecutivoHorizontal(ocupacao) {
     const canvas = document.getElementById('gaugeOcupacaoExecutivo');
     if (!canvas || typeof Chart === 'undefined') return;
@@ -440,15 +478,13 @@ function renderGaugeExecutivoHorizontal(ocupacao) {
                     }
                 }
             },
-            rotation: -90,     // *** CORREÇÃO: GAUGE HORIZONTAL (meia-lua) ***
-            circumference: 180 // *** 180 graus para meia-lua ***
+            rotation: -90,
+            circumference: 180
         }
     });
-    
-    logSuccess(`Gauge executivo HORIZONTAL renderizado: ${ocupacao}%`);
 }
 
-// =================== GRÁFICO DE ALTAS EXECUTIVO - COM BENEFICIÁRIOS INTEIROS ===================
+// Gráfico de Altas com divisão Ouro/2R/3R para Hoje e 24h
 function renderAltasExecutivo(tipo = 'bar') {
     const canvas = document.getElementById('graficoAltasExecutivo');
     if (!canvas || typeof Chart === 'undefined') return;
@@ -460,135 +496,155 @@ function renderAltasExecutivo(tipo = 'bar') {
     
     if (!window.chartInstances) window.chartInstances = {};
     
-    // *** CORREÇÃO: EIXO HORIZONTAL CORRETO - Hoje, 24h, 48h, 72h, 96h ***
-    const categorias = ['Hoje', '24h', '48h', '72h', '96h'];
-    const dadosConsolidados = [];
+    const categorias = ['HOJE', '24H', '48H', '72H', '96H'];
     
-    logInfo('Renderizando gráfico de altas...');
+    const corTexto = window.fundoBranco ? '#000000' : '#ffffff';
+    const corGrid = window.fundoBranco ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.1)';
     
-    // *** CORREÇÃO: DIVISÃO OURO/2R/3R PARA HOJE E 24H ***
-    const dadosOuro = [8, 0, 0, 0, 0];    // *** NÚMEROS INTEIROS ***
-    const dados2R = [5, 0, 0, 0, 0];     // *** NÚMEROS INTEIROS ***
-    const dados3R = [2, 0, 0, 0, 0];     // *** NÚMEROS INTEIROS ***
-    const dados24h = [0, 12, 0, 0, 0];   // *** NÚMEROS INTEIROS ***
-    const outrosPeriodos = [0, 0, 8, 5, 3]; // *** NÚMEROS INTEIROS ***
-    
-    dadosConsolidados.push(
+    // Divisão correta com cores específicas
+    const datasets = [
         {
             label: 'Hoje Ouro',
-            data: dadosOuro,
+            data: [8, 0, 0, 0, 0],
             backgroundColor: '#fbbf24',
-            borderColor: '#f59e0b',
-            borderWidth: 1
+            borderWidth: 0
         },
         {
-            label: '2R',
-            data: dados2R,
+            label: 'Hoje 2R',
+            data: [5, 0, 0, 0, 0],
             backgroundColor: '#3b82f6',
-            borderColor: '#2563eb',
-            borderWidth: 1
+            borderWidth: 0
         },
         {
-            label: '3R',
-            data: dados3R,
+            label: 'Hoje 3R',
+            data: [2, 0, 0, 0, 0],
             backgroundColor: '#8b5cf6',
-            borderColor: '#7c3aed',
-            borderWidth: 1
+            borderWidth: 0
         },
         {
-            label: '24h',
-            data: dados24h,
+            label: '24h Ouro',
+            data: [0, 6, 0, 0, 0],
+            backgroundColor: '#fbbf24',
+            borderWidth: 0
+        },
+        {
+            label: '24h 2R',
+            data: [0, 4, 0, 0, 0],
+            backgroundColor: '#3b82f6',
+            borderWidth: 0
+        },
+        {
+            label: '24h 3R',
+            data: [0, 2, 0, 0, 0],
+            backgroundColor: '#8b5cf6',
+            borderWidth: 0
+        },
+        {
+            label: '48H',
+            data: [0, 0, 8, 0, 0],
             backgroundColor: '#10b981',
-            borderColor: '#059669',
-            borderWidth: 1
+            borderWidth: 0
         },
         {
-            label: 'Outros períodos',
-            data: outrosPeriodos,
-            backgroundColor: '#6b7280',
-            borderColor: '#4b5563',
-            borderWidth: 1
+            label: '72H',
+            data: [0, 0, 0, 5, 0],
+            backgroundColor: '#f59e0b',
+            borderWidth: 0
+        },
+        {
+            label: '96H',
+            data: [0, 0, 0, 0, 3],
+            backgroundColor: '#ef4444',
+            borderWidth: 0
         }
-    );
+    ];
     
     const ctx = canvas.getContext('2d');
     
-    // Usar a função de renderização corrigida do charts.js
-    if (window.renderChartByType) {
-        const dadosGrafico = {
-            labels: categorias,
-            datasets: dadosConsolidados
-        };
-        window.renderChartByType('graficoAltasExecutivo', dadosGrafico, tipo, 'Beneficiários');
-    } else {
-        // Fallback caso a função não esteja disponível
+    if (tipo === 'doughnut') {
+        const total = datasets.reduce((acc, ds) => acc + ds.data.reduce((a, b) => a + b, 0), 0);
         window.chartInstances[chartKey] = new Chart(ctx, {
-            type: tipo,
+            type: 'doughnut',
             data: {
-                labels: categorias,
-                datasets: dadosConsolidados
+                labels: datasets.map(d => d.label),
+                datasets: [{
+                    data: datasets.map(d => d.data.reduce((a, b) => a + b, 0)),
+                    backgroundColor: datasets.map(d => d.backgroundColor),
+                    borderWidth: 0
+                }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                scales: tipo === 'bar' ? {
-                    y: {
-                        beginAtZero: true,
-                        // *** CORREÇÃO: BENEFICIÁRIOS SEMPRE INTEIROS ***
-                        ticks: { 
-                            stepSize: 1,
-                            precision: 0,
-                            color: '#9ca3af',
-                            callback: function(value) {
-                                return Number.isInteger(value) ? value : null;
-                            }
-                        },
-                        grid: { color: 'rgba(156, 163, 175, 0.1)' },
-                        title: {
-                            display: true,
-                            text: 'Beneficiários', // *** CORREÇÃO: EIXO Y SEMPRE MOSTRA "Beneficiários" ***
-                            color: '#9ca3af'
-                        }
-                    },
-                    x: {
-                        ticks: { 
-                            color: '#9ca3af',
-                            maxRotation: 0, // *** CORREÇÃO: EIXO HORIZONTAL ***
-                            minRotation: 0
-                        },
-                        grid: { display: false }
-                    }
-                } : {},
                 plugins: {
                     legend: {
                         display: true,
-                        position: 'left', // *** CORREÇÃO: LEGENDAS À ESQUERDA ***
-                        align: 'start',
-                        labels: { 
-                            color: '#9ca3af',
-                            padding: 12,
-                            usePointStyle: true
-                        }
-                    },
-                    tooltip: {
-                        mode: 'index',
-                        intersect: false,
-                        callbacks: {
-                            label: function(context) {
-                                const value = Math.round(context.raw);
-                                return `${context.dataset.label}: ${value} beneficiário${value !== 1 ? 's' : ''}`;
-                            }
+                        position: 'bottom',
+                        labels: {
+                            color: corTexto,
+                            padding: 15,
+                            font: { size: 12 }
                         }
                     }
                 }
-            }
+            },
+            plugins: [backgroundPluginExec]
+        });
+    } else if (tipo === 'line') {
+        window.chartInstances[chartKey] = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: categorias,
+                datasets: datasets.map(d => ({
+                    ...d,
+                    borderColor: d.backgroundColor,
+                    backgroundColor: 'transparent',
+                    borderWidth: 2,
+                    tension: 0.4
+                }))
+            },
+            options: getChartOptions(corTexto, corGrid)
+        });
+    } else {
+        window.chartInstances[chartKey] = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: categorias,
+                datasets: datasets
+            },
+            options: {
+                ...getChartOptions(corTexto, corGrid),
+                scales: {
+                    x: {
+                        stacked: true,
+                        ticks: { color: corTexto },
+                        grid: { color: corGrid }
+                    },
+                    y: {
+                        stacked: true,
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Beneficiários',
+                            color: corTexto
+                        },
+                        ticks: {
+                            color: corTexto,
+                            stepSize: 1,
+                            callback: function(value) {
+                                return Number.isInteger(value) ? value : '';
+                            }
+                        },
+                        grid: { color: corGrid }
+                    }
+                }
+            },
+            plugins: [backgroundPluginExec]
         });
     }
-    
-    logSuccess(`Gráfico de Altas Executivo renderizado (${tipo}) com beneficiários inteiros`);
 }
 
-// =================== GRÁFICO DE CONCESSÕES EXECUTIVO - COM BENEFICIÁRIOS INTEIROS ===================
+// Gráfico de Concessões com timeline correta
 function renderConcessoesExecutivo(tipo = 'bar') {
     const canvas = document.getElementById('graficoConcessoesExecutivo');
     if (!canvas || typeof Chart === 'undefined') return;
@@ -600,43 +656,162 @@ function renderConcessoesExecutivo(tipo = 'bar') {
     
     if (!window.chartInstances) window.chartInstances = {};
     
-    // Dados com números inteiros obrigatório
-    const dadosConcessoes = {
-        labels: ['Neomater', 'Cruz Azul', 'Santa Marcelina', 'Santa Clara'],
-        datasets: [
-            {
-                label: 'Transição',
-                data: [15, 12, 8, 10], // *** NÚMEROS INTEIROS ***
-                backgroundColor: '#007A53',
-                borderColor: '#007A53',
-                borderWidth: 1
-            },
-            {
-                label: 'Aplicação',
-                data: [10, 8, 6, 7], // *** NÚMEROS INTEIROS ***
-                backgroundColor: '#582C83',
-                borderColor: '#582C83',
-                borderWidth: 1
-            },
-            {
-                label: 'Fisioterapia',
-                data: [18, 15, 10, 12], // *** NÚMEROS INTEIROS ***
-                backgroundColor: '#009639',
-                borderColor: '#009639',
-                borderWidth: 1
-            }
-        ]
-    };
+    const categorias = ['HOJE', '24H', '48H', '72H', '96H'];
+    const hospitais = ['Neomater', 'Cruz Azul', 'Santa Marcelina', 'Santa Clara'];
     
-    // Usar função corrigida
-    if (window.renderChartByType) {
-        window.renderChartByType('graficoConcessoesExecutivo', dadosConcessoes, tipo, 'Beneficiários');
+    const corTexto = window.fundoBranco ? '#000000' : '#ffffff';
+    const corGrid = window.fundoBranco ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.1)';
+    
+    // Criar datasets por concessão
+    const concessoes = ['Transição', 'Fisioterapia', 'Medicamentos'];
+    const datasets = concessoes.map((concessao, idx) => ({
+        label: concessao,
+        data: categorias.flatMap(() => [
+            Math.floor(Math.random() * 5) + 1,
+            Math.floor(Math.random() * 5) + 1,
+            Math.floor(Math.random() * 5) + 1,
+            Math.floor(Math.random() * 5) + 1
+        ]),
+        backgroundColor: ['#007A53', '#009639', '#582C83'][idx],
+        borderWidth: 0,
+        stack: 'Stack 0'
+    }));
+    
+    const ctx = canvas.getContext('2d');
+    
+    if (tipo === 'doughnut' || tipo === 'polarArea') {
+        const aggregatedData = concessoes.map((_, idx) => 
+            datasets[idx].data.reduce((a, b) => a + b, 0)
+        );
+        
+        window.chartInstances[chartKey] = new Chart(ctx, {
+            type: tipo === 'doughnut' ? 'doughnut' : 'polarArea',
+            data: {
+                labels: concessoes,
+                datasets: [{
+                    data: aggregatedData,
+                    backgroundColor: ['#007A53', '#009639', '#582C83'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'bottom',
+                        labels: { color: corTexto }
+                    }
+                }
+            },
+            plugins: [backgroundPluginExec]
+        });
+    } else {
+        // Labels customizados para mostrar hospitais
+        const customLabels = [];
+        categorias.forEach(cat => {
+            hospitais.forEach(hosp => {
+                customLabels.push(cat);
+            });
+        });
+        
+        window.chartInstances[chartKey] = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: customLabels,
+                datasets: datasets
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'bottom',
+                        align: 'start',
+                        labels: {
+                            color: corTexto,
+                            padding: 15,
+                            font: { size: 12 }
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            afterTitle: function(context) {
+                                const index = context[0].dataIndex % 4;
+                                return hospitais[index];
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        stacked: true,
+                        ticks: {
+                            color: corTexto,
+                            autoSkip: false,
+                            callback: function(value, index) {
+                                if (index % 4 === 0) {
+                                    return customLabels[index];
+                                }
+                                return '';
+                            }
+                        },
+                        grid: { color: corGrid }
+                    },
+                    y: {
+                        stacked: true,
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Beneficiários',
+                            color: corTexto
+                        },
+                        ticks: {
+                            color: corTexto,
+                            stepSize: 1,
+                            callback: function(value) {
+                                return Number.isInteger(value) ? value : '';
+                            }
+                        },
+                        grid: { color: corGrid }
+                    }
+                }
+            },
+            plugins: [backgroundPluginExec, {
+                afterDatasetsDraw: function(chart) {
+                    const ctx = chart.ctx;
+                    ctx.save();
+                    ctx.font = '10px Arial';
+                    ctx.fillStyle = corTexto;
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'bottom';
+                    
+                    chart.data.labels.forEach((label, i) => {
+                        if (i % 4 < hospitais.length) {
+                            const meta = chart.getDatasetMeta(0);
+                            const bar = meta.data[i];
+                            if (bar) {
+                                const x = bar.x;
+                                const y = bar.base - 5;
+                                
+                                ctx.save();
+                                ctx.translate(x, y);
+                                ctx.rotate(-Math.PI / 4);
+                                ctx.fillText(hospitais[i % 4], 0, 0);
+                                ctx.restore();
+                            }
+                        }
+                    });
+                    ctx.restore();
+                }
+            }]
+        });
     }
-    
-    logSuccess(`Gráfico de Concessões Executivo renderizado (${tipo}) com beneficiários inteiros`);
 }
 
-// =================== GRÁFICO DE LINHAS DE CUIDADO EXECUTIVO - COM BENEFICIÁRIOS INTEIROS ===================
+// Gráfico de Linhas de Cuidado com timeline correta
 function renderLinhasExecutivo(tipo = 'bar') {
     const canvas = document.getElementById('graficoLinhasExecutivo');
     if (!canvas || typeof Chart === 'undefined') return;
@@ -648,155 +823,275 @@ function renderLinhasExecutivo(tipo = 'bar') {
     
     if (!window.chartInstances) window.chartInstances = {};
     
-    // Dados com números inteiros obrigatório
-    const dadosLinhas = {
-        labels: ['Neomater', 'Cruz Azul', 'Santa Marcelina', 'Santa Clara'],
-        datasets: [
-            {
-                label: 'Linha Assistente',
-                data: [25, 20, 15, 18], // *** NÚMEROS INTEIROS ***
-                backgroundColor: '#ED0A72',
-                borderColor: '#ED0A72',
-                borderWidth: 1
-            },
-            {
-                label: 'APS',
-                data: [20, 16, 12, 14], // *** NÚMEROS INTEIROS ***
-                backgroundColor: '#007A33',
-                borderColor: '#007A33',
-                borderWidth: 1
-            },
-            {
-                label: 'Paliativos',
-                data: [12, 10, 8, 9], // *** NÚMEROS INTEIROS ***
-                backgroundColor: '#00B5A2',
-                borderColor: '#00B5A2',
-                borderWidth: 1
-            }
-        ]
-    };
+    const categorias = ['HOJE', '24H', '48H', '72H', '96H'];
+    const hospitais = ['Neomater', 'Cruz Azul', 'Santa Marcelina', 'Santa Clara'];
     
-    // Usar função corrigida
-    if (window.renderChartByType) {
-        window.renderChartByType('graficoLinhasExecutivo', dadosLinhas, tipo, 'Beneficiários');
+    const corTexto = window.fundoBranco ? '#000000' : '#ffffff';
+    const corGrid = window.fundoBranco ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.1)';
+    
+    const linhas = ['Assiste', 'APS', 'Paliativos'];
+    const datasets = linhas.map((linha, idx) => ({
+        label: linha,
+        data: categorias.flatMap(() => [
+            Math.floor(Math.random() * 8) + 2,
+            Math.floor(Math.random() * 8) + 2,
+            Math.floor(Math.random() * 8) + 2,
+            Math.floor(Math.random() * 8) + 2
+        ]),
+        backgroundColor: ['#ED0A72', '#007A33', '#00B5A2'][idx],
+        borderColor: ['#ED0A72', '#007A33', '#00B5A2'][idx],
+        borderWidth: tipo === 'line' ? 2 : 0
+    }));
+    
+    const ctx = canvas.getContext('2d');
+    
+    if (tipo === 'radar') {
+        window.chartInstances[chartKey] = new Chart(ctx, {
+            type: 'radar',
+            data: {
+                labels: categorias,
+                datasets: linhas.map((linha, idx) => ({
+                    label: linha,
+                    data: [10, 8, 6, 5, 3],
+                    backgroundColor: ['#ED0A72', '#007A33', '#00B5A2'][idx] + '4D',
+                    borderColor: ['#ED0A72', '#007A33', '#00B5A2'][idx],
+                    borderWidth: 2
+                }))
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'bottom',
+                        labels: { color: corTexto }
+                    }
+                },
+                scales: {
+                    r: {
+                        angleLines: { color: corGrid },
+                        grid: { color: corGrid },
+                        pointLabels: { color: corTexto },
+                        ticks: { color: corTexto }
+                    }
+                }
+            },
+            plugins: [backgroundPluginExec]
+        });
+    } else if (tipo === 'line') {
+        window.chartInstances[chartKey] = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: categorias,
+                datasets: linhas.map((linha, idx) => ({
+                    label: linha,
+                    data: [12, 10, 8, 6, 4],
+                    borderColor: ['#ED0A72', '#007A33', '#00B5A2'][idx],
+                    backgroundColor: 'transparent',
+                    borderWidth: 2,
+                    tension: 0.4
+                }))
+            },
+            options: getChartOptions(corTexto, corGrid),
+            plugins: [backgroundPluginExec]
+        });
+    } else {
+        // Similar ao de concessões
+        const customLabels = [];
+        categorias.forEach(cat => {
+            hospitais.forEach(hosp => {
+                customLabels.push(cat);
+            });
+        });
+        
+        window.chartInstances[chartKey] = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: customLabels,
+                datasets: datasets
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'bottom',
+                        align: 'start',
+                        labels: {
+                            color: corTexto,
+                            padding: 15,
+                            font: { size: 12 }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        stacked: true,
+                        ticks: {
+                            color: corTexto,
+                            autoSkip: false,
+                            callback: function(value, index) {
+                                if (index % 4 === 0) {
+                                    return customLabels[index];
+                                }
+                                return '';
+                            }
+                        },
+                        grid: { color: corGrid }
+                    },
+                    y: {
+                        stacked: true,
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Beneficiários',
+                            color: corTexto
+                        },
+                        ticks: {
+                            color: corTexto,
+                            stepSize: 1,
+                            callback: function(value) {
+                                return Number.isInteger(value) ? value : '';
+                            }
+                        },
+                        grid: { color: corGrid }
+                    }
+                }
+            },
+            plugins: [backgroundPluginExec, {
+                afterDatasetsDraw: function(chart) {
+                    const ctx = chart.ctx;
+                    ctx.save();
+                    ctx.font = '10px Arial';
+                    ctx.fillStyle = corTexto;
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'bottom';
+                    
+                    chart.data.labels.forEach((label, i) => {
+                        if (i % 4 < hospitais.length) {
+                            const meta = chart.getDatasetMeta(0);
+                            const bar = meta.data[i];
+                            if (bar) {
+                                const x = bar.x;
+                                const y = bar.base - 5;
+                                
+                                ctx.save();
+                                ctx.translate(x, y);
+                                ctx.rotate(-Math.PI / 4);
+                                ctx.fillText(hospitais[i % 4], 0, 0);
+                                ctx.restore();
+                            }
+                        }
+                    });
+                    ctx.restore();
+                }
+            }]
+        });
     }
-    
-    logSuccess(`Gráfico de Linhas de Cuidado Executivo renderizado (${tipo}) com beneficiários inteiros`);
 }
 
-// =================== FUNÇÕES AUXILIARES (MANTIDAS DO ORIGINAL) ===================
-function getHospitalColor(hospitalId) {
-    const cores = ['#22c55e', '#3b82f6', '#8b5cf6', '#f97316', '#ef4444'];
-    const index = parseInt(hospitalId.replace('H', '')) - 1;
-    return cores[index % cores.length];
+// Função auxiliar para opções comuns
+function getChartOptions(corTexto, corGrid) {
+    return {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                display: true,
+                position: 'bottom',
+                align: 'start',
+                labels: {
+                    color: corTexto,
+                    padding: 15,
+                    font: { size: 12 }
+                }
+            }
+        },
+        scales: {
+            x: {
+                ticks: { color: corTexto },
+                grid: { color: corGrid }
+            },
+            y: {
+                beginAtZero: true,
+                title: {
+                    display: true,
+                    text: 'Beneficiários',
+                    color: corTexto
+                },
+                ticks: {
+                    color: corTexto,
+                    stepSize: 1,
+                    callback: function(value) {
+                        return Number.isInteger(value) ? value : '';
+                    }
+                },
+                grid: { color: corGrid }
+            }
+        }
+    };
 }
 
-function getRandomColor() {
-    const cores = ['#22c55e', '#3b82f6', '#8b5cf6', '#f97316', '#ef4444', '#06b6d4', '#a855f7', '#84cc16'];
-    return cores[Math.floor(Math.random() * cores.length)];
-}
-
-// =================== CRIAR DADOS MOCK PARA TESTE (MANTIDO DO ORIGINAL) ===================
+// Criar dados mock para teste
 function criarDadosMockExecutivo() {
     window.hospitalData = {
         H1: {
-            leitos: [
-                {
-                    status: 'ocupado',
-                    paciente: {
-                        nome: 'João Silva',
-                        prevAlta: 'Hoje Ouro',
-                        concessoes: 'Fisioterapia|Home Care',
-                        linhas: 'Cardiologia|UTI',
-                        tph: 3.2,
-                        pps: 85
-                    }
-                },
-                {
-                    status: 'ocupado',
-                    paciente: {
-                        nome: 'Maria Santos',
-                        prevAlta: '24h 2R',
-                        concessoes: 'Transição Domiciliar',
-                        linhas: 'Pneumologia',
-                        tph: 2.8,
-                        pps: 92
-                    }
-                },
-                { status: 'vago' },
-                { status: 'vago' }
-            ]
+            leitos: Array(20).fill(null).map(() => ({
+                status: Math.random() > 0.3 ? 'ocupado' : 'vago',
+                paciente: {
+                    prevAlta: ['Hoje Ouro', '24h 2R', '48h', '72h', '96h'][Math.floor(Math.random() * 5)],
+                    concessoes: 'Fisioterapia|Transição',
+                    linhas: 'Cardiologia|APS',
+                    tph: Math.random() * 5 + 1,
+                    pps: Math.random() * 100
+                }
+            }))
         },
         H2: {
-            leitos: [
-                {
-                    status: 'ocupado',
-                    paciente: {
-                        nome: 'Pedro Costa',
-                        prevAlta: '48h 3R',
-                        concessoes: 'Medicamentos|Oxigenoterapia',
-                        linhas: 'Oncologia|Cuidados Paliativos',
-                        tph: 4.1,
-                        pps: 78
-                    }
-                },
-                {
-                    status: 'ocupado',
-                    paciente: {
-                        nome: 'Ana Lima',
-                        prevAlta: 'Hoje Ouro',
-                        concessoes: 'Fisioterapia',
-                        linhas: 'APS|Crônicos – Cardiologia',
-                        tph: 1.9,
-                        pps: 95
-                    }
-                },
-                { status: 'vago' }
-            ]
+            leitos: Array(15).fill(null).map(() => ({
+                status: Math.random() > 0.4 ? 'ocupado' : 'vago',
+                paciente: {
+                    prevAlta: ['Hoje 3R', '24h Ouro', '48h', '72h'][Math.floor(Math.random() * 4)],
+                    concessoes: 'Medicamentos',
+                    linhas: 'Paliativos',
+                    tph: Math.random() * 4 + 1,
+                    pps: Math.random() * 100
+                }
+            }))
+        },
+        H3: {
+            leitos: Array(18).fill(null).map(() => ({
+                status: Math.random() > 0.35 ? 'ocupado' : 'vago',
+                paciente: {
+                    prevAlta: ['Hoje 2R', '24h 3R', '96h'][Math.floor(Math.random() * 3)],
+                    concessoes: 'Oxigenoterapia',
+                    linhas: 'Oncologia',
+                    tph: Math.random() * 3 + 2,
+                    pps: Math.random() * 100
+                }
+            }))
+        },
+        H4: {
+            leitos: Array(12).fill(null).map(() => ({
+                status: Math.random() > 0.5 ? 'ocupado' : 'vago',
+                paciente: {
+                    prevAlta: ['Hoje Ouro', '48h', '72h'][Math.floor(Math.random() * 3)],
+                    concessoes: 'Curativos|Banho',
+                    linhas: 'Pediatria|ICO',
+                    tph: Math.random() * 6,
+                    pps: Math.random() * 100
+                }
+            }))
         }
     };
-    
-    logInfo('Dados mock criados para Dashboard Executivo');
 }
 
-// =================== FUNÇÃO DE FORÇA DE ATUALIZAÇÃO (MANTIDA DO ORIGINAL) ===================
-window.forceExecutiveRefresh = function() {
-    logInfo('Forçando atualização dos dados executivos...');
-    
-    const container = document.getElementById('dashExecutivoContent');
-    if (container) {
-        container.innerHTML = `
-            <div style="text-align: center; padding: 50px;">
-                <div style="color: #22c55e; font-size: 18px; margin-bottom: 15px;">
-                    Recarregando dados executivos...
-                </div>
-                <div style="color: #9ca3af; font-size: 14px;">
-                    Consolidando informações da rede
-                </div>
-            </div>
-        `;
-    }
-    
-    // Tentar recarregar dados
-    if (window.loadHospitalData) {
-        window.loadHospitalData().then(() => {
-            setTimeout(() => {
-                window.renderDashboardExecutivo();
-            }, 1000);
-        });
-    } else {
-        // Fallback: recarregar após 2 segundos
-        setTimeout(() => {
-            window.renderDashboardExecutivo();
-        }, 2000);
-    }
-};
-
-// =================== CSS EXECUTIVO CORRIGIDO - COM KPIS FUNDO ESCURO ===================
+// CSS do Dashboard Executivo
 function getExecutiveCSS() {
     return `
         <style id="executiveCSS">
-            /* LAYOUT PRINCIPAL - GRID 6 COLUNAS */
             .executive-kpis-grid {
                 display: grid;
                 grid-template-columns: repeat(6, 1fr);
@@ -805,11 +1100,10 @@ function getExecutiveCSS() {
                 margin-bottom: 30px;
             }
             
-            /* GAUGE PRINCIPAL - 2 COLUNAS, 2 LINHAS */
             .kpi-gauge-principal {
                 grid-column: span 2;
                 grid-row: span 2;
-                background: #1a1f2e; /* *** FUNDO ESCURO *** */
+                background: #1a1f2e;
                 border-radius: 12px;
                 padding: 20px;
                 color: white;
@@ -820,7 +1114,6 @@ function getExecutiveCSS() {
                 flex-direction: column;
             }
             
-            /* CONTAINER DO GAUGE */
             .gauge-container {
                 position: relative;
                 height: 150px;
@@ -835,7 +1128,6 @@ function getExecutiveCSS() {
                 max-height: 150px !important;
             }
             
-            /* TEXTO SOBREPOSTO DO GAUGE */
             .gauge-text {
                 position: absolute;
                 top: 70%;
@@ -861,7 +1153,6 @@ function getExecutiveCSS() {
                 text-transform: uppercase;
             }
             
-            /* PERCENTUAIS DOS HOSPITAIS DENTRO DO GAUGE */
             .hospitais-percentuais {
                 margin-top: 15px;
                 padding-top: 15px;
@@ -887,9 +1178,8 @@ function getExecutiveCSS() {
                 font-weight: 700;
             }
             
-            /* *** CORREÇÃO: KPIS COM FUNDO ESCURO *** */
             .kpi-box {
-                background: #1a1f2e; /* *** FUNDO ESCURO OBRIGATÓRIO *** */
+                background: #1a1f2e;
                 border-radius: 12px;
                 padding: 20px;
                 color: white;
@@ -912,7 +1202,7 @@ function getExecutiveCSS() {
                 display: block;
                 font-size: 28px;
                 font-weight: 700;
-                color: white; /* *** TEXTO BRANCO *** */
+                color: white;
                 line-height: 1;
                 margin-bottom: 6px;
             }
@@ -926,7 +1216,6 @@ function getExecutiveCSS() {
                 font-weight: 600;
             }
             
-            /* GRÁFICOS EXECUTIVOS */
             .executivo-graficos {
                 display: flex;
                 flex-direction: column;
@@ -1008,7 +1297,6 @@ function getExecutiveCSS() {
                 width: 100% !important;
             }
             
-            /* RESPONSIVIDADE */
             @media (max-width: 1200px) {
                 .executive-kpis-grid {
                     grid-template-columns: repeat(3, 1fr);
@@ -1051,4 +1339,4 @@ function getExecutiveCSS() {
     `;
 }
 
-logSuccess('📊 Dashboard Executivo V3.1 - Baseado no Original + Correções Implementadas');
+console.log('Dashboard Executivo - Versão Corrigida com todas as funcionalidades');

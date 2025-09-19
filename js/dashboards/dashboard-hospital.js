@@ -682,24 +682,17 @@ function renderConcessoesHospital(hospitalId, type = 'bar') {
                     position: 'bottom',
                     align: 'start',
                     labels: {
-                        color: '#ffffff',
-                        padding: 15, // *** AUMENTAR PADDING PARA FORÇAR QUEBRA ***
+                        color: '#ffffff', // *** FONTE BRANCA FORÇADA ***
+                        padding: 20,
                         font: { size: 11, weight: 500 },
                         usePointStyle: true,
                         boxWidth: 12,
                         boxHeight: 12,
-                        generateLabels: function(chart) {
-                            // Forçar quebra de linha entre legendas
-                            return chart.data.datasets.map((dataset, i) => ({
-                                text: dataset.label + '\n', // *** QUEBRA MANUAL ***
-                                fillStyle: dataset.backgroundColor,
-                                strokeStyle: dataset.borderColor,
-                                lineWidth: 0,
-                                hidden: !chart.isDatasetVisible(i),
-                                index: i
-                            }));
-                        }
-                    }
+                        textAlign: 'left'
+                    },
+                    // *** FORÇAR UMA LEGENDA POR LINHA ***
+                    onClick: function() { return false; }, // Desabilitar click
+                    maxWidth: 200 // Forçar quebra
                 },
                 tooltip: {
                     backgroundColor: 'rgba(26, 31, 46, 0.95)',
@@ -727,9 +720,10 @@ function renderConcessoesHospital(hospitalId, type = 'bar') {
                 y: {
                     beginAtZero: true,
                     stacked: type === 'bar',
-                    // EIXO Y SEMPRE +1 (FORÇADO)
+                    // *** FORÇAR EIXO Y SEMPRE +1 (CRÍTICO) ***
                     max: limiteSuperior,
                     min: 0,
+                    suggestedMax: limiteSuperior, // Dupla garantia
                     title: {
                         display: true,
                         text: 'Beneficiários',
@@ -738,10 +732,11 @@ function renderConcessoesHospital(hospitalId, type = 'bar') {
                     },
                     ticks: { 
                         stepSize: 1,
+                        max: limiteSuperior, // Tripla garantia
                         color: '#e2e8f0',
                         font: { size: 11 },
                         callback: function(value) {
-                            return Number.isInteger(value) && value >= 0 ? value : '';
+                            return Number.isInteger(value) && value >= 0 && value <= limiteSuperior ? value : '';
                         }
                     },
                     grid: { color: 'rgba(255, 255, 255, 0.05)' }
@@ -876,24 +871,17 @@ function renderLinhasHospital(hospitalId, type = 'bar') {
                     position: 'bottom',
                     align: 'start',
                     labels: {
-                        color: '#ffffff',
-                        padding: 15, // *** AUMENTAR PADDING PARA FORÇAR QUEBRA ***
+                        color: '#ffffff', // *** FONTE BRANCA FORÇADA ***
+                        padding: 20,
                         font: { size: 11, weight: 500 },
                         usePointStyle: true,
                         boxWidth: 12,
                         boxHeight: 12,
-                        generateLabels: function(chart) {
-                            // Forçar quebra de linha entre legendas
-                            return chart.data.datasets.map((dataset, i) => ({
-                                text: dataset.label + '\n', // *** QUEBRA MANUAL ***
-                                fillStyle: dataset.backgroundColor,
-                                strokeStyle: dataset.borderColor,
-                                lineWidth: 0,
-                                hidden: !chart.isDatasetVisible(i),
-                                index: i
-                            }));
-                        }
-                    }
+                        textAlign: 'left'
+                    },
+                    // *** FORÇAR UMA LEGENDA POR LINHA ***
+                    onClick: function() { return false; }, // Desabilitar click
+                    maxWidth: 200 // Forçar quebra
                 },
                 tooltip: {
                     backgroundColor: 'rgba(26, 31, 46, 0.95)',
@@ -921,7 +909,10 @@ function renderLinhasHospital(hospitalId, type = 'bar') {
                 y: {
                     beginAtZero: true,
                     stacked: type === 'bar',
-                    max: limiteSuperior, // +1
+                    // *** FORÇAR EIXO Y SEMPRE +1 (CRÍTICO) ***
+                    max: limiteSuperior,
+                    min: 0,
+                    suggestedMax: limiteSuperior, // Dupla garantia
                     title: {
                         display: true,
                         text: 'Beneficiários',
@@ -930,10 +921,11 @@ function renderLinhasHospital(hospitalId, type = 'bar') {
                     },
                     ticks: { 
                         stepSize: 1,
+                        max: limiteSuperior, // Tripla garantia
                         color: '#e2e8f0',
                         font: { size: 11 },
                         callback: function(value) {
-                            return Number.isInteger(value) && value >= 0 ? value : '';
+                            return Number.isInteger(value) && value >= 0 && value <= limiteSuperior ? value : '';
                         }
                     },
                     grid: { color: 'rgba(255, 255, 255, 0.05)' }

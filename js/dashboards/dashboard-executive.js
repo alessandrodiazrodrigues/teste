@@ -669,7 +669,7 @@ function renderConcessoesExecutivo() {
                         lineWidth: function(context) {
                             // Linha mais grossa entre grupos
                             if (context.index % 4 === 0 && context.index > 0) {
-                                return 2;
+                                return 6;
                             }
                             return 0;
                         }
@@ -826,7 +826,7 @@ function renderLinhasExecutivo() {
                         drawOnChartArea: true,
                         lineWidth: function(context) {
                             if (context.index % 4 === 0 && context.index > 0) {
-                                return 2;
+                                return 6;
                             }
                             return 0;
                         }

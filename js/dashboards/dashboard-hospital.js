@@ -161,8 +161,13 @@ window.renderDashboardHospitalar = function() {
             hospitaisComDados.forEach(hospitalId => {
                 renderGaugeHospital(hospitalId);
                 renderAltasHospital(hospitalId);
-                renderConcessoesHospital(hospitalId);
-                renderLinhasHospital(hospitalId);
+                
+                // *** CORREÇÃO: RENDERIZAR CONCESSÕES E LINHAS COM TIPO SCATTER INICIAL ***
+                const hospitalData = window.hospitalData[hospitalId];
+                if (hospitalData) {
+                    renderConcessoesHospital(hospitalId, 'scatter');
+                    renderLinhasHospital(hospitalId, 'scatter');
+                }
             });
             
             logSuccess('Dashboard Hospitalar V4.0 renderizado com layout horizontal e dados reais');
@@ -272,14 +277,39 @@ function renderHospitalSection(hospitalId) {
 }
 
 // =================== CALCULAR KPIs DE UM HOSPITAL ===================
+// *** CORREÇÃO: CALCULAR KPIs COM SOMA CORRETA (ENF + APT + UTI) ***
 function calcularKPIsHospital(hospitalId) {
     const hospital = window.hospitalData[hospitalId];
     if (!hospital || !hospital.leitos) {
         return { ocupacao: 0, total: 0, ocupados: 0, vagos: 0, altas: 0 };
     }
     
-    const total = hospital.leitos.length;
-    const ocupados = hospital.leitos.filter(l => l.status === 'ocupado').length;
+    // *** CORREÇÃO: SOMAR TODOS OS TIPOS DE LEITO ***
+    let totalEnf = 0, totalApt = 0, totalUti = 0;
+    let ocupadosEnf = 0, ocupadosApt = 0, ocupadosUti = 0;
+    
+    hospital.leitos.forEach(leito => {
+        // Identificar tipo de leito
+        const tipo = leito.tipo || leito.categoria || 'ENF'; // fallback para ENF
+        
+        if (tipo.includes('ENF') || tipo.includes('Enfermaria')) {
+            totalEnf++;
+            if (leito.status === 'ocupado') ocupadosEnf++;
+        } else if (tipo.includes('APT') || tipo.includes('Apartamento')) {
+            totalApt++;
+            if (leito.status === 'ocupado') ocupadosApt++;
+        } else if (tipo.includes('UTI')) {
+            totalUti++;
+            if (leito.status === 'ocupado') ocupadosUti++;
+        } else {
+            // Se não identificar, contar como ENF
+            totalEnf++;
+            if (leito.status === 'ocupado') ocupadosEnf++;
+        }
+    });
+    
+    const total = totalEnf + totalApt + totalUti;
+    const ocupados = ocupadosEnf + ocupadosApt + ocupadosUti;
     const vagos = total - ocupados;
     
     // *** CORREÇÃO: USAR TIMELINE V4.0 CORRIGIDA ***
@@ -292,6 +322,8 @@ function calcularKPIsHospital(hospitalId) {
     ).length;
     
     const ocupacao = total > 0 ? Math.round((ocupados / total) * 100) : 0;
+    
+    logInfo(`KPIs ${hospitalId}: ENF=${totalEnf}, APT=${totalApt}, UTI=${totalUti}, Total=${total}`);
     
     return { ocupacao, total, ocupados, vagos, altas };
 }
@@ -492,38 +524,212 @@ function renderAltasHospital(hospitalId) {
     logInfo(`Gráfico de altas CORRIGIDO renderizado para ${hospitalId} com legenda embaixo`);
 }
 
-// =================== GRÁFICO DE CONCESSÕES ===================
-function renderConcessoesHospital(hospitalId) {
+// *** CORREÇÃO: GRÁFICO DE CONCESSÕES COM FALLBACK LOCAL ***
+function renderConcessoesHospital(hospitalId, type = 'scatter') {
     const canvas = document.getElementById(`graficoConcessoes${hospitalId}`);
     if (!canvas || typeof Chart === 'undefined') return;
     
     const hospital = window.hospitalData[hospitalId];
     if (!hospital || !hospital.leitos) return;
     
-    const type = window.graficosState[hospitalId]?.concessoes || 'bar';
-    
-    // *** USAR FUNÇÃO DO DASHBOARD.JS V4.0 ***
+    // *** PRIMEIRO: TENTAR USAR FUNÇÃO DO DASHBOARD.JS V4.0 ***
     if (window.renderGraficoConcessoesV4) {
-        window.renderGraficoConcessoesV4(`graficoConcessoes${hospitalId}`, hospital, type);
-        logInfo(`Gráfico de concessões V4.0 renderizado para ${hospitalId}: ${type}`);
+        try {
+            window.renderGraficoConcessoesV4(`graficoConcessoes${hospitalId}`, hospital, type);
+            logInfo(`Gráfico de concessões V4.0 renderizado para ${hospitalId}: ${type}`);
+            return;
+        } catch (error) {
+            logError(`Erro na função V4.0, usando fallback: ${error.message}`);
+        }
     }
+    
+    // *** FALLBACK LOCAL SE V4.0 NÃO FUNCIONAR ***
+    const chartKey = `concessoes${hospitalId}`;
+    if (window.chartInstances && window.chartInstances[chartKey]) {
+        window.chartInstances[chartKey].destroy();
+    }
+    
+    if (!window.chartInstances) window.chartInstances = {};
+    
+    // Processar dados localmente
+    const concessoesCount = {};
+    
+    hospital.leitos.forEach(leito => {
+        if (leito.status === 'ocupado' && leito.paciente && leito.paciente.concessoes) {
+            const concessoesList = Array.isArray(leito.paciente.concessoes) ? 
+                leito.paciente.concessoes : 
+                String(leito.paciente.concessoes).split('|');
+            
+            concessoesList.forEach(concessao => {
+                if (concessao && concessao.trim()) {
+                    concessoesCount[concessao.trim()] = (concessoesCount[concessao.trim()] || 0) + 1;
+                }
+            });
+        }
+    });
+    
+    const concessoesOrdenadas = Object.entries(concessoesCount)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 8);
+    
+    if (concessoesOrdenadas.length === 0) {
+        return;
+    }
+    
+    const labels = concessoesOrdenadas.map(([nome]) => nome);
+    const valores = concessoesOrdenadas.map(([, count]) => count);
+    
+    const ctx = canvas.getContext('2d');
+    
+    let chartConfig = {
+        type: type === 'scatter' ? 'scatter' : type,
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Beneficiários',
+                data: type === 'scatter' ? 
+                    valores.map((value, index) => ({x: index, y: value})) : 
+                    valores,
+                backgroundColor: '#007A53',
+                borderColor: '#007A53',
+                borderWidth: type === 'line' ? 2 : 0,
+                fill: type === 'area',
+                tension: (type === 'line' || type === 'area') ? 0.4 : 0,
+                pointRadius: type === 'scatter' ? 8 : 4
+            }]
+        },
+        options: {
+            responsive: false,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                x: {
+                    ticks: { color: '#e2e8f0' },
+                    grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                },
+                y: {
+                    beginAtZero: true,
+                    ticks: { 
+                        stepSize: 1,
+                        color: '#e2e8f0',
+                        callback: function(value) {
+                            return Number.isInteger(value) ? value : '';
+                        }
+                    },
+                    grid: { color: 'rgba(255, 255, 255, 0.05)' }
+                }
+            }
+        }
+    };
+    
+    window.chartInstances[chartKey] = new Chart(ctx, chartConfig);
+    logInfo(`Gráfico de concessões LOCAL renderizado para ${hospitalId}: ${type}`);
 }
 
-// =================== GRÁFICO DE LINHAS DE CUIDADO ===================
-function renderLinhasHospital(hospitalId) {
+// *** CORREÇÃO: GRÁFICO DE LINHAS COM FALLBACK LOCAL ***
+function renderLinhasHospital(hospitalId, type = 'scatter') {
     const canvas = document.getElementById(`graficoLinhas${hospitalId}`);
     if (!canvas || typeof Chart === 'undefined') return;
     
     const hospital = window.hospitalData[hospitalId];
     if (!hospital || !hospital.leitos) return;
     
-    const type = window.graficosState[hospitalId]?.linhas || 'bar';
-    
-    // *** USAR FUNÇÃO DO DASHBOARD.JS V4.0 ***
+    // *** PRIMEIRO: TENTAR USAR FUNÇÃO DO DASHBOARD.JS V4.0 ***
     if (window.renderGraficoLinhasV4) {
-        window.renderGraficoLinhasV4(`graficoLinhas${hospitalId}`, hospital, type);
-        logInfo(`Gráfico de linhas V4.0 renderizado para ${hospitalId}: ${type}`);
+        try {
+            window.renderGraficoLinhasV4(`graficoLinhas${hospitalId}`, hospital, type);
+            logInfo(`Gráfico de linhas V4.0 renderizado para ${hospitalId}: ${type}`);
+            return;
+        } catch (error) {
+            logError(`Erro na função V4.0, usando fallback: ${error.message}`);
+        }
     }
+    
+    // *** FALLBACK LOCAL SE V4.0 NÃO FUNCIONAR ***
+    const chartKey = `linhas${hospitalId}`;
+    if (window.chartInstances && window.chartInstances[chartKey]) {
+        window.chartInstances[chartKey].destroy();
+    }
+    
+    if (!window.chartInstances) window.chartInstances = {};
+    
+    // Processar dados localmente
+    const linhasCount = {};
+    
+    hospital.leitos.forEach(leito => {
+        if (leito.status === 'ocupado' && leito.paciente && leito.paciente.linhas) {
+            const linhasList = Array.isArray(leito.paciente.linhas) ? 
+                leito.paciente.linhas : 
+                String(leito.paciente.linhas).split('|');
+            
+            linhasList.forEach(linha => {
+                if (linha && linha.trim()) {
+                    linhasCount[linha.trim()] = (linhasCount[linha.trim()] || 0) + 1;
+                }
+            });
+        }
+    });
+    
+    const linhasOrdenadas = Object.entries(linhasCount)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 6);
+    
+    if (linhasOrdenadas.length === 0) {
+        return;
+    }
+    
+    const labels = linhasOrdenadas.map(([nome]) => nome);
+    const valores = linhasOrdenadas.map(([, count]) => count);
+    
+    const ctx = canvas.getContext('2d');
+    
+    let chartConfig = {
+        type: type === 'scatter' ? 'scatter' : type,
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Beneficiários',
+                data: type === 'scatter' ? 
+                    valores.map((value, index) => ({x: index, y: value})) : 
+                    valores,
+                backgroundColor: '#ED0A72',
+                borderColor: '#ED0A72',
+                borderWidth: type === 'line' ? 2 : 0,
+                fill: type === 'area',
+                tension: (type === 'line' || type === 'area') ? 0.4 : 0,
+                pointRadius: type === 'scatter' ? 8 : 4
+            }]
+        },
+        options: {
+            responsive: false,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                x: {
+                    ticks: { color: '#e2e8f0' },
+                    grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                },
+                y: {
+                    beginAtZero: true,
+                    ticks: { 
+                        stepSize: 1,
+                        color: '#e2e8f0',
+                        callback: function(value) {
+                            return Number.isInteger(value) ? value : '';
+                        }
+                    },
+                    grid: { color: 'rgba(255, 255, 255, 0.05)' }
+                }
+            }
+        }
+    };
+    
+    window.chartInstances[chartKey] = new Chart(ctx, chartConfig);
+    logInfo(`Gráfico de linhas LOCAL renderizado para ${hospitalId}: ${type}`);
 }
 
 // =================== FUNÇÃO DE FORÇA DE ATUALIZAÇÃO - APENAS DADOS REAIS ===================
@@ -598,53 +804,62 @@ function getHospitalCSS() {
             
             /* *** CORREÇÃO: KPIs LAYOUT HORIZONTAL IGUAL AO EXECUTIVO *** */
             .kpis-horizontal-container {
-                display: flex;
-                align-items: center;
+                display: grid;
+                grid-template-columns: repeat(5, 1fr);
                 gap: 16px;
-                padding: 20px;
-                background: rgba(255, 255, 255, 0.05);
-                border-radius: 10px;
-                flex-wrap: wrap;
-                justify-content: center;
+                margin-bottom: 30px;
+                padding: 0;
+                background: transparent;
+                border-radius: 0;
             }
             
             .kpi-box-inline {
-                text-align: center;
                 background: #1a1f2e;
                 border-radius: 12px;
-                padding: 15px;
+                padding: 20px;
+                color: white;
+                box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
                 border: 1px solid rgba(255, 255, 255, 0.1);
-                min-width: 100px;
-                flex: 1;
-                max-width: 120px;
-            }
-            
-            .kpi-gauge-box {
-                position: relative;
+                text-align: center;
                 display: flex;
                 flex-direction: column;
                 align-items: center;
                 justify-content: center;
+                transition: all 0.3s ease;
+                min-height: 100px;
+            }
+            
+            .kpi-box-inline:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+            }
+            
+            .kpi-gauge-box {
+                position: relative;
             }
             
             .kpi-gauge-box canvas {
                 margin-bottom: 8px;
+                max-width: 80px;
+                max-height: 40px;
             }
             
             .kpi-value {
+                display: block;
                 font-size: 28px;
                 font-weight: 700;
-                margin-bottom: 4px;
-                color: #60a5fa;
+                color: white;
                 line-height: 1;
+                margin-bottom: 6px;
             }
             
             .kpi-label {
-                font-size: 10px;
-                font-weight: 600;
+                display: block;
+                font-size: 12px;
+                color: #9ca3af;
                 text-transform: uppercase;
-                color: #e2e8f0;
                 letter-spacing: 0.5px;
+                font-weight: 600;
             }
             
             /* LAYOUT VERTICAL DOS GRÁFICOS */
@@ -720,33 +935,28 @@ function getHospitalCSS() {
                 background: rgba(0, 0, 0, 0.2);
                 border-radius: 8px;
                 padding: 15px;
+                box-sizing: border-box;
             }
             
             .chart-container canvas {
                 width: 100% !important;
                 height: 100% !important;
-                max-height: 400px;
+                max-height: 370px !important;
+                max-width: calc(100% - 30px) !important;
+                object-fit: contain;
             }
             
             /* RESPONSIVIDADE */
+            @media (max-width: 1200px) {
+                .kpis-horizontal-container {
+                    grid-template-columns: repeat(3, 1fr);
+                }
+            }
+            
             @media (max-width: 768px) {
                 .kpis-horizontal-container {
-                    flex-direction: column;
-                    gap: 15px;
-                }
-                
-                .kpi-gauge {
-                    margin-right: 0;
-                    margin-bottom: 10px;
-                }
-                
-                .kpis-inline {
-                    flex-direction: column;
+                    grid-template-columns: 1fr;
                     gap: 10px;
-                }
-                
-                .kpi-box-inline {
-                    min-width: 120px;
                 }
                 
                 .chart-header {
@@ -761,6 +971,10 @@ function getHospitalCSS() {
                 
                 .chart-container {
                     height: 300px;
+                }
+                
+                .chart-container canvas {
+                    max-height: 270px !important;
                 }
             }
         </style>

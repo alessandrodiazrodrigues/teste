@@ -491,16 +491,23 @@ function renderAltasHospital(hospitalId) {
             // BARRAS MAIS FINAS
             barPercentage: 0.6,
             categoryPercentage: 0.8,
+            // *** FORÇAR MESMA PROPORÇÃO DOS OUTROS GRÁFICOS ***
+            aspectRatio: 2,
             plugins: {
                 legend: {
                     display: true,
                     position: 'bottom',
                     align: 'start',
+                    // *** FORÇAR UMA LEGENDA POR LINHA ***
+                    maxWidth: 150,
                     labels: {
                         color: '#ffffff',
-                        padding: 15,
-                        font: { size: 12, weight: 600 },
-                        usePointStyle: true
+                        padding: 25, // Maior espaçamento vertical
+                        font: { size: 13, weight: 600 }, // *** FONTE 15% MAIOR ***
+                        usePointStyle: true,
+                        boxWidth: 10,
+                        boxHeight: 10,
+                        textAlign: 'left'
                     }
                 },
                 tooltip: {
@@ -626,9 +633,17 @@ function renderConcessoesHospital(hospitalId, type = 'bar') {
         const cor = CORES_CONCESSOES[nome] || '#007A53';
         
         if (type === 'scatter') {
+            // *** PARA SCATTER: APENAS PLOTAR PONTOS COM VALOR > 0 ***
+            const pontosValidos = [];
+            dados.forEach((value, index) => {
+                if (value > 0) { // Só adicionar se valor > 0
+                    pontosValidos.push({ x: index, y: value });
+                }
+            });
+            
             return {
                 label: nome,
-                data: dados, // *** USAR DADOS DIRETOS PARA CATEGORIAS ***
+                data: pontosValidos, // Apenas pontos com valores > 0
                 backgroundColor: cor,
                 pointRadius: 8,
                 showLine: false
@@ -676,23 +691,24 @@ function renderConcessoesHospital(hospitalId, type = 'bar') {
         options: {
             responsive: false,
             maintainAspectRatio: false,
+            // *** FORÇAR MESMA PROPORÇÃO DOS OUTROS GRÁFICOS ***
+            aspectRatio: 2,
             plugins: {
                 legend: { 
                     display: true,
                     position: 'bottom',
                     align: 'start',
+                    // *** FORÇAR UMA LEGENDA POR LINHA ***
+                    maxWidth: 150,
                     labels: {
                         color: '#ffffff', // *** FONTE BRANCA FORÇADA ***
-                        padding: 20,
-                        font: { size: 11, weight: 500 },
+                        padding: 25, // Maior espaçamento vertical
+                        font: { size: 13, weight: 500 }, // *** FONTE 15% MAIOR ***
                         usePointStyle: true,
-                        boxWidth: 12,
-                        boxHeight: 12,
+                        boxWidth: 10,
+                        boxHeight: 10,
                         textAlign: 'left'
-                    },
-                    // *** FORÇAR UMA LEGENDA POR LINHA ***
-                    onClick: function() { return false; }, // Desabilitar click
-                    maxWidth: 200 // Forçar quebra
+                    }
                 },
                 tooltip: {
                     backgroundColor: 'rgba(26, 31, 46, 0.95)',
@@ -709,7 +725,7 @@ function renderConcessoesHospital(hospitalId, type = 'bar') {
             scales: {
                 x: {
                     type: 'category', // *** SEMPRE CATEGORY PARA MOSTRAR LABELS ***
-                    stacked: type === 'bar',
+                    stacked: false, // *** BARRAS AGRUPADAS, NÃO EMPILHADAS ***
                     ticks: { 
                         color: '#e2e8f0',
                         font: { size: 12, weight: 600 },
@@ -719,7 +735,7 @@ function renderConcessoesHospital(hospitalId, type = 'bar') {
                 },
                 y: {
                     beginAtZero: true,
-                    stacked: type === 'bar',
+                    stacked: false, // *** BARRAS AGRUPADAS, NÃO EMPILHADAS ***
                     // *** FORÇAR EIXO Y SEMPRE +1 (CRÍTICO) ***
                     max: limiteSuperior,
                     min: 0,
@@ -865,23 +881,24 @@ function renderLinhasHospital(hospitalId, type = 'bar') {
         options: {
             responsive: false,
             maintainAspectRatio: false,
+            // *** FORÇAR MESMA PROPORÇÃO DOS OUTROS GRÁFICOS ***
+            aspectRatio: 2,
             plugins: {
                 legend: { 
                     display: true,
                     position: 'bottom',
                     align: 'start',
+                    // *** FORÇAR UMA LEGENDA POR LINHA ***
+                    maxWidth: 150,
                     labels: {
                         color: '#ffffff', // *** FONTE BRANCA FORÇADA ***
-                        padding: 20,
-                        font: { size: 11, weight: 500 },
+                        padding: 25, // Maior espaçamento vertical
+                        font: { size: 13, weight: 500 }, // *** FONTE 15% MAIOR ***
                         usePointStyle: true,
-                        boxWidth: 12,
-                        boxHeight: 12,
+                        boxWidth: 10,
+                        boxHeight: 10,
                         textAlign: 'left'
-                    },
-                    // *** FORÇAR UMA LEGENDA POR LINHA ***
-                    onClick: function() { return false; }, // Desabilitar click
-                    maxWidth: 200 // Forçar quebra
+                    }
                 },
                 tooltip: {
                     backgroundColor: 'rgba(26, 31, 46, 0.95)',

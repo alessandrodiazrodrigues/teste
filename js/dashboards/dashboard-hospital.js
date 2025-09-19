@@ -726,8 +726,11 @@ function renderLinhasHospital(hospitalId, type = 'scatter') {
             datasets: [{
                 label: 'Beneficiários',
                 data: type === 'scatter' ? 
-                    valores.map((value, index) => ({x: index, y: value})) : 
-                    valores,
+                    valores.map((value, index) => ({
+                        x: index + 1,
+                        y: Math.round(value)
+                    })) : 
+                    valores.map(v => Math.round(v)),
                 backgroundColor: '#ED0A72',
                 borderColor: '#ED0A72',
                 borderWidth: type === 'line' ? 2 : 0,
@@ -740,20 +743,48 @@ function renderLinhasHospital(hospitalId, type = 'scatter') {
             responsive: false,
             maintainAspectRatio: false,
             plugins: {
-                legend: { display: false }
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: 'rgba(26, 31, 46, 0.95)',
+                    titleColor: '#ffffff',
+                    bodyColor: '#ffffff',
+                    callbacks: {
+                        label: function(context) {
+                            const value = Math.round(context.parsed.y || context.parsed);
+                            return `${value} beneficiário${value !== 1 ? 's' : ''}`;
+                        }
+                    }
+                }
             },
             scales: {
                 x: {
-                    ticks: { color: '#e2e8f0' },
+                    type: type === 'scatter' ? 'linear' : 'category',
+                    title: {
+                        display: type === 'scatter',
+                        text: 'Linhas de Cuidado',
+                        color: '#e2e8f0'
+                    },
+                    ticks: { 
+                        color: '#e2e8f0',
+                        stepSize: 1,
+                        callback: function(value) {
+                            return Number.isInteger(value) ? value : '';
+                        }
+                    },
                     grid: { color: 'rgba(255, 255, 255, 0.1)' }
                 },
                 y: {
                     beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Beneficiários',
+                        color: '#e2e8f0'
+                    },
                     ticks: { 
                         stepSize: 1,
                         color: '#e2e8f0',
                         callback: function(value) {
-                            return Number.isInteger(value) ? value : '';
+                            return Number.isInteger(value) && value >= 0 ? value : '';
                         }
                     },
                     grid: { color: 'rgba(255, 255, 255, 0.05)' }

@@ -588,8 +588,11 @@ function renderConcessoesHospital(hospitalId, type = 'scatter') {
             datasets: [{
                 label: 'Beneficiários',
                 data: type === 'scatter' ? 
-                    valores.map((value, index) => ({x: index, y: value})) : 
-                    valores,
+                    valores.map((value, index) => ({
+                        x: index + 1, // *** CORREÇÃO: X como índice simples ***
+                        y: Math.round(value) // *** CORREÇÃO: Y sempre número inteiro ***
+                    })) : 
+                    valores.map(v => Math.round(v)), // *** CORREÇÃO: Todos os valores inteiros ***
                 backgroundColor: '#007A53',
                 borderColor: '#007A53',
                 borderWidth: type === 'line' ? 2 : 0,
@@ -602,20 +605,51 @@ function renderConcessoesHospital(hospitalId, type = 'scatter') {
             responsive: false,
             maintainAspectRatio: false,
             plugins: {
-                legend: { display: false }
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: 'rgba(26, 31, 46, 0.95)',
+                    titleColor: '#ffffff',
+                    bodyColor: '#ffffff',
+                    callbacks: {
+                        label: function(context) {
+                            // *** CORREÇÃO: TOOLTIP SEMPRE MOSTRA NÚMEROS INTEIROS ***
+                            const value = Math.round(context.parsed.y || context.parsed);
+                            return `${value} beneficiário${value !== 1 ? 's' : ''}`;
+                        }
+                    }
+                }
             },
             scales: {
                 x: {
-                    ticks: { color: '#e2e8f0' },
+                    type: type === 'scatter' ? 'linear' : 'category',
+                    title: {
+                        display: type === 'scatter',
+                        text: 'Concessões',
+                        color: '#e2e8f0'
+                    },
+                    ticks: { 
+                        color: '#e2e8f0',
+                        // *** CORREÇÃO: SEMPRE NÚMEROS INTEIROS ***
+                        stepSize: 1,
+                        callback: function(value) {
+                            return Number.isInteger(value) ? value : '';
+                        }
+                    },
                     grid: { color: 'rgba(255, 255, 255, 0.1)' }
                 },
                 y: {
                     beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Beneficiários',
+                        color: '#e2e8f0'
+                    },
                     ticks: { 
-                        stepSize: 1,
+                        stepSize: 1, // *** CORREÇÃO: STEP SIZE 1 ***
                         color: '#e2e8f0',
                         callback: function(value) {
-                            return Number.isInteger(value) ? value : '';
+                            // *** CORREÇÃO: APENAS NÚMEROS INTEIROS NO EIXO ***
+                            return Number.isInteger(value) && value >= 0 ? value : '';
                         }
                     },
                     grid: { color: 'rgba(255, 255, 255, 0.05)' }

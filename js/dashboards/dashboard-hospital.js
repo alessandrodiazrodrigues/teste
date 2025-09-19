@@ -413,14 +413,17 @@ function renderAltasHospital(hospitalId) {
     
     if (!window.chartInstances) window.chartInstances = {};
     
-    // Eixos exatos - HOJE, 24H, 48H, 72H (SEM SP)
-    const categorias = ['HOJE', '24H', '48H', '72H'];
+    // Eixos exatos - HOJE, 24H, 48H, 72H, 96H (5 COLUNAS)
+    const categorias = ['HOJE', '24H', '48H', '72H', '96H'];
     
-    // Separar HOJE e 24H em Ouro/2R/3R
+    // Separar HOJE e 24H em Ouro/2R/3R, outros com cores únicas
     const dados = {
-        'Ouro': [0, 0, 0, 0],
-        '2R': [0, 0, 0, 0],
-        '3R': [0, 0, 0, 0]
+        'Ouro': [0, 0, 0, 0, 0],
+        '2R': [0, 0, 0, 0, 0],
+        '3R': [0, 0, 0, 0, 0],
+        '48H': [0, 0, 0, 0, 0], // Cor específica para 48H
+        '72H': [0, 0, 0, 0, 0], // Cor específica para 72H
+        '96H': [0, 0, 0, 0, 0]  // Cor específica para 96H
     };
     
     hospital.leitos.forEach(leito => {
@@ -436,14 +439,13 @@ function renderAltasHospital(hospitalId) {
             else if (leito.paciente.prevAlta === '24h 2R') { index = 1; tipo = '2R'; }
             else if (leito.paciente.prevAlta === '24h 3R') { index = 1; tipo = '3R'; }
             else if (leito.paciente.prevAlta === '48h') { 
-                index = 2; 
-                dados['Ouro'][index]++; 
-                return;
+                index = 2; tipo = '48H'; // *** COR ESPECÍFICA PARA 48H ***
             }
             else if (leito.paciente.prevAlta === '72h') { 
-                index = 3; 
-                dados['2R'][index]++; 
-                return;
+                index = 3; tipo = '72H'; // *** COR ESPECÍFICA PARA 72H ***
+            }
+            else if (leito.paciente.prevAlta === '96h') { 
+                index = 4; tipo = '96H'; // *** COR ESPECÍFICA PARA 96H ***
             }
             
             if (index >= 0 && tipo && dados[tipo]) {
@@ -453,7 +455,7 @@ function renderAltasHospital(hospitalId) {
     });
     
     // CALCULAR VALOR MÁXIMO PARA EIXO Y +1 (REFORÇADO)
-    const todosDados = [...dados['Ouro'], ...dados['2R'], ...dados['3R']];
+    const todosDados = [...dados['Ouro'], ...dados['2R'], ...dados['3R'], ...dados['48H'], ...dados['72H'], ...dados['96H']];
     const valorMaximo = Math.max(...todosDados, 0); // Garantir pelo menos 0
     const limiteSuperior = valorMaximo + 1; // SEMPRE +1
     
@@ -481,6 +483,24 @@ function renderAltasHospital(hospitalId) {
                     label: '3R',
                     data: dados['3R'],
                     backgroundColor: '#8b5cf6',
+                    borderWidth: 0
+                },
+                {
+                    label: '48H',
+                    data: dados['48H'],
+                    backgroundColor: '#10b981', // *** COR VERDE PARA 48H ***
+                    borderWidth: 0
+                },
+                {
+                    label: '72H',
+                    data: dados['72H'],
+                    backgroundColor: '#f59e0b', // *** COR LARANJA PARA 72H ***
+                    borderWidth: 0
+                },
+                {
+                    label: '96H',
+                    data: dados['96H'],
+                    backgroundColor: '#ef4444', // *** COR VERMELHA PARA 96H ***
                     borderWidth: 0
                 }
             ]
@@ -633,20 +653,22 @@ function renderConcessoesHospital(hospitalId, type = 'bar') {
         const cor = CORES_CONCESSOES[nome] || '#007A53';
         
         if (type === 'scatter') {
-            // *** PARA SCATTER: APENAS PLOTAR PONTOS COM VALOR > 0 ***
+            // *** PARA SCATTER: MAPEAR VALORES > 0 PARA POSIÇÕES CORRETAS ***
             const pontosValidos = [];
-            dados.forEach((value, index) => {
+            dados.forEach((value, timelineIndex) => {
                 if (value > 0) { // Só adicionar se valor > 0
-                    pontosValidos.push({ x: index, y: value });
+                    pontosValidos.push(value); // Para gráfico category, usar valor direto
                 }
             });
             
+            // Se não há pontos válidos, retornar dataset vazio mas visível na legenda
             return {
                 label: nome,
-                data: pontosValidos, // Apenas pontos com valores > 0
+                data: pontosValidos.length > 0 ? dados.map(v => v > 0 ? v : null) : [],
                 backgroundColor: cor,
                 pointRadius: 8,
-                showLine: false
+                showLine: false,
+                spanGaps: false
             };
         } else if (type === 'line') {
             return {

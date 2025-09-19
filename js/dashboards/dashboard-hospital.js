@@ -514,7 +514,24 @@ function renderAltasHospital(hospitalId) {
     logInfo(`Gráfico de altas CORRIGIDO: barras finas + eixo Y até ${limiteSuperior}`);
 }
 
-// *** CORREÇÃO 2: GRÁFICO DE CONCESSÕES - NÚMEROS INTEIROS E 4 TIPOS ***
+// *** PALETA DE CORES PANTONE PARA CONCESSÕES ***
+const CORES_CONCESSOES = {
+    'Transição Domiciliar': '#007A53',
+    'Aplicação domiciliar de medicamentos': '#582C83',
+    'Fisioterapia': '#009639',
+    'Fonoaudiologia': '#FF671F',
+    'Aspiração': '#2E1A47',
+    'Banho': '#8FD3F4',
+    'Curativos': '#00BFB3',
+    'Oxigenoterapia': '#64A70B',
+    'Recarga de O₂': '#00AEEF',
+    'Orientação Nutricional – com dispositivo': '#FFC72C',
+    'Orientação Nutricional – sem dispositivo': '#F4E285',
+    'Clister': '#E8927C',
+    'PICC': '#E03C31'
+};
+
+// *** CORREÇÃO 2: GRÁFICO DE CONCESSÕES - CORES PANTONE CORRETAS ***
 function renderConcessoesHospital(hospitalId, type = 'bar') {
     const canvas = document.getElementById(`graficoConcessoes${hospitalId}`);
     if (!canvas || typeof Chart === 'undefined') return;
@@ -557,6 +574,11 @@ function renderConcessoesHospital(hospitalId, type = 'bar') {
     const labels = concessoesOrdenadas.map(([nome]) => nome);
     const valores = concessoesOrdenadas.map(([, count]) => Math.round(count)); // *** GARANTIR INTEIROS ***
     
+    // *** MAPEAR CORES PANTONE PARA CADA CONCESSÃO ***
+    const cores = labels.map(concessao => {
+        return CORES_CONCESSOES[concessao] || '#007A53'; // Fallback para verde padrão
+    });
+    
     const ctx = canvas.getContext('2d');
     
     let chartConfig = {
@@ -571,12 +593,13 @@ function renderConcessoesHospital(hospitalId, type = 'bar') {
                         y: value     // *** VALOR INTEIRO ***
                     })) : 
                     valores, // *** TODOS INTEIROS ***
-                backgroundColor: type === 'area' ? 'rgba(0, 122, 83, 0.3)' : '#007A53',
-                borderColor: '#007A53',
+                backgroundColor: type === 'area' ? cores.map(cor => cor + '4D') : cores, // 30% transparência para área
+                borderColor: type === 'line' || type === 'area' ? cores[0] : cores,
                 borderWidth: (type === 'line' || type === 'area') ? 2 : 0,
                 fill: type === 'area',
                 tension: (type === 'line' || type === 'area') ? 0.4 : 0,
-                pointRadius: type === 'scatter' ? 8 : 4
+                pointRadius: type === 'scatter' ? 8 : 4,
+                pointBackgroundColor: type === 'scatter' ? cores : undefined
             }]
         },
         options: {
@@ -639,7 +662,30 @@ function renderConcessoesHospital(hospitalId, type = 'bar') {
     logInfo(`Gráfico de concessões CORRIGIDO: ${type} com números inteiros`);
 }
 
-// *** CORREÇÃO 3: GRÁFICO DE LINHAS - NÚMEROS INTEIROS E 4 TIPOS ***
+// *** PALETA DE CORES PANTONE PARA LINHAS DE CUIDADO ***
+const CORES_LINHAS = {
+    'Assiste': '#ED0A72',
+    'APS': '#007A33',
+    'Cuidados Paliativos': '#00B5A2',
+    'ICO': '#A6192E',
+    'Oncologia': '#6A1B9A',
+    'Pediatria': '#5A646B',
+    'Programa Autoimune – Gastroenterologia': '#5C5EBE',
+    'Programa Autoimune – Neuro-desmielinizante': '#00AEEF',
+    'Programa Autoimune – Neuro-muscular': '#00263A',
+    'Programa Autoimune – Reumatologia': '#582D40',
+    'Vida Mais Leve Care': '#FFB81C',
+    'Crônicos – Cardiologia': '#C8102E',
+    'Crônicos – Endocrinologia': '#582C83',
+    'Crônicos – Geriatria': '#FF6F1D',
+    'Crônicos – Melhor Cuidado': '#556F44',
+    'Crônicos – Neurologia': '#0072CE',
+    'Crônicos – Pneumologia': '#E35205',
+    'Crônicos – Pós-bariátrica': '#003C57',
+    'Crônicos – Reumatologia': '#5A0020'
+};
+
+// *** CORREÇÃO 3: GRÁFICO DE LINHAS - CORES PANTONE CORRETAS ***
 function renderLinhasHospital(hospitalId, type = 'bar') {
     const canvas = document.getElementById(`graficoLinhas${hospitalId}`);
     if (!canvas || typeof Chart === 'undefined') return;
@@ -682,6 +728,11 @@ function renderLinhasHospital(hospitalId, type = 'bar') {
     const labels = linhasOrdenadas.map(([nome]) => nome);
     const valores = linhasOrdenadas.map(([, count]) => Math.round(count)); // *** GARANTIR INTEIROS ***
     
+    // *** MAPEAR CORES PANTONE PARA CADA LINHA DE CUIDADO ***
+    const cores = labels.map(linha => {
+        return CORES_LINHAS[linha] || '#ED0A72'; // Fallback para magenta padrão
+    });
+    
     const ctx = canvas.getContext('2d');
     
     let chartConfig = {
@@ -696,12 +747,13 @@ function renderLinhasHospital(hospitalId, type = 'bar') {
                         y: value     // *** VALOR INTEIRO ***
                     })) : 
                     valores, // *** TODOS INTEIROS ***
-                backgroundColor: type === 'area' ? 'rgba(237, 10, 114, 0.3)' : '#ED0A72',
-                borderColor: '#ED0A72',
+                backgroundColor: type === 'area' ? cores.map(cor => cor + '4D') : cores, // 30% transparência para área
+                borderColor: type === 'line' || type === 'area' ? cores[0] : cores,
                 borderWidth: (type === 'line' || type === 'area') ? 2 : 0,
                 fill: type === 'area',
                 tension: (type === 'line' || type === 'area') ? 0.4 : 0,
-                pointRadius: type === 'scatter' ? 8 : 4
+                pointRadius: type === 'scatter' ? 8 : 4,
+                pointBackgroundColor: type === 'scatter' ? cores : undefined
             }]
         },
         options: {

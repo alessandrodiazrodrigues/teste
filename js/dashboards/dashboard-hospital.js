@@ -182,57 +182,57 @@ function renderHospitalSection(hospitalId) {
             <div class="hospital-header">
                 <h3 class="hospital-title">${hospital.nome}</h3>
                 
-                <!-- *** CORREÇÃO 1: KPIs EM LAYOUT HORIZONTAL *** -->
+                <!-- *** CORREÇÃO 1: KPIs EM LAYOUT HORIZONTAL IGUAL AO EXECUTIVO *** -->
                 <div class="kpis-horizontal-container">
-                    <!-- GAUGE -->
-                    <div class="kpi-gauge">
-                        <canvas id="gauge${hospitalId}" width="120" height="60"></canvas>
-                        <div class="gauge-percentage">${kpis.ocupacao}%</div>
+                    <!-- GAUGE MESMO TAMANHO DOS OUTROS -->
+                    <div class="kpi-box-inline kpi-gauge-box">
+                        <canvas id="gauge${hospitalId}" width="80" height="40"></canvas>
+                        <div class="kpi-value">${kpis.ocupacao}%</div>
+                        <div class="kpi-label">OCUPAÇÃO</div>
                     </div>
                     
-                    <!-- KPIs EM LINHA -->
-                    <div class="kpis-inline">
-                        <div class="kpi-box-inline">
-                            <div class="kpi-value">${kpis.total}</div>
-                            <div class="kpi-label">TOTAL</div>
-                        </div>
-                        <div class="kpi-box-inline">
-                            <div class="kpi-value">${kpis.ocupados}</div>
-                            <div class="kpi-label">OCUPADOS</div>
-                        </div>
-                        <div class="kpi-box-inline">
-                            <div class="kpi-value">${kpis.vagos}</div>
-                            <div class="kpi-label">VAGOS</div>
-                        </div>
-                        <div class="kpi-box-inline">
-                            <div class="kpi-value">${kpis.altas}</div>
-                            <div class="kpi-label">EM ALTA</div>
-                        </div>
+                    <!-- TOTAL -->
+                    <div class="kpi-box-inline">
+                        <div class="kpi-value">${kpis.total}</div>
+                        <div class="kpi-label">TOTAL</div>
+                    </div>
+                    
+                    <!-- OCUPADOS -->
+                    <div class="kpi-box-inline">
+                        <div class="kpi-value">${kpis.ocupados}</div>
+                        <div class="kpi-label">OCUPADOS</div>
+                    </div>
+                    
+                    <!-- VAGOS -->
+                    <div class="kpi-box-inline">
+                        <div class="kpi-value">${kpis.vagos}</div>
+                        <div class="kpi-label">VAGOS</div>
+                    </div>
+                    
+                    <!-- EM ALTA -->
+                    <div class="kpi-box-inline">
+                        <div class="kpi-value">${kpis.altas}</div>
+                        <div class="kpi-label">EM ALTA</div>
                     </div>
                 </div>
             </div>
             
             <!-- GRÁFICOS EM LAYOUT VERTICAL -->
             <div class="graficos-verticais">
-                <!-- *** CORREÇÃO 2: Gráfico de Altas SEM EMOJIS *** -->
+                <!-- *** CORREÇÃO 2: Gráfico de Altas SEM V4.0 - APENAS BARRAS *** -->
                 <div class="grafico-item">
                     <div class="chart-header">
-                        <h4>Análise Preditiva de Altas V4.0</h4>
-                        <div class="chart-controls">
-                            <button class="chart-btn active" data-hospital="${hospitalId}" data-chart="preditivos" data-type="bar">Barras</button>
-                            <button class="chart-btn" data-hospital="${hospitalId}" data-chart="preditivos" data-type="scatter">Scatter</button>
-                            <button class="chart-btn" data-hospital="${hospitalId}" data-chart="preditivos" data-type="line">Linha</button>
-                        </div>
+                        <h4>Análise Preditiva de Altas em ${new Date().toLocaleDateString('pt-BR')}</h4>
                     </div>
                     <div class="chart-container">
                         <canvas id="graficoAltas${hospitalId}" width="800" height="400"></canvas>
                     </div>
                 </div>
                 
-                <!-- *** CORREÇÃO 3: Gráfico de Concessões SEM EMOJIS *** -->
+                <!-- *** CORREÇÃO 3: Gráfico de Concessões SEM V4.0 *** -->
                 <div class="grafico-item">
                     <div class="chart-header">
-                        <h4>Concessões Previstas V4.0</h4>
+                        <h4>Concessões Previstas em ${new Date().toLocaleDateString('pt-BR')}</h4>
                         <div class="chart-controls">
                             <button class="chart-btn active" data-hospital="${hospitalId}" data-chart="concessoes" data-type="bar">Barras</button>
                             <button class="chart-btn" data-hospital="${hospitalId}" data-chart="concessoes" data-type="scatter">Bolinhas</button>
@@ -248,10 +248,10 @@ function renderHospitalSection(hospitalId) {
                     </div>
                 </div>
                 
-                <!-- *** CORREÇÃO 4: Gráfico de Linhas SEM EMOJIS *** -->
+                <!-- *** CORREÇÃO 4: Gráfico de Linhas SEM V4.0 *** -->
                 <div class="grafico-item">
                     <div class="chart-header">
-                        <h4>Linhas de Cuidado V4.0</h4>
+                        <h4>Linhas de Cuidado em ${new Date().toLocaleDateString('pt-BR')}</h4>
                         <div class="chart-controls">
                             <button class="chart-btn active" data-hospital="${hospitalId}" data-chart="linhas" data-type="bar">Barras</button>
                             <button class="chart-btn" data-hospital="${hospitalId}" data-chart="linhas" data-type="scatter">Bolinhas</button>
@@ -344,7 +344,7 @@ function renderGaugeHospital(hospitalId) {
     }
 }
 
-// *** CORREÇÃO 5: GRÁFICO DE ALTAS COM EIXOS CORRETOS ***
+// *** CORREÇÃO 5: GRÁFICO DE ALTAS COM ESPECIFICAÇÕES EXATAS ***
 function renderAltasHospital(hospitalId) {
     const canvas = document.getElementById(`graficoAltas${hospitalId}`);
     if (!canvas || typeof Chart === 'undefined') return;
@@ -359,11 +359,137 @@ function renderAltasHospital(hospitalId) {
     
     if (!window.chartInstances) window.chartInstances = {};
     
-    // *** CORREÇÃO: USAR FUNÇÃO DO DASHBOARD.JS V4.0 ***
-    if (window.renderGraficoAltasV4Corrigido) {
-        window.renderGraficoAltasV4Corrigido(`graficoAltas${hospitalId}`, hospital);
-        logInfo(`Gráfico de altas V4.0 renderizado para ${hospitalId} com eixos corretos`);
-    }
+    // *** CORREÇÃO: EIXOS EXATOS - HOJE, 24H, 48H, 72H (SEM SP) ***
+    const categorias = ['HOJE', '24H', '48H', '72H'];
+    
+    // *** CORREÇÃO: SEPARAR HOJE E 24H EM OURO/2R/3R ***
+    const dados = {
+        'Ouro': [0, 0, 0, 0],
+        '2R': [0, 0, 0, 0],
+        '3R': [0, 0, 0, 0]
+    };
+    
+    hospital.leitos.forEach(leito => {
+        if (leito.status === 'ocupado' && leito.paciente && leito.paciente.prevAlta) {
+            let index = -1;
+            let tipo = '';
+            
+            // Mapear previsão de alta para categoria e tipo
+            if (leito.paciente.prevAlta === 'Hoje Ouro') { index = 0; tipo = 'Ouro'; }
+            else if (leito.paciente.prevAlta === 'Hoje 2R') { index = 0; tipo = '2R'; }
+            else if (leito.paciente.prevAlta === 'Hoje 3R') { index = 0; tipo = '3R'; }
+            else if (leito.paciente.prevAlta === '24h Ouro') { index = 1; tipo = 'Ouro'; }
+            else if (leito.paciente.prevAlta === '24h 2R') { index = 1; tipo = '2R'; }
+            else if (leito.paciente.prevAlta === '24h 3R') { index = 1; tipo = '3R'; }
+            else if (leito.paciente.prevAlta === '48h') { 
+                index = 2; 
+                // Para 48h, adicionar como Ouro (cor específica)
+                dados['Ouro'][index]++; 
+                return;
+            }
+            else if (leito.paciente.prevAlta === '72h') { 
+                index = 3; 
+                // Para 72h, adicionar como 2R (cor específica diferente)
+                dados['2R'][index]++; 
+                return;
+            }
+            
+            if (index >= 0 && tipo && dados[tipo]) {
+                dados[tipo][index]++;
+            }
+        }
+    });
+    
+    const ctx = canvas.getContext('2d');
+    window.chartInstances[chartKey] = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: categorias,
+            datasets: [
+                {
+                    label: 'Ouro',
+                    data: dados['Ouro'],
+                    backgroundColor: '#fbbf24',
+                    borderWidth: 0
+                },
+                {
+                    label: '2R',
+                    data: dados['2R'],
+                    backgroundColor: '#3b82f6',
+                    borderWidth: 0
+                },
+                {
+                    label: '3R',
+                    data: dados['3R'],
+                    backgroundColor: '#8b5cf6',
+                    borderWidth: 0
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'bottom',
+                    align: 'start',
+                    labels: {
+                        color: '#ffffff',
+                        padding: 15,
+                        font: { size: 12, weight: 600 },
+                        usePointStyle: true
+                    }
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(26, 31, 46, 0.95)',
+                    titleColor: '#ffffff',
+                    bodyColor: '#ffffff',
+                    callbacks: {
+                        label: function(context) {
+                            return `${context.dataset.label}: ${context.parsed.y} beneficiários`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    stacked: true,
+                    ticks: {
+                        color: '#e2e8f0',
+                        font: { size: 12, weight: 600 },
+                        maxRotation: 0
+                    },
+                    grid: {
+                        color: 'rgba(255, 255, 255, 0.1)'
+                    }
+                },
+                y: {
+                    stacked: true,
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Beneficiários',
+                        color: '#e2e8f0',
+                        font: { size: 12, weight: 600 }
+                    },
+                    ticks: {
+                        stepSize: 1,
+                        color: '#e2e8f0',
+                        font: { size: 11 },
+                        callback: function(value) {
+                            return Number.isInteger(value) ? value : '';
+                        }
+                    },
+                    grid: {
+                        color: 'rgba(255, 255, 255, 0.05)'
+                    }
+                }
+            }
+        }
+    });
+    
+    logInfo(`Gráfico de altas CORRIGIDO renderizado para ${hospitalId} com legenda embaixo`);
 }
 
 // =================== GRÁFICO DE CONCESSÕES ===================
@@ -470,11 +596,11 @@ function getHospitalCSS() {
                 letter-spacing: 0.5px;
             }
             
-            /* *** CORREÇÃO: KPIs LAYOUT HORIZONTAL *** */
+            /* *** CORREÇÃO: KPIs LAYOUT HORIZONTAL IGUAL AO EXECUTIVO *** */
             .kpis-horizontal-container {
                 display: flex;
                 align-items: center;
-                gap: 20px;
+                gap: 16px;
                 padding: 20px;
                 background: rgba(255, 255, 255, 0.05);
                 border-radius: 10px;
@@ -482,53 +608,43 @@ function getHospitalCSS() {
                 justify-content: center;
             }
             
-            .kpi-gauge {
-                position: relative;
-                width: 120px;
-                height: 80px;
-                margin-right: 20px;
-            }
-            
-            .gauge-percentage {
-                position: absolute;
-                bottom: -10px;
-                left: 50%;
-                transform: translateX(-50%);
-                font-size: 16px;
-                font-weight: 700;
-                color: #60a5fa;
-            }
-            
-            .kpis-inline {
-                display: flex;
-                gap: 15px;
-                flex: 1;
-                justify-content: space-around;
-                flex-wrap: wrap;
-            }
-            
             .kpi-box-inline {
                 text-align: center;
-                background: rgba(255, 255, 255, 0.08);
-                border-radius: 8px;
-                padding: 15px 20px;
+                background: #1a1f2e;
+                border-radius: 12px;
+                padding: 15px;
                 border: 1px solid rgba(255, 255, 255, 0.1);
-                min-width: 80px;
+                min-width: 100px;
+                flex: 1;
+                max-width: 120px;
+            }
+            
+            .kpi-gauge-box {
+                position: relative;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+            }
+            
+            .kpi-gauge-box canvas {
+                margin-bottom: 8px;
             }
             
             .kpi-value {
-                font-size: 24px;
+                font-size: 28px;
                 font-weight: 700;
                 margin-bottom: 4px;
                 color: #60a5fa;
+                line-height: 1;
             }
             
             .kpi-label {
-                font-size: 11px;
-                color: #9ca3af;
-                text-transform: uppercase;
-                letter-spacing: 0.5px;
+                font-size: 10px;
                 font-weight: 600;
+                text-transform: uppercase;
+                color: #e2e8f0;
+                letter-spacing: 0.5px;
             }
             
             /* LAYOUT VERTICAL DOS GRÁFICOS */

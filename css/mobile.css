@@ -1,4 +1,4 @@
-/* =================== MOBILE.CSS - RESPONSIVIDADE COMPLETA BASEADA NO ARQUIVO ORIGINAL =================== */
+/* =================== MOBILE.CSS - RESPONSIVIDADE COMPLETA V5.0 =================== */
 
 /* =================== TABLETS E TELAS MÉDIAS =================== */
 @media (max-width: 1024px) {
@@ -41,20 +41,40 @@
 
 /* =================== SMARTPHONES - LAYOUT PRINCIPAL =================== */
 @media (max-width: 768px) {
-    /* Header responsivo */
+    /* =================== HEADER MOBILE - CORREÇÃO HAMBÚRGUER =================== */
     header {
         flex-direction: column;
         gap: 10px;
         padding: 10px;
+        align-items: flex-start; /* Alinhamento à esquerda */
+    }
+    
+    .header-left {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        width: 100%;
+        justify-content: flex-start; /* Forçar alinhamento à esquerda */
+    }
+    
+    .hamburger {
+        font-size: 20px;
+        padding: 8px;
+        margin-right: 10px;
+        order: -1; /* Garantir que fica primeiro */
+        align-self: flex-start; /* Alinhamento à esquerda */
     }
     
     header h1 {
         font-size: 18px;
+        margin: 0;
+        flex: 1;
     }
     
     .header-right {
         width: 100%;
         justify-content: space-between;
+        align-items: center;
     }
     
     #timer,
@@ -62,13 +82,13 @@
         font-size: 12px;
     }
     
+    /* =================== CARDS MOBILE - LAYOUT 3x3 OTIMIZADO =================== */
+    
     /* Cards em coluna única no mobile */
     .cards-grid {
         grid-template-columns: 1fr;
         gap: 15px;
     }
-    
-    /* =================== CORREÇÃO CRÍTICA: LAYOUT 3x3 DOS CARDS EM MOBILE =================== */
     
     /* FORÇAR LAYOUT 3x3 EM TODAS AS LINHAS DOS CARDS */
     .card-row,
@@ -97,387 +117,401 @@
         justify-content: center !important;
         min-height: 60px !important;
         flex: 1 !important;
-        min-width: 0 !important; /* Permitir shrinking */
+        min-width: 0 !important;
     }
     
-    /* BOX DO LEITO (MEIO) - DESTAQUE ESPECIAL */
+    /* =================== CORREÇÃO CRÍTICA: BOX LEITO OCUPADO =================== */
+    
+    /* BOX DO LEITO (MEIO) - VAGO (VERDE) */
     .card > div:first-child > div:nth-child(2),
     .card div[style*="display: flex; align-items: center; justify-content: center"] {
         background: var(--status-vago) !important;
+        border: none !important; /* Remover borda conflitante */
         color: #ffffff !important;
         width: 100% !important;
         flex: 1 !important;
     }
     
+    /* BOX DO LEITO (MEIO) - OCUPADO (AMARELO COMPLETO) */
     .card > div:first-child > div:nth-child(2).ocupado,
     .card > div:first-child > div:nth-child(2)[style*="background: var(--status-uso)"],
-    .card > div:first-child > div:nth-child(2)[style*="background: #fbbf24"] {
-        background: var(--status-uso) !important;
+    .card > div:first-child > div:nth-child(2)[style*="background: #fbbf24"],
+    .card > div:first-child > div:nth-child(2)[style*="background:#fbbf24"] {
+        background: var(--status-uso) !important; /* Amarelo completo */
+        border: none !important; /* Sem borda verde */
         color: #000000 !important;
     }
     
+    /* Conteúdo interno do leito */
     .card div[style*="display: flex; align-items: center; justify-content: center"] > div {
         width: 100% !important;
-        padding: 12px 8px !important; /* Padding menor para mobile */
-        font-size: 12px !important; /* Fonte menor */
+        padding: 12px 8px !important;
+        font-size: 12px !important;
         letter-spacing: 0.5px !important;
+        background: transparent !important; /* Sem background adicional */
     }
     
     /* PREVISÃO DE ALTA - MANTER COR ESPECIAL */
     .card > div:nth-child(3) > div:last-child,
-    .card > div:nth-child(3) > div[style*="background: var(--destaque)"] {
+    .card > div:nth-child(3) > div[style*="background: var(--destaque)"],
+    .card > div:nth-child(3) > div[style*="background: #8FD3F4"] {
         background: var(--destaque) !important;
         color: #000000 !important;
         font-weight: 700 !important;
     }
     
-    /* AJUSTAR FONTES PARA MOBILE */
-    .card div[style*="font-size: 10px"] {
-        font-size: 9px !important;
-        margin-bottom: 2px !important;
-        padding: 1px 3px !important;
-    }
+    /* =================== SEÇÕES CONCESSÕES E LINHAS - CORREÇÕES =================== */
     
-    .card div[style*="font-size: 12px"] {
-        font-size: 11px !important;
-        line-height: 1.1 !important;
-    }
-    
-    .card div[style*="font-size: 16px"] {
-        font-size: 14px !important;
-        line-height: 1.2 !important;
-    }
-    
-    .card div[style*="font-size: 11px"] {
-        font-size: 10px !important;
-    }
-    
-    /* Badge leito centralizado */
-    .leito-badge {
-        width: 100% !important;
-        margin: 10px 0 !important;
-    }
-    
-    /* =================== SEÇÕES DE CONCESSÕES E LINHAS - MOBILE =================== */
-    
-    /* Títulos das seções em mobile */
+    /* Títulos das seções - REMOVER VERSÃO, ADICIONAR DATA */
     .card-section .section-title {
         font-size: 10px !important;
         padding: 6px 8px !important;
         margin-bottom: 6px !important;
+        text-align: left !important; /* Alinhamento à esquerda */
     }
     
-    /* Container dos chips em mobile */
+    /* Container dos chips - ALINHAMENTO À ESQUERDA */
     .card-section .chips-container {
         padding: 6px !important;
         min-height: 20px !important;
+        text-align: left !important;
+        justify-content: flex-start !important;
     }
     
-    /* Chips individuais menores */
+    /* Chips individuais - ALINHADOS À ESQUERDA */
     .card-section .chip {
         font-size: 9px !important;
         padding: 2px 6px !important;
-        margin: 1px !important;
+        margin: 1px 2px 1px 0 !important; /* Margem apenas à direita */
+        text-align: left !important;
     }
     
-    /* Texto "Nenhuma" menor */
+    /* Texto "Nenhuma" - ALINHADO À ESQUERDA */
     .card-section span[style*="color: rgba(255,255,255,0.7)"] {
         font-size: 9px !important;
+        text-align: left !important;
     }
     
-    /* =================== ÁREA DE BOTÕES - MOBILE =================== */
+    /* =================== DASHBOARD HOSPITALAR MOBILE =================== */
     
-    /* Container dos botões mais compacto */
+    /* Header do dashboard - TÍTULO BRANCO EM UMA LINHA */
+    .dashboard-hospitalar h2,
+    .hospital-dashboard-title {
+        color: #ffffff !important;
+        font-size: 20px !important;
+        margin-bottom: 10px !important;
+        line-height: 1.2 !important;
+        white-space: nowrap !important; /* Uma linha só */
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+    }
+    
+    /* Switch escuro/claro - LINHA DE BAIXO */
+    #toggleFundoBtn,
+    .toggle-fundo-btn {
+        margin-top: 10px !important;
+        width: 100% !important;
+        justify-content: center !important;
+    }
+    
+    /* REMOVER "4 hospitais com dados reais" */
+    .hospital-dashboard-subtitle,
+    .hospital-status-info {
+        display: none !important;
+    }
+    
+    /* KPIs hospitalares - 2 POR LINHA (exceto gauge) */
+    .kpis-horizontal-container {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr !important; /* 2 colunas */
+        gap: 8px !important;
+        margin-bottom: 20px !important;
+    }
+    
+    /* Gauge principal - LINHA COMPLETA */
+    .kpi-gauge-box,
+    .kpi-box-inline:first-child {
+        grid-column: span 2 !important; /* Ocupa linha inteira */
+        text-align: center !important;
+    }
+    
+    /* =================== DASHBOARD EXECUTIVO MOBILE =================== */
+    
+    /* Header executivo - TÍTULO JÁ CORRETO */
+    .dashboard-executivo h2 {
+        color: #ffffff !important;
+        font-size: 20px !important;
+        margin-bottom: 10px !important;
+    }
+    
+    /* Switch executivo - LINHA DE BAIXO */
+    #toggleFundoBtnExec,
+    .toggle-fundo-btn-exec {
+        margin-top: 10px !important;
+        width: 100% !important;
+        justify-content: center !important;
+    }
+    
+    /* REMOVER "4 hospitais conectados" */
+    .executive-status-info,
+    .executive-subtitle {
+        display: none !important;
+    }
+    
+    /* KPIs Executivos: GAUGE + 2 POR LINHA */
+    .executive-kpis-grid {
+        display: grid !important;
+        grid-template-columns: 1fr !important;
+        gap: 10px !important;
+        margin-bottom: 20px !important;
+    }
+    
+    /* Gauge principal - LINHA COMPLETA */
+    .kpi-gauge-principal,
+    .kpi-principal {
+        grid-column: 1 !important;
+        grid-row: auto !important;
+        padding: 15px !important;
+        text-align: center !important;
+    }
+    
+    /* Demais KPIs em 2 colunas */
+    .executive-kpis-grid .kpi-box:not(.kpi-principal):not(.kpi-gauge-principal) {
+        display: inline-block !important;
+        width: calc(50% - 5px) !important;
+        margin-right: 10px !important;
+        margin-bottom: 10px !important;
+        vertical-align: top !important;
+        padding: 15px !important;
+        min-height: 80px !important;
+    }
+    
+    /* Remover margem do último item de cada linha */
+    .executive-kpis-grid .kpi-box:not(.kpi-principal):nth-child(even) {
+        margin-right: 0 !important;
+    }
+    
+    /* =================== GRÁFICOS MOBILE - OTIMIZAÇÃO VISUAL =================== */
+    
+    /* Altura reduzida para mobile */
+    .chart-container {
+        height: 200px !important; /* Reduzido de 400px */
+        margin-bottom: 20px !important;
+    }
+    
+    .chart-container canvas {
+        max-height: 200px !important;
+        height: 200px !important;
+        width: 100% !important;
+    }
+    
+    /* Controles de gráfico - 2 POR LINHA */
+    .chart-selector,
+    .chart-type-selector {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr !important; /* 2 botões por linha */
+        gap: 8px !important;
+        margin-bottom: 10px !important;
+        padding: 10px !important;
+    }
+    
+    .chart-selector button,
+    .chart-type-btn,
+    .chart-btn {
+        padding: 8px 12px !important;
+        font-size: 10px !important;
+        min-height: 36px !important;
+        text-align: center !important;
+    }
+    
+    /* =================== LEGENDAS PERSONALIZADAS MOBILE =================== */
+    
+    /* Container das legendas - ABAIXO DO GRÁFICO */
+    .chart-legend-mobile {
+        margin-top: 15px !important;
+        padding: 10px !important;
+        background: rgba(255,255,255,0.05) !important;
+        border-radius: 6px !important;
+        border-left: 3px solid #60a5fa !important;
+    }
+    
+    /* Itens da legenda - UMA POR LINHA */
+    .legend-item-mobile {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: flex-start !important; /* Alinhado à esquerda */
+        padding: 4px 0 !important;
+        font-size: 11px !important;
+        color: #ffffff !important;
+    }
+    
+    /* Cor da legenda */
+    .legend-color-mobile {
+        width: 12px !important;
+        height: 12px !important;
+        border-radius: 2px !important;
+        margin-right: 8px !important;
+        flex-shrink: 0 !important;
+    }
+    
+    /* Texto da legenda */
+    .legend-text-mobile {
+        flex: 1 !important;
+        text-align: left !important;
+    }
+    
+    /* =================== REMOÇÃO DE ELEMENTOS DESNECESSÁRIOS =================== */
+    
+    /* ESCONDER textos de versão e subtítulos */
+    [class*="version"],
+    [id*="version"],
+    .version-info,
+    .subtitle-info,
+    .hospital-count,
+    .connected-info {
+        display: none !important;
+    }
+    
+    /* REMOVER sublegendas específicas */
+    .timeline-subtitle,
+    .chart-subtitle {
+        display: none !important;
+    }
+    
+    /* =================== FORMULÁRIOS E MODAIS MOBILE =================== */
+    
+    /* Modais responsivos */
+    .modal-overlay {
+        padding: 10px !important;
+    }
+    
+    .modal-overlay > div,
+    .medico-form {
+        width: 95% !important;
+        max-width: none !important;
+        margin: 10px !important;
+        max-height: 95vh !important;
+        border-radius: 8px !important;
+    }
+    
+    /* Grid 3 colunas nos formulários */
+    .form-grid,
+    .modal-grid {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr 1fr !important; /* 3 colunas simétricas */
+        gap: 10px !important;
+        margin-bottom: 15px !important;
+    }
+    
+    /* Seções de concessões e linhas no modal */
+    .modal-overlay div[id$="Concessoes"], 
+    .modal-overlay div[id$="Linhas"] {
+        grid-template-columns: 1fr !important; /* Uma coluna para checkboxes */
+        max-height: 150px !important;
+        overflow-y: auto !important;
+    }
+    
+    /* =================== BOTÕES MOBILE OTIMIZADOS =================== */
+    
+    /* Área de botões dos cards */
     .card > div:last-child {
         flex-direction: column !important;
         gap: 10px !important;
         padding-top: 10px !important;
     }
     
-    /* Informações de admissão em coluna */
-    .card > div:last-child > div:first-child {
-        display: flex !important;
-        flex-direction: column !important;
-        gap: 8px !important;
-        margin-bottom: 10px !important;
-    }
-    
-    /* Botões de ação menores */
-    .card .btn-action {
-        padding: 8px 16px !important;
-        font-size: 11px !important;
+    /* Botões de ação */
+    .card .btn-action,
+    .btn-cancelar,
+    .btn-salvar,
+    .btn-alta {
+        padding: 12px 16px !important;
+        font-size: 12px !important;
         width: 100% !important;
+        min-height: 44px !important; /* Touch-friendly */
         text-align: center !important;
+        border-radius: 6px !important;
     }
     
-    /* =================== SELETORES DE HOSPITAL - MOBILE =================== */
+    /* =================== AJUSTES DE FONTE MOBILE =================== */
+    
+    /* Fontes otimizadas para leitura mobile */
+    .card div[style*="font-size: 10px"] {
+        font-size: 9px !important;
+        line-height: 1.2 !important;
+    }
+    
+    .card div[style*="font-size: 12px"] {
+        font-size: 11px !important;
+        line-height: 1.2 !important;
+    }
+    
+    .card div[style*="font-size: 16px"] {
+        font-size: 14px !important;
+        line-height: 1.3 !important;
+    }
+    
+    /* =================== SELETORES DE HOSPITAL MOBILE =================== */
     
     .hospital-selector {
-        flex-direction: column;
-        gap: 10px;
-        padding: 15px;
+        flex-direction: column !important;
+        gap: 10px !important;
+        padding: 15px !important;
     }
     
     .hospital-btn {
-        width: 100%;
-        min-width: auto;
-        flex: none;
-        padding: 12px 16px;
-        font-size: 14px;
-    }
-    
-    /* =================== DASHBOARDS - MOBILE =================== */
-    
-    /* KPIs Executivos: Gauge + 2 por linha */
-    .executive-kpis-grid {
-        grid-template-columns: 1fr !important;
-        gap: 10px !important;
-    }
-    
-    /* Gauge principal ocupa linha completa */
-    .kpi-principal {
-        grid-column: 1 !important;
-        grid-row: auto !important;
-        padding: 15px !important;
-    }
-    
-    /* Demais KPIs em 2 colunas */
-    .executive-kpis-grid .kpi-box:not(.kpi-principal) {
-        display: inline-block;
-        width: calc(50% - 5px);
-        margin-right: 10px;
-        margin-bottom: 10px;
-        vertical-align: top;
-        padding: 15px;
-        min-height: 80px;
-    }
-    
-    /* Remover margem do último item de cada linha */
-    .executive-kpis-grid .kpi-box:not(.kpi-principal):nth-child(even) {
-        margin-right: 0;
-    }
-    
-    .kpi-value {
-        font-size: 20px;
-    }
-    
-    /* Dashboard hospitalar mobile */
-    .hospital-kpis {
-        flex-direction: column;
-        gap: 10px;
-    }
-    
-    .kpi-box-small {
-        width: 100%;
-    }
-    
-    /* Seletores de gráfico mobile */
-    .chart-selector,
-    .chart-type-selector {
-        flex-wrap: wrap;
-        justify-content: center;
-        margin-bottom: 10px;
-    }
-    
-    .chart-selector button,
-    .chart-type-btn {
-        flex: 1;
-        min-width: 80px;
-        font-size: 9px !important;
-        padding: 4px 8px !important;
-    }
-    
-    /* Gráficos sempre verticais */
-    .chart-container canvas {
-        max-height: 250px !important;
-        height: 250px !important;
-    }
-    
-    /* =================== FORMULÁRIOS MOBILE - CORREÇÃO CRÍTICA =================== */
-    
-    .form-grid {
-        grid-template-columns: 1fr !important; /* Uma coluna só */
-    }
-    
-    /* =================== MODAIS MOBILE RESPONSIVOS =================== */
-    
-    .modal-overlay {
-        padding: 10px !important;
-    }
-    
-    .modal-overlay > div {
-        width: 95% !important;
-        max-width: none !important;
-        margin: 10px !important;
-        max-height: 95vh !important;
-    }
-    
-    .medico-form {
-        width: 100%;
-        max-width: 100%;
-        height: 100%;
-        max-height: 100%;
-        border-radius: 0;
-    }
-    
-    .medico-form-header {
-        padding: 15px;
-    }
-    
-    .medico-form-body {
-        padding: 15px;
-    }
-    
-    /* Grids dos formulários em mobile */
-    .modal-overlay div[style*="grid-template-columns"] {
-        grid-template-columns: 1fr !important;
-        gap: 10px !important;
-    }
-    
-    .modal-overlay div[id$="Concessoes"], 
-    .modal-overlay div[id$="Linhas"] {
-        grid-template-columns: 1fr !important;
-    }
-    
-    /* =================== BOTÕES DOS FORMULÁRIOS MOBILE - CRÍTICO =================== */
-    
-    .medico-form-actions,
-    .modal-footer {
-        padding: 15px !important;
-        display: flex !important;
-        flex-direction: row !important; /* MANTER HORIZONTAL */
-        justify-content: space-between !important;
-        align-items: center !important;
-        gap: 8px !important;
-    }
-    
-    /* BOTÕES ALINHADOS E MESMO TAMANHO */
-    .btn-cancelar,
-    .btn-salvar,
-    .btn-alta,
-    .btn-cancel,
-    .btn-save {
-        flex: 1 !important;
-        padding: 12px 8px !important;
-        margin: 0 !important;
-        font-size: 12px !important;
-        font-weight: 600 !important;
-        text-transform: uppercase !important;
-        border-radius: 6px !important;
-        cursor: pointer !important;
-        text-align: center !important;
-        min-height: 44px !important; /* Altura mínima para touch */
-    }
-    
-    /* Cores específicas dos botões */
-    .btn-cancelar,
-    .btn-cancel {
-        background: rgba(255,255,255,0.1) !important;
-        color: #ffffff !important;
-        border: 1px solid rgba(255,255,255,0.2) !important;
-    }
-    
-    .btn-salvar,
-    .btn-save {
-        background: #3b82f6 !important;
-        color: #ffffff !important;
-        border: none !important;
-    }
-    
-    .btn-alta {
-        background: #ef4444 !important;
-        color: #ffffff !important;
-        border: none !important;
-    }
-    
-    /* Container dos botões de ações */
-    .medico-form-actions > div {
-        display: flex !important;
-        gap: 8px !important;
-        flex: 1 !important;
-    }
-    
-    /* =================== CHECKBOXES E LISTAS MOBILE =================== */
-    
-    /* Checkbox grid mobile */
-    .checkbox-grid {
-        max-height: 200px;
-        overflow-y: auto;
-    }
-    
-    .checkbox-item {
-        padding: 10px;
-    }
-    
-    /* =================== ADMIN PANEL MOBILE =================== */
-    
-    .admin-panel-content {
-        width: 100%;
-        max-width: 100%;
-        height: 100%;
-        max-height: 100%;
-        border-radius: 0;
-    }
-    
-    .admin-tabs {
-        flex-wrap: wrap;
-    }
-    
-    .tab-btn {
-        flex: 1;
-        min-width: 50%;
-        padding: 12px 10px;
-        font-size: 14px;
-    }
-    
-    .cores-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    /* =================== QR CODES MOBILE =================== */
-    
-    .qr-codes-grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 10px;
-    }
-    
-    .qr-code-item {
-        padding: 10px;
-    }
-    
-    .qr-label {
-        font-size: 12px;
+        width: 100% !important;
+        min-width: auto !important;
+        padding: 12px 16px !important;
+        font-size: 14px !important;
+        min-height: 44px !important;
     }
     
     /* =================== MENU LATERAL MOBILE =================== */
     
     .side-menu {
-        width: 100%;
-        left: -100%;
+        width: 100% !important;
+        left: -100% !important;
+        transition: left 0.3s ease !important;
     }
     
     .side-menu.open {
-        left: 0;
+        left: 0 !important;
     }
     
-    /* =================== FOOTER MOBILE =================== */
+    /* =================== QR CODES MOBILE =================== */
     
-    footer {
-        padding: 20px 10px;
-        font-size: 12px;
+    .qr-codes-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 10px !important;
     }
     
-    footer p {
-        margin: 5px 0;
+    .qr-code-item {
+        padding: 10px !important;
+        text-align: center !important;
+    }
+    
+    .qr-label {
+        font-size: 12px !important;
     }
 }
 
 /* =================== TELAS MUITO PEQUENAS (< 480px) =================== */
 @media (max-width: 480px) {
-    /* Cards com padding reduzido */
+    /* Header ainda mais compacto */
+    header h1 {
+        font-size: 16px !important;
+    }
+    
+    .hamburger {
+        font-size: 18px !important;
+        padding: 6px !important;
+    }
+    
+    /* Cards mais compactos */
     .card {
-        padding: 15px !important;
-        margin-bottom: 12px !important;
+        padding: 12px !important;
+        margin-bottom: 10px !important;
     }
     
     /* Layout 3x3 ainda mais compacto */
@@ -485,111 +519,58 @@
     .card > div:nth-child(2),
     .card > div:nth-child(3) {
         gap: 6px !important;
-        margin-bottom: 10px !important;
+        margin-bottom: 8px !important;
     }
     
-    .card > div:first-child > div,
-    .card > div:nth-child(2) > div,
-    .card > div:nth-child(3) > div {
-        padding: 8px 4px !important;
-        min-height: 50px !important;
-    }
-    
-    /* LABELS E VALORES AINDA MENORES */
-    .card div[style*="font-size: 10px"] {
-        font-size: 8px !important;
-        padding: 2px 3px !important;
-        margin-bottom: 2px !important;
-    }
-    
-    .card div[style*="font-size: 16px"],
-    .card div[style*="font-size: 12px"] {
-        font-size: 12px !important;
-    }
-    
-    /* GARANTIR ALINHAMENTO DOS 3 BOXES */
     .card > div > div {
-        min-height: 50px !important;
-        padding: 8px 4px !important;
+        padding: 6px 4px !important;
+        min-height: 45px !important;
+        font-size: 10px !important;
     }
     
-    /* Seções ainda mais compactas */
-    .card-section {
-        margin-bottom: 12px !important;
-    }
-    
-    .card-section .section-title {
-        font-size: 9px !important;
-        padding: 4px 6px !important;
-    }
-    
-    .card-section .chips-container {
-        padding: 4px !important;
-    }
-    
-    .card-section .chip {
-        font-size: 8px !important;
-        padding: 1px 4px !important;
-    }
-    
-    /* Botões de formulário muito pequenos */
-    .btn-cancelar,
-    .btn-salvar,
-    .btn-alta {
-        font-size: 11px !important;
-        padding: 10px 6px !important;
-        min-height: 40px !important;
-    }
-    
-    /* KPIs executivos em 1 coluna em telas muito pequenas */
+    /* KPIs executivos em 1 coluna */
     .executive-kpis-grid .kpi-box:not(.kpi-principal) {
         width: 100% !important;
         margin-right: 0 !important;
         margin-bottom: 8px !important;
     }
     
-    /* Header ainda mais compacto */
-    header {
-        padding: 8px;
+    /* Controles de gráfico em 1 coluna */
+    .chart-selector,
+    .chart-type-selector {
+        grid-template-columns: 1fr !important;
     }
     
-    header h1 {
-        font-size: 16px;
-    }
-    
-    /* QR Codes em coluna única */
+    /* QR Codes em 1 coluna */
     .qr-codes-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: 1fr !important;
     }
     
-    /* Botões menores */
-    button {
-        font-size: 14px;
-        padding: 10px 15px;
-    }
-    
-    /* Inputs menores */
-    input, select {
-        font-size: 14px;
-        padding: 8px;
+    /* Formulário em 1 coluna */
+    .form-grid,
+    .modal-grid {
+        grid-template-columns: 1fr !important;
     }
 }
 
-/* =================== ORIENTAÇÃO LANDSCAPE EM MOBILE =================== */
+/* =================== LANDSCAPE MOBILE =================== */
 @media (max-width: 768px) and (orientation: landscape) {
     /* Header mais compacto em landscape */
     header {
-        padding: 5px 10px;
+        padding: 5px 10px !important;
+    }
+    
+    header h1 {
+        font-size: 16px !important;
     }
     
     /* Cards em 2 colunas em landscape */
     .cards-grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 12px;
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 12px !important;
     }
     
-    /* MANTER LAYOUT 3x3 MESMO EM LANDSCAPE */
-    .card-row,
+    /* MANTER layout 3x3 mesmo em landscape */
     .card > div:first-child,
     .card > div:nth-child(2),
     .card > div:nth-child(3) {
@@ -597,25 +578,88 @@
         gap: 6px !important;
     }
     
-    /* KPIs executivos em landscape */
+    /* KPIs executivos em 3 colunas em landscape */
     .executive-kpis-grid {
-        grid-template-columns: repeat(3, 1fr);
-        grid-template-rows: auto auto;
+        grid-template-columns: repeat(3, 1fr) !important;
     }
     
-    .kpi-principal,
-    .kpi-box-principal {
-        grid-column: span 3;
+    .kpi-principal {
+        grid-column: span 3 !important;
     }
     
-    /* KPIs menores: 4 por linha em landscape */
-    .executive-kpis-grid .kpi-box:not(.kpi-principal) {
-        width: calc(25% - 7.5px);
-        margin-right: 10px;
+    /* Gráficos com altura reduzida em landscape */
+    .chart-container {
+        height: 180px !important;
     }
     
-    .executive-kpis-grid .kpi-box:not(.kpi-principal):nth-child(4n) {
-        margin-right: 0;
+    .chart-container canvas {
+        max-height: 180px !important;
+        height: 180px !important;
+    }
+}
+
+/* =================== ACESSIBILIDADE E TOUCH =================== */
+@media (hover: none) and (pointer: coarse) {
+    /* Botões maiores para touch */
+    .btn-action,
+    .hospital-btn,
+    .chart-btn {
+        min-height: 44px !important;
+        padding: 12px 16px !important;
+    }
+    
+    /* Maior espaçamento entre elementos tocáveis */
+    .card-actions,
+    .hospital-selector,
+    .chart-selector {
+        gap: 12px !important;
+    }
+    
+    /* Checkboxes maiores */
+    input[type="checkbox"] {
+        width: 18px !important;
+        height: 18px !important;
+    }
+}
+
+/* =================== CORREÇÕES FINAIS ESPECÍFICAS =================== */
+@media (max-width: 768px) {
+    /* Forçar layout 3x3 - ÚLTIMA REGRA */
+    .card > div:first-child,
+    .card > div:nth-child(2),
+    .card > div:nth-child(3) {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr 1fr !important;
+        gap: 8px !important;
+    }
+    
+    /* Leito vago - VERDE COMPLETO */
+    .card > div:first-child > div:nth-child(2) {
+        background: var(--status-vago) !important;
+        border: none !important;
+        color: #ffffff !important;
+    }
+    
+    /* Leito ocupado - AMARELO COMPLETO SEM BORDA VERDE */
+    .card > div:first-child > div:nth-child(2)[style*="background: #fbbf24"],
+    .card > div:first-child > div:nth-child(2)[style*="background: var(--status-uso)"] {
+        background: var(--status-uso) !important;
+        border: none !important;
+        color: #000000 !important;
+    }
+    
+    /* Previsão de alta - COR ESPECIAL */
+    .card > div:nth-child(3) > div:last-child {
+        background: var(--destaque) !important;
+        color: #000000 !important;
+        font-weight: 700 !important;
+    }
+    
+    /* Remover elementos desnecessários */
+    .version-text,
+    .hospital-count-text,
+    .connected-status {
+        display: none !important;
     }
 }
 
@@ -628,210 +672,32 @@
     .btn-action,
     .chart-type-selector,
     .chart-selector,
+    .toggle-fundo-btn,
     footer {
         display: none !important;
     }
     
-    /* Cards em layout de impressão */
+    /* Layout de impressão otimizado */
     .cards-grid {
-        grid-template-columns: repeat(3, 1fr);
-        gap: 10px;
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 10px !important;
     }
     
     .card {
-        break-inside: avoid;
-        page-break-inside: avoid;
-        border: 1px solid #000;
+        break-inside: avoid !important;
+        page-break-inside: avoid !important;
+        border: 1px solid #000 !important;
         background: white !important;
         color: black !important;
-    }
-    
-    .card * {
-        color: black !important;
-    }
-    
-    /* Leito badges para impressão */
-    .leito-badge {
-        border: 2px solid #000;
-        background: white !important;
-        color: black !important;
-    }
-    
-    .leito-badge.ocupado {
-        background: #f0f0f0 !important;
-    }
-    
-    /* Seções para impressão */
-    .card-section .section-title {
-        background: #f0f0f0 !important;
-        color: black !important;
-        border: 1px solid #000;
-    }
-    
-    .card-section .chip {
-        background: white !important;
-        color: black !important;
-        border: 1px solid #000;
     }
     
     /* Gráficos para impressão */
+    .chart-container {
+        height: 300px !important;
+    }
+    
     canvas {
         max-width: 100% !important;
         height: auto !important;
     }
 }
-
-/* =================== ACESSIBILIDADE - ALTO CONTRASTE =================== */
-@media (prefers-contrast: high) {
-    .card {
-        border: 2px solid white;
-    }
-    
-    .card > div > div {
-        border-width: 2px !important;
-    }
-    
-    .section-title,
-    .field-label {
-        font-weight: 700;
-    }
-    
-    button {
-        border: 2px solid currentColor;
-        font-weight: 700;
-    }
-    
-    input, select {
-        border-width: 2px;
-    }
-    
-    .chip {
-        border-width: 2px !important;
-        font-weight: 700;
-    }
-}
-
-/* =================== MODO ESCURO DO SISTEMA =================== */
-@media (prefers-color-scheme: dark) {
-    /* Projeto já usa cores escuras por padrão */
-    /* Reforçar algumas variáveis se necessário */
-    :root {
-        --card: #1a1f2e;
-        --text-white: #ffffff;
-        --text-muted: #e2e8f0;
-    }
-}
-
-/* =================== ANIMAÇÕES REDUZIDAS =================== */
-@media (prefers-reduced-motion: reduce) {
-    * {
-        animation: none !important;
-        transition: none !important;
-    }
-    
-    .card {
-        transform: none !important;
-    }
-    
-    button {
-        transform: none !important;
-    }
-}
-
-/* =================== ESTILOS PARA DISPOSITIVOS TOUCH =================== */
-@media (hover: none) and (pointer: coarse) {
-    /* Botões maiores para touch */
-    .btn-action {
-        min-height: 44px !important;
-        padding: 12px 16px !important;
-    }
-    
-    .hospital-btn {
-        min-height: 44px !important;
-        padding: 12px 20px !important;
-    }
-    
-    .chart-type-btn {
-        min-height: 36px !important;
-        padding: 8px 12px !important;
-    }
-    
-    /* Maior espaçamento entre elementos tocáveis */
-    .card-actions {
-        gap: 12px !important;
-    }
-    
-    .hospital-selector {
-        gap: 12px !important;
-    }
-}
-
-/* =================== CORREÇÕES ESPECÍFICAS PARA WEBKIT =================== */
-@supports (-webkit-appearance: none) {
-    /* Correções específicas para Safari/Chrome mobile */
-    .card > div:first-child > div,
-    .card > div:nth-child(2) > div,
-    .card > div:nth-child(3) > div {
-        -webkit-box-flex: 1;
-        -webkit-flex: 1;
-    }
-}
-
-/* =================== CORREÇÕES ESPECÍFICAS PARA FIREFOX MOBILE =================== */
-@supports (-moz-appearance: none) {
-    /* Correções específicas para Firefox mobile */
-    .card > div:first-child,
-    .card > div:nth-child(2),
-    .card > div:nth-child(3) {
-        display: -moz-grid !important;
-    }
-}
-
-/* =================== CORREÇÃO FINAL ESPECÍFICA PARA CARDS MOBILE =================== */
-@media (max-width: 768px) {
-    /* Forçar layout 3x3 em todas as situações - ÚLTIMA REGRA */
-    .card > div:first-child,
-    .card > div:nth-child(2),
-    .card > div:nth-child(3) {
-        display: grid !important;
-        grid-template-columns: 1fr 1fr 1fr !important;
-        gap: 8px !important;
-    }
-    
-    /* Box do meio (leito) com background especial - FORÇADO */
-    .card > div:first-child > div:nth-child(2) {
-        background: var(--status-vago) !important;
-    }
-    
-    .card > div:first-child > div:nth-child(2)[style*="background: #fbbf24"],
-    .card > div:first-child > div:nth-child(2)[style*="background: var(--status-uso)"] {
-        background: #fbbf24 !important;
-    }
-    
-    /* Previsão de alta mantém cor especial - FORÇADO */
-    .card > div:nth-child(3) > div:last-child {
-        background: #8FD3F4 !important;
-        color: #000000 !important;
-    }
-}
-
-/* =================== DEBUG AUXILIAR (REMOVER EM PRODUÇÃO) =================== */
-/*
-@media (max-width: 768px) {
-    .card {
-        border: 2px solid red;
-    }
-    
-    .card > div:first-child,
-    .card > div:nth-child(2),
-    .card > div:nth-child(3) {
-        border: 1px solid blue;
-    }
-    
-    .card > div:first-child > div,
-    .card > div:nth-child(2) > div,
-    .card > div:nth-child(3) > div {
-        border: 1px solid green;
-    }
-}
-*/

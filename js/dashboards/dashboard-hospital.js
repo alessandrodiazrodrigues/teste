@@ -325,7 +325,7 @@ function renderHospitalSection(hospitalId) {
     `;
 }
 
-// Calcular KPIs de um hospital - VERSÃO SIMPLIFICADA E CORRIGIDA
+// Calcular KPIs de um hospital - CORREÇÃO DEFINITIVA
 function calcularKPIsHospital(hospitalId) {
     const hospital = window.hospitalData[hospitalId];
     if (!hospital || !hospital.leitos) {
@@ -336,13 +336,21 @@ function calcularKPIsHospital(hospitalId) {
     let ocupados = 0;
     let altas = 0;
     
+    // Array com TODAS as previsões válidas incluindo 96h e SP
+    const PREVISOES_VALIDAS = [
+        'Hoje Ouro', 'Hoje 2R', 'Hoje 3R',
+        '24h Ouro', '24h 2R', '24h 3R',
+        '48h', '72h', '96h', 'SP'
+    ];
+    
     hospital.leitos.forEach(leito => {
         // Verificar se está ocupado
         if (leito.status === 'ocupado') {
             ocupados++;
             
-            // Contar altas - buscar prevAlta diretamente no leito
-            if (leito.prevAlta) {
+            // Verificar se tem previsão de alta válida
+            // O campo vem direto do leito, não de leito.paciente
+            if (leito.prevAlta && PREVISOES_VALIDAS.includes(leito.prevAlta)) {
                 altas++;
             }
         }
@@ -351,7 +359,11 @@ function calcularKPIsHospital(hospitalId) {
     const vagos = total - ocupados;
     const ocupacao = total > 0 ? Math.round((ocupados / total) * 100) : 0;
     
+    // Debug para ver os valores
+    console.log(`Hospital ${hospitalId} - Total: ${total}, Ocupados: ${ocupados}, Altas: ${altas}`);
+    
     return { ocupacao, total, ocupados, vagos, altas };
+}
 }
 
 // Plugin para fundo branco/escuro nos gráficos (NÃO usado no gauge)

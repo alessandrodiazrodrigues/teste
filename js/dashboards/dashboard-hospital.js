@@ -100,7 +100,7 @@ window.renderDashboardHospitalar = function() {
     
     const hospitaisComDados = Object.keys(CONFIG.HOSPITAIS).filter(hospitalId => {
         const hospital = window.hospitalData[hospitalId];
-        return hospital && hospital.leitos && hospital.leitos.some(l => l.status === 'ocupado' || l.status === 'vago');
+        return hospital && hospital.leitos && hospital.leitos.some(l => l.status === 'ocupado' || l.status === 'vago' || l.status === 'Em uso');
     });
     
     if (hospitaisComDados.length === 0) {
@@ -121,7 +121,7 @@ window.renderDashboardHospitalar = function() {
     container.innerHTML = `
         <div style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); min-height: 100vh; padding: 20px; color: white;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; padding: 20px; background: rgba(255, 255, 255, 0.05); border-radius: 12px; border-left: 4px solid #60a5fa;">
-                <h2 style="margin: 0; color: #60a5fa; font-size: 24px; font-weight: 700;">Dashboard Hospitalar</h2>
+                <h2 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 700;">Dashboard Hospitalar</h2>
                 <div style="display: flex; align-items: center; gap: 15px;">
                     <button id="toggleFundoBtn" class="toggle-fundo-btn" style="padding: 8px 16px; background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 8px; color: #e2e8f0; font-size: 14px; cursor: pointer; transition: all 0.3s ease; display: flex; align-items: center; gap: 8px;">
                         <span id="toggleIcon">🌙</span>
@@ -132,13 +132,6 @@ window.renderDashboardHospitalar = function() {
                         ${hospitaisComDados.length} hospital${hospitaisComDados.length > 1 ? 'ais' : ''} com dados reais
                     </div>
                 </div>
-            </div>
-            
-            <div style="background: rgba(34, 197, 94, 0.1); border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 8px; padding: 15px; margin-bottom: 25px; text-align: center;">
-                <strong style="color: #22c55e;">Dados Reais da Planilha</strong>
-                <p style="margin: 5px 0 0 0; color: #9ca3af; font-size: 14px;">
-                    Hospitais: ${hospitaisComDados.map(id => CONFIG.HOSPITAIS[id].nome).join(', ')} • Atualizado em ${hoje}
-                </p>
             </div>
             
             <div class="hospitais-container">
@@ -332,8 +325,7 @@ function renderHospitalSection(hospitalId) {
     `;
 }
 
-// Calcular KPIs de um hospital
-// VERSÃO CORRIGIDA
+// Calcular KPIs de um hospital - CORRIGIDO
 function calcularKPIsHospital(hospitalId) {
     const hospital = window.hospitalData[hospitalId];
     if (!hospital || !hospital.leitos) {
@@ -344,20 +336,20 @@ function calcularKPIsHospital(hospitalId) {
     let ocupadosEnf = 0, ocupadosApt = 0, ocupadosUti = 0;
     
     hospital.leitos.forEach(leito => {
-        const tipo = leito.tipo || leito.categoria || 'ENF';
+        const tipo = leito.tipo || leito.categoria || leito.Tipo || 'ENF';
         
         if (tipo.includes('ENF') || tipo.includes('Enfermaria')) {
             totalEnf++;
-            if (leito.status === 'ocupado') ocupadosEnf++;
+            if (leito.status === 'ocupado' || leito.status === 'Em uso' || leito.Status === 'Em uso') ocupadosEnf++;
         } else if (tipo.includes('APT') || tipo.includes('Apartamento')) {
             totalApt++;
-            if (leito.status === 'ocupado') ocupadosApt++;
+            if (leito.status === 'ocupado' || leito.status === 'Em uso' || leito.Status === 'Em uso') ocupadosApt++;
         } else if (tipo.includes('UTI')) {
             totalUti++;
-            if (leito.status === 'ocupado') ocupadosUti++;
+            if (leito.status === 'ocupado' || leito.status === 'Em uso' || leito.Status === 'Em uso') ocupadosUti++;
         } else {
             totalEnf++;
-            if (leito.status === 'ocupado') ocupadosEnf++;
+            if (leito.status === 'ocupado' || leito.status === 'Em uso' || leito.Status === 'Em uso') ocupadosEnf++;
         }
     });
     
@@ -365,14 +357,19 @@ function calcularKPIsHospital(hospitalId) {
     const ocupados = ocupadosEnf + ocupadosApt + ocupadosUti;
     const vagos = total - ocupados;
     
-    // CORREÇÃO: Contar altas incluindo 96h
+    // Contar altas - CORRIGIDO
     const TIMELINE_ALTA = ['Hoje Ouro', 'Hoje 2R', 'Hoje 3R', '24h Ouro', '24h 2R', '24h 3R', '48h', '72h', '96h'];
     let altas = 0;
     
     hospital.leitos.forEach(leito => {
-        if (leito.status === 'ocupado' && leito.paciente) {
-            // Verificar campo correto da previsão de alta
-            const prevAlta = leito.paciente?.prevAlta || leito.prevAlta || leito['Previsão de alta'];
+        const isOcupado = leito.status === 'ocupado' || leito.status === 'Em uso' || leito.Status === 'Em uso';
+        if (isOcupado) {
+            // Buscar previsão de alta em diferentes possíveis localizações
+            const prevAlta = leito.PrevAlta || 
+                           leito.prevAlta || 
+                           leito['Previsão de alta'] ||
+                           (leito.paciente && (leito.paciente.prevAlta || leito.paciente.PrevAlta));
+            
             if (prevAlta && TIMELINE_ALTA.includes(prevAlta)) {
                 altas++;
             }
@@ -436,14 +433,13 @@ function renderGaugeHospital(hospitalId) {
                 rotation: -90,
                 circumference: 180
             }
-            // NÃO adicionar plugins aqui
         });
     } catch (error) {
         logError(`Erro ao renderizar gauge ${hospitalId}:`, error);
     }
 }
 
-// Gráfico de Altas
+// Gráfico de Altas - CORRIGIDO
 function renderAltasHospital(hospitalId) {
     const canvas = document.getElementById(`graficoAltas${hospitalId}`);
     if (!canvas || typeof Chart === 'undefined') return;
@@ -469,23 +465,19 @@ function renderAltasHospital(hospitalId) {
         '96H': [0, 0, 0, 0, 0]
     };
     
-hospital.leitos.forEach(leito => {
-        if (leito.status === 'ocupado' && leito.paciente) {
-            // Tentar pegar a previsão de alta de diferentes formas possíveis
-            const prevAlta = leito.paciente.prevAlta || 
-                           leito.paciente['Previsão de alta'] || 
-                           leito.paciente.previsaoAlta ||
-                           leito.prevAlta ||
-                           leito['Previsão de alta'];
+    hospital.leitos.forEach(leito => {
+        const isOcupado = leito.status === 'ocupado' || leito.status === 'Em uso' || leito.Status === 'Em uso';
+        if (isOcupado) {
+            // Buscar previsão em diferentes locais possíveis
+            const prevAlta = leito.PrevAlta || 
+                           leito.prevAlta || 
+                           leito['Previsão de alta'] ||
+                           (leito.paciente && (leito.paciente.prevAlta || leito.paciente.PrevAlta));
             
-            // Debug para ver o que está vindo
             if (prevAlta) {
-                console.log('Previsão encontrada:', prevAlta);
-                
                 let index = -1;
                 let tipo = '';
                 
-                // Normalizar o valor (remover espaços, converter para padrão)
                 const prevAltaNorm = prevAlta.trim();
                 
                 if (prevAltaNorm === 'Hoje Ouro') { index = 0; tipo = 'Ouro'; }
@@ -500,7 +492,6 @@ hospital.leitos.forEach(leito => {
                 
                 if (index >= 0 && tipo && dados[tipo]) {
                     dados[tipo][index]++;
-                    console.log(`Adicionado: ${prevAltaNorm} -> index: ${index}, tipo: ${tipo}`);
                 }
             }
         }
@@ -594,6 +585,7 @@ hospital.leitos.forEach(leito => {
         plugins: [backgroundPlugin]
     });
 }
+
 // Gráfico de Concessões
 function renderConcessoesHospital(hospitalId, type = 'bar') {
     const canvas = document.getElementById(`graficoConcessoes${hospitalId}`);
@@ -655,7 +647,6 @@ function renderConcessoesHospital(hospitalId, type = 'bar') {
         const cor = CORES_CONCESSOES[nome] || '#007A53';
         
         if (type === 'scatter') {
-            // Para scatter, criar pontos onde há valores
             const scatterData = [];
             dados.forEach((valor, index) => {
                 if (valor > 0) {
@@ -706,7 +697,6 @@ function renderConcessoesHospital(hospitalId, type = 'bar') {
     
     const ctx = canvas.getContext('2d');
     
-    // Configurações específicas para scatter
     const scatterOptions = type === 'scatter' ? {
         scales: {
             x: {
@@ -884,7 +874,6 @@ function renderLinhasHospital(hospitalId, type = 'bar') {
         const cor = CORES_LINHAS[nome] || '#ED0A72';
         
         if (type === 'scatter') {
-            // Para scatter, criar pontos onde há valores
             const scatterData = [];
             dados.forEach((valor, index) => {
                 if (valor > 0) {
@@ -935,7 +924,6 @@ function renderLinhasHospital(hospitalId, type = 'bar') {
     
     const ctx = canvas.getContext('2d');
     
-    // Configurações específicas para scatter
     const scatterOptions = type === 'scatter' ? {
         scales: {
             x: {

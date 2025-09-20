@@ -131,11 +131,17 @@ function createCard(leito, hospitalNome) {
     card.className = 'card';
     card.style.cssText = 'background: var(--card); border-radius: 12px; padding: 20px; color: var(--text-white); box-shadow: 0 4px 6px rgba(0,0,0,0.1);';
     
-    // *** CORREÇÃO CRÍTICA: STATUS COM COR CORRETA ***
+    // *** CORREÇÃO CRÍTICA: STATUS E CORES CORRETAS ***
     let isVago = leito.status === 'Vago' || leito.status === 'vago';
-    if (leito.status === 'Em uso') leito.status = 'ocupado';
-    if (leito.status === 'Vago') leito.status = 'vago';
-    isVago = leito.status === 'vago';
+    
+    // Normalizar status
+    if (leito.status === 'Em uso' || leito.status === 'ocupado' || leito.status === 'Ocupado') {
+        leito.status = 'ocupado';
+        isVago = false;
+    } else if (leito.status === 'Vago' || leito.status === 'vago') {
+        leito.status = 'vago';
+        isVago = true;
+    }
     
     // Dados do paciente
     const nome = leito.nome || '';
@@ -171,9 +177,9 @@ function createCard(leito, hospitalNome) {
     
     const numeroLeito = leito.leito || leito.numero || 'N/A';
     
-    // *** CORREÇÃO: COR DO LEITO BASEADA NO STATUS ***
-    const leitoBgColor = isVago ? 'var(--status-vago)' : '#fbbf24'; // AMARELO PARA OCUPADO
-    const leitoTextColor = isVago ? '#ffffff' : '#000000';
+    // *** CORREÇÃO FINAL: CORES BASEADAS NO STATUS ***
+    const leitoBgColor = isVago ? '#22c55e' : '#fbbf24'; // VERDE VAGO, AMARELO OCUPADO
+    const leitoTextColor = '#000000'; // TEXTO PRETO SEMPRE
     
     // HTML do Card (layout 3x3 mantido)
     card.innerHTML = `

@@ -239,7 +239,7 @@ function createCard(leito, hospitalNome) {
             <div class="section-title" style="font-size: 11px; color: #ffffff; background: #60a5fa; padding: 8px; border-radius: 4px; margin-bottom: 8px; text-transform: uppercase; font-weight: 700;">
                 CONCESSÕES PREVISTAS NA ALTA
             </div>
-            <div class="chips-container-concessoes" style="display: flex; flex-wrap: wrap; gap: 4px; min-height: 24px; background: rgba(255,255,255,0.05); border-radius: 6px; padding: 8px;">
+            <div class="chips-container" style="display: flex; flex-wrap: wrap; gap: 4px; min-height: 24px; background: rgba(255,255,255,0.05); border-radius: 6px; padding: 8px;">
                 ${(concessoes && concessoes.length > 0) 
                     ? concessoes.map(concessao => `<span class="chip" style="font-size: 10px; background: rgba(96,165,250,0.1); border: 1px solid rgba(96,165,250,0.3); color: #60a5fa; padding: 3px 8px; border-radius: 12px; font-weight: 600;">${concessao}</span>`).join('') 
                     : '<span style="color: rgba(255,255,255,0.7); font-size: 10px;">Nenhuma</span>'
@@ -251,7 +251,7 @@ function createCard(leito, hospitalNome) {
             <div class="section-title" style="font-size: 11px; color: #ffffff; background: #60a5fa; padding: 8px; border-radius: 4px; margin-bottom: 8px; text-transform: uppercase; font-weight: 700;">
                 LINHAS DE CUIDADO PREVISTAS NA ALTA
             </div>
-            <div class="chips-container-linhas" style="display: flex; flex-wrap: wrap; gap: 4px; min-height: 24px; background: rgba(255,255,255,0.05); border-radius: 6px; padding: 8px;">
+            <div class="chips-container" style="display: flex; flex-wrap: wrap; gap: 4px; min-height: 24px; background: rgba(255,255,255,0.05); border-radius: 6px; padding: 8px;">
                 ${(linhas && linhas.length > 0) 
                     ? linhas.map(linha => `<span class="chip" style="font-size: 10px; background: rgba(96,165,250,0.1); border: 1px solid rgba(96,165,250,0.3); color: #60a5fa; padding: 3px 8px; border-radius: 12px; font-weight: 600;">${linha}</span>`).join('') 
                     : '<span style="color: rgba(255,255,255,0.7); font-size: 10px;">Nenhuma</span>'
@@ -1138,32 +1138,6 @@ if (!document.getElementById('cardsConsolidadoCSS')) {
                 color: #000000 !important;
             }
             
-            /* *** CORREÇÃO PRINCIPAL: CONCESSÕES/LINHAS UMA POR LINHA *** */
-            .chips-container-concessoes,
-            .chips-container-linhas {
-                display: flex !important;
-                flex-direction: column !important;
-                gap: 4px !important;
-                min-height: 24px !important;
-                background: rgba(255,255,255,0.05) !important;
-                border-radius: 6px !important;
-                padding: 8px !important;
-            }
-            
-            .chips-container-concessoes .chip,
-            .chips-container-linhas .chip {
-                font-size: 9px !important;
-                background: rgba(96,165,250,0.1) !important;
-                border: 1px solid rgba(96,165,250,0.3) !important;
-                color: #60a5fa !important;
-                padding: 4px 8px !important;
-                border-radius: 12px !important;
-                font-weight: 600 !important;
-                text-align: center !important;
-                width: 100% !important;
-                box-sizing: border-box !important;
-            }
-            
             /* Maior espaçamento entre elementos tocáveis */
             .card-actions {
                 gap: 12px !important;
@@ -1242,6 +1216,17 @@ if (!document.getElementById('cardsConsolidadoCSS')) {
                 margin-bottom: 6px !important;
             }
             
+            .card-section .chips-container {
+                padding: 6px !important;
+                min-height: 20px !important;
+            }
+            
+            .card-section .chip {
+                font-size: 9px !important;
+                padding: 2px 6px !important;
+                margin: 1px !important;
+            }
+            
             /* Botões de ação menores */
             .btn-action {
                 padding: 8px 16px !important;
@@ -1295,13 +1280,6 @@ if (!document.getElementById('cardsConsolidadoCSS')) {
                 font-size: 10px !important;
             }
             
-            /* Concessões/linhas ainda mais compactas */
-            .chips-container-concessoes .chip,
-            .chips-container-linhas .chip {
-                font-size: 8px !important;
-                padding: 2px 6px !important;
-            }
-            
             /* Modal ainda mais compacto */
             .modal-content {
                 padding: 15px !important;
@@ -1343,14 +1321,6 @@ if (!document.getElementById('cardsConsolidadoCSS')) {
                 gap: 6px !important;
             }
             
-            /* MANTER CONCESSÕES/LINHAS UMA POR LINHA EM LANDSCAPE */
-            .chips-container-concessoes,
-            .chips-container-linhas {
-                display: flex !important;
-                flex-direction: column !important;
-                gap: 3px !important;
-            }
-            
             /* Modal em landscape */
             .modal-overlay .modal-content {
                 max-height: 85vh !important;
@@ -1385,4 +1355,87 @@ if (!document.getElementById('cardsConsolidadoCSS')) {
         .prev-alta-48h { background: #10b981 !important; color: #fff !important; }
         .prev-alta-72h { background: #f59e0b !important; color: #fff !important; }
         .prev-alta-96h { background: #ef4444 !important; color: #fff !important; }
-        .prev-alta-sp { background: #6b7280 !important; color: #fff !important;
+        .prev-alta-sp { background: #6b7280 !important; color: #fff !important; }
+    `;
+    document.head.appendChild(style);
+}
+
+// =================== INICIALIZAÇÃO ===================
+document.addEventListener('DOMContentLoaded', function() {
+    logSuccess('✅ Cards.js CONSOLIDADO CARREGADO - Todo CSS responsivo incluído');
+    
+    // Verificar dependências
+    if (typeof window.CONFIG === 'undefined') {
+        logError('CONFIG não encontrado - algumas funcionalidades podem não funcionar');
+    }
+    
+    if (typeof window.hospitalData === 'undefined') {
+        window.hospitalData = {};
+        logInfo('hospitalData inicializado');
+    }
+    
+    // Verificar se API está disponível
+    if (typeof window.admitirPaciente === 'undefined') {
+        logError('Funções da API não encontradas - verificar api.js');
+    }
+    
+    // Verificar listas
+    if (window.CONCESSOES_LIST.length !== 13) {
+        logError(`ERRO: Esperadas 13 concessões, encontradas ${window.CONCESSOES_LIST.length}`);
+    }
+    
+    if (window.LINHAS_CUIDADO_LIST.length !== 19) {
+        logError(`ERRO: Esperadas 19 linhas, encontradas ${window.LINHAS_CUIDADO_LIST.length}`);
+    }
+    
+    if (window.PREVISAO_ALTA_OPTIONS.length !== 10) {
+        logError(`ERRO: Esperadas 10 opções timeline, encontradas ${window.PREVISAO_ALTA_OPTIONS.length}`);
+    }
+    
+    // Garantir que seleção inicial funcione
+    if (window.currentHospital && window.HOSPITAL_MAPPING[window.currentHospital]) {
+        logInfo(`Hospital inicial: ${window.currentHospital} - ${window.HOSPITAL_MAPPING[window.currentHospital]}`);
+    }
+    
+    // Log das melhorias ativas
+    logInfo('🚀 Melhorias ativas:');
+    logInfo('  • Arrays diretos - SEM parsing');
+    logInfo('  • Timeline com 10 opções');
+    logInfo('  • 13 concessões + 19 linhas');
+    logInfo('  • Performance otimizada');
+    logInfo('  • Validação automática');
+    logInfo('  • Layout 3x3 mobile FORÇADO');
+    logInfo('  • Leitos: VERDE=vago, AMARELO=ocupado');
+    logInfo('  • Modais 3 colunas no mobile');
+    logInfo('  • Campo idade como SELECT');
+    logInfo('  • CSS CONSOLIDADO - sem mobile.css');
+    
+    // Adicionar listener para resize
+    window.addEventListener('resize', function() {
+        const width = window.innerWidth;
+        if (width <= 480) {
+            logDebug('Modo mobile pequeno ativado');
+        } else if (width <= 768) {
+            logDebug('Modo mobile ativado');
+        } else if (width <= 1024) {
+            logDebug('Modo tablet ativado');
+        } else {
+            logDebug('Modo desktop ativado');
+        }
+    });
+});
+
+// =================== EXPORT DE FUNÇÕES PÚBLICAS ===================
+window.createCard = createCard;
+window.openAdmissaoModal = openAdmissaoModal;
+window.openAtualizacaoModal = openAtualizacaoModal;
+window.forcarPreMarcacao = forcarPreMarcacao;
+window.coletarDadosFormulario = coletarDadosFormulario;
+
+logSuccess('🏥 CARDS.JS CONSOLIDADO - VERSÃO FINAL IMPLEMENTADA!');
+logInfo('📋 Todo CSS responsivo consolidado neste arquivo');
+logInfo('✅ Eliminada dependência do mobile.css');
+logInfo('✅ Cores hardcoded: Verde=vago, Amarelo=ocupado');
+logInfo('✅ Layout 3x3 forçado no mobile');
+logInfo('✅ Modais responsivos com 3 colunas');
+logInfo('✅ Performance otimizada com CSS inline');

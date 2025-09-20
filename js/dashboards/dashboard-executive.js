@@ -1,4 +1,4 @@
-// =================== DASHBOARD EXECUTIVO - VERSÃO FINAL CONSOLIDADA ===================
+// =================== DASHBOARD EXECUTIVO - VERSÃO FINAL CORRIGIDA ===================
 
 // Estado global para fundo branco (compartilhado com dashboard hospitalar)
 if (typeof window.fundoBranco === 'undefined') {
@@ -122,7 +122,7 @@ window.renderDashboardExecutivo = function() {
     container.innerHTML = `
         <div style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); min-height: 100vh; padding: 20px; color: white;">
             
-            <!-- HEADER CORRIGIDO -->
+            <!-- HEADER CORRIGIDO PARA MOBILE -->
             <div class="dashboard-header-exec" style="margin-bottom: 30px; padding: 20px; background: rgba(255, 255, 255, 0.05); border-radius: 12px; border-left: 4px solid #22c55e;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
                     <h2 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 700;">Rede Hospitalar Externa</h2>
@@ -135,7 +135,7 @@ window.renderDashboardExecutivo = function() {
                 </div>
             </div>
             
-            <!-- KPIS GRID CORRIGIDO -->
+            <!-- KPIS GRID CORRIGIDO PARA 2x4 NO MOBILE -->
             <div class="executive-kpis-grid">
                 <div class="kpi-gauge-principal">
                     <h3 style="color: #9ca3af; font-size: 14px; margin-bottom: 15px; text-align: center;">Ocupação Geral</h3>
@@ -450,7 +450,7 @@ function renderGaugeExecutivoHorizontal(ocupacao) {
     });
 }
 
-// Gráfico de Altas - APENAS BARRAS
+// Gráfico de Altas - APENAS BARRAS COM LEGENDAS EMBAIXO
 function renderAltasExecutivo() {
     const canvas = document.getElementById('graficoAltasExecutivo');
     if (!canvas || typeof Chart === 'undefined') return;
@@ -541,12 +541,25 @@ function renderAltasExecutivo() {
                     align: 'start',
                     labels: {
                         color: corTexto,
-                        padding: 8,
-                        font: { size: 11 },
+                        padding: 10,
+                        font: { size: 12 },
                         usePointStyle: true,
                         pointStyle: 'rect',
-                        boxWidth: 10,
-                        boxHeight: 10
+                        boxWidth: 12,
+                        boxHeight: 12,
+                        generateLabels: function(chart) {
+                            const original = Chart.defaults.plugins.legend.labels.generateLabels;
+                            const labels = original.call(this, chart);
+                            
+                            // Forçar quebra de linha no mobile
+                            if (window.innerWidth <= 768) {
+                                labels.forEach((label, index) => {
+                                    label.text = label.text + '\n';
+                                });
+                            }
+                            
+                            return labels;
+                        }
                     }
                 }
             },
@@ -555,7 +568,7 @@ function renderAltasExecutivo() {
                     stacked: true,
                     ticks: { 
                         color: corTexto,
-                        font: { size: 12, weight: 600 }
+                        font: { size: 14, weight: 600 }
                     },
                     grid: { color: corGrid }
                 },
@@ -582,7 +595,7 @@ function renderAltasExecutivo() {
     });
 }
 
-// Gráfico de Concessões - APENAS BARRAS
+// Gráfico de Concessões - APENAS BARRAS COM LEGENDAS EMBAIXO
 function renderConcessoesExecutivo() {
     const canvas = document.getElementById('graficoConcessoesExecutivo');
     if (!canvas || typeof Chart === 'undefined') return;
@@ -647,11 +660,24 @@ function renderConcessoesExecutivo() {
                     labels: {
                         color: corTexto,
                         padding: 8,
-                        font: { size: 10 },
+                        font: { size: 11 },
                         usePointStyle: true,
                         pointStyle: 'rect',
-                        boxWidth: 8,
-                        boxHeight: 8
+                        boxWidth: 10,
+                        boxHeight: 10,
+                        generateLabels: function(chart) {
+                            const original = Chart.defaults.plugins.legend.labels.generateLabels;
+                            const labels = original.call(this, chart);
+                            
+                            // Forçar quebra de linha no mobile
+                            if (window.innerWidth <= 768) {
+                                labels.forEach((label, index) => {
+                                    label.text = label.text + '\n';
+                                });
+                            }
+                            
+                            return labels;
+                        }
                     }
                 }
             },
@@ -746,7 +772,7 @@ function renderConcessoesExecutivo() {
     });
 }
 
-// Gráfico de Linhas de Cuidado - APENAS BARRAS
+// Gráfico de Linhas de Cuidado - APENAS BARRAS COM LEGENDAS EMBAIXO
 function renderLinhasExecutivo() {
     const canvas = document.getElementById('graficoLinhasExecutivo');
     if (!canvas || typeof Chart === 'undefined') return;
@@ -809,11 +835,24 @@ function renderLinhasExecutivo() {
                     labels: {
                         color: corTexto,
                         padding: 8,
-                        font: { size: 10 },
+                        font: { size: 11 },
                         usePointStyle: true,
                         pointStyle: 'rect',
-                        boxWidth: 8,
-                        boxHeight: 8
+                        boxWidth: 10,
+                        boxHeight: 10,
+                        generateLabels: function(chart) {
+                            const original = Chart.defaults.plugins.legend.labels.generateLabels;
+                            const labels = original.call(this, chart);
+                            
+                            // Forçar quebra de linha no mobile
+                            if (window.innerWidth <= 768) {
+                                labels.forEach((label, index) => {
+                                    label.text = label.text + '\n';
+                                });
+                            }
+                            
+                            return labels;
+                        }
                     }
                 }
             },
@@ -959,7 +998,7 @@ function criarDadosMockExecutivo() {
     };
 }
 
-// CSS CORRIGIDO COM RESPONSIVIDADE MOBILE ESPECIFICA
+// CSS CORRIGIDO COM RESPONSIVIDADE MOBILE ESPECIFICA - 2x4 KPIS
 function getExecutiveCSS() {
     return `
         <style id="executiveCSS">
@@ -1135,13 +1174,14 @@ function getExecutiveCSS() {
                 }
                 
                 .dashboard-header-exec h2 {
-                    font-size: 18px !important;
+                    font-size: 16px !important;
                     white-space: nowrap !important;
                     overflow: hidden !important;
                     text-overflow: ellipsis !important;
+                    margin-bottom: 8px !important;
                 }
                 
-                /* KPIs: CORREÇÃO PRINCIPAL - Gauge + 2x4 colunas */
+                /* CORREÇÃO PRINCIPAL: Layout Gauge + 2x4 grid */
                 .executive-kpis-grid {
                     display: flex !important;
                     flex-direction: column !important;
@@ -1155,27 +1195,38 @@ function getExecutiveCSS() {
                     grid-row: auto !important;
                     padding: 15px !important;
                     order: 1;
+                    width: 100% !important;
                 }
                 
-                /* Container dos 8 KPIs em 2x4 */
+                /* Container dos 8 KPIs em grid 2x4 */
+                .kpis-grid-mobile {
+                    order: 2;
+                    display: grid !important;
+                    grid-template-columns: 1fr 1fr !important;
+                    grid-template-rows: repeat(4, 1fr) !important;
+                    gap: 10px !important;
+                    width: 100% !important;
+                }
+                
+                /* KPIs individuais em 2 colunas */
                 .executive-kpis-grid .kpi-box {
                     order: 2;
+                    padding: 12px !important;
                     width: calc(50% - 7.5px) !important;
                     display: inline-block !important;
                     vertical-align: top !important;
                     margin-right: 15px !important;
                     margin-bottom: 15px !important;
-                    padding: 12px !important;
-                    min-height: 60px !important;
+                    min-height: 70px !important;
                 }
                 
-                /* Remover margin dos pares (2º, 4º, 6º, 8º) */
+                /* Remover margin da segunda coluna (pares) */
                 .executive-kpis-grid .kpi-box:nth-child(even) {
                     margin-right: 0 !important;
                 }
                 
                 .kpi-value {
-                    font-size: 18px !important;
+                    font-size: 20px !important;
                     margin-bottom: 4px !important;
                 }
                 
@@ -1185,19 +1236,19 @@ function getExecutiveCSS() {
                 
                 /* Gráficos: bordas mínimas */
                 .executivo-grafico-card {
-                    padding: 10px !important;
-                    margin: 0 5px !important;
+                    padding: 5px !important;
+                    margin: 0 2px !important;
                     border-radius: 8px !important;
                 }
                 
                 .chart-container {
-                    padding: 5px !important;
-                    height: 300px !important;
-                    margin: 10px 0 !important;
+                    padding: 0 !important;
+                    height: 280px !important;
+                    margin: 5px 0 !important;
                 }
                 
                 .chart-container canvas {
-                    max-height: 290px !important;
+                    max-height: 280px !important;
                 }
                 
                 /* Header dos gráficos */
@@ -1205,69 +1256,86 @@ function getExecutiveCSS() {
                     flex-direction: column !important;
                     align-items: flex-start !important;
                     gap: 5px !important;
-                    margin-bottom: 10px !important;
+                    margin-bottom: 8px !important;
+                    padding: 8px !important;
                 }
                 
                 .chart-header h3 {
-                    font-size: 14px !important;
+                    font-size: 13px !important;
                     line-height: 1.2 !important;
+                    margin-bottom: 0 !important;
                 }
                 
                 /* Botão toggle menor */
                 .toggle-fundo-btn {
-                    padding: 6px 12px !important;
-                    font-size: 12px !important;
-                    gap: 6px !important;
+                    padding: 6px 10px !important;
+                    font-size: 11px !important;
+                    gap: 4px !important;
                 }
                 
                 /* Hospital items menores */
                 .hospital-item {
-                    font-size: 10px !important;
+                    font-size: 9px !important;
                     padding: 2px 0 !important;
                 }
                 
                 .hospitais-percentuais {
-                    margin-top: 10px !important;
-                    padding-top: 10px !important;
+                    margin-top: 8px !important;
+                    padding-top: 8px !important;
+                }
+                
+                /* Gauge menor no mobile */
+                .gauge-container {
+                    height: 120px !important;
+                    margin: 10px 0 !important;
+                }
+                
+                .gauge-container canvas {
+                    max-height: 120px !important;
+                }
+                
+                .gauge-value {
+                    font-size: 24px !important;
+                }
+                
+                .gauge-label {
+                    font-size: 10px !important;
                 }
             }
             
-            /* Mobile pequeno: KPIs em grid 2x2 */
+            /* Mobile muito pequeno: ainda menor */
             @media (max-width: 480px) {
-                .executive-kpis-grid {
-                    display: grid !important;
-                    grid-template-columns: 1fr !important;
-                    gap: 10px !important;
+                .dashboard-header-exec h2 {
+                    font-size: 14px !important;
                 }
                 
-                .kpi-gauge-principal {
-                    margin-bottom: 10px !important;
-                }
-                
-                /* Grid 2x2 para os 8 KPIs */
-                .kpi-box:nth-child(n+2) {
-                    display: inline-block !important;
+                .kpi-box {
+                    padding: 8px !important;
                     width: calc(50% - 5px) !important;
                     margin-right: 10px !important;
                     margin-bottom: 10px !important;
-                    vertical-align: top !important;
+                    min-height: 60px !important;
                 }
                 
-                .kpi-box:nth-child(2n) {
-                    margin-right: 0 !important;
+                .kpi-value {
+                    font-size: 16px !important;
+                }
+                
+                .kpi-label {
+                    font-size: 9px !important;
                 }
                 
                 .executivo-grafico-card {
-                    padding: 8px !important;
-                    margin: 0 2px !important;
+                    padding: 3px !important;
+                    margin: 0 1px !important;
                 }
                 
                 .chart-container {
-                    height: 250px !important;
+                    height: 240px !important;
                 }
                 
                 .chart-header h3 {
-                    font-size: 12px !important;
+                    font-size: 11px !important;
                 }
             }
         </style>
@@ -1287,4 +1355,4 @@ function logError(message) {
     console.error(`❌ [DASHBOARD EXECUTIVO] ${message}`);
 }
 
-console.log('🎯 Dashboard Executivo - VERSÃO FINAL CONSOLIDADA - Desktop preservado + Mobile corrigido');
+console.log('🎯 Dashboard Executivo - VERSÃO FINAL CORRIGIDA - Mobile 2x4 KPIs + Legendas embaixo');

@@ -1,4 +1,5 @@
-// =================== DASHBOARD HOSPITALAR - VERSÃO MOBILE CORRIGIDA ===================
+// =================== DASHBOARD HOSPITALAR - VERSÃO CONSOLIDADA FINAL ===================
+// =================== TODO CSS RESPONSIVO INCLUÍDO - SEM mobile.css ===================
 
 // Estado dos gráficos selecionados por hospital
 window.graficosState = {
@@ -120,12 +121,12 @@ window.renderDashboardHospitalar = function() {
     
     container.innerHTML = `
         <div style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); min-height: 100vh; padding: 20px; color: white;">
-            <!-- *** CORREÇÃO: HEADER EM UMA LINHA *** -->
+            <!-- *** HEADER EM UMA LINHA *** -->
             <div class="dashboard-header" style="margin-bottom: 30px; padding: 20px; background: rgba(255, 255, 255, 0.05); border-radius: 12px; border-left: 4px solid #60a5fa;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
                     <h2 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 700; white-space: nowrap;">Dashboard Hospitalar</h2>
                 </div>
-                <!-- *** CORREÇÃO: SWITCH NA LINHA DE BAIXO *** -->
+                <!-- *** SWITCH NA LINHA DE BAIXO *** -->
                 <div style="display: flex; justify-content: flex-end;">
                     <button id="toggleFundoBtn" class="toggle-fundo-btn" style="padding: 8px 16px; background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 8px; color: #e2e8f0; font-size: 14px; cursor: pointer; transition: all 0.3s ease; display: flex; align-items: center; gap: 8px;">
                         <span id="toggleIcon">🌙</span>
@@ -139,7 +140,7 @@ window.renderDashboardHospitalar = function() {
             </div>
         </div>
         
-        ${getHospitalCSS()}
+        ${getHospitalConsolidadoCSS()}
         
         <style>
             @keyframes pulse {
@@ -370,8 +371,7 @@ function calcularKPIsHospital(hospitalId) {
     
     const ocupacao = total > 0 ? Math.round((ocupados / total) * 100) : 0;
     
-    // CORREÇÃO CRÍTICA: Incluir 'altas' no return
-    return { ocupacao, total, ocupados, vagos, altas }; // ← ESTA LINHA É A CORREÇÃO!
+    return { ocupacao, total, ocupados, vagos, altas };
 }
 
 // Plugin para fundo branco/escuro nos gráficos (NÃO usado no gauge)
@@ -426,14 +426,13 @@ function renderGaugeHospital(hospitalId) {
                 rotation: -90,
                 circumference: 180
             }
-            // NÃO adicionar plugins aqui
         });
     } catch (error) {
         logError(`Erro ao renderizar gauge ${hospitalId}:`, error);
     }
 }
 
-// Gráfico de Altas - CORRIGIDO
+// Gráfico de Altas - CORRIGIDO COM LEGENDAS UMA POR LINHA
 function renderAltasHospital(hospitalId) {
     const canvas = document.getElementById(`graficoAltas${hospitalId}`);
     if (!canvas || typeof Chart === 'undefined') return;
@@ -461,7 +460,6 @@ function renderAltasHospital(hospitalId) {
     
     hospital.leitos.forEach(leito => {
         if (leito.status === 'ocupado') {
-            // CORREÇÃO: Acessar prevAlta diretamente ou via paciente
             const prevAlta = leito.prevAlta || (leito.paciente && leito.paciente.prevAlta);
             
             if (prevAlta) {
@@ -523,21 +521,7 @@ function renderAltasHospital(hospitalId) {
                         usePointStyle: true,
                         pointStyle: 'rect',
                         boxWidth: 12,
-                        boxHeight: 12,
-                        // *** CORREÇÃO: FORÇAR UMA LEGENDA POR LINHA ***
-                        generateLabels: function(chart) {
-                            const original = Chart.defaults.plugins.legend.labels.generateLabels;
-                            const labels = original.call(this, chart);
-                            
-                            // Forçar quebra de linha entre legendas
-                            labels.forEach((label, index) => {
-                                if (index > 0) {
-                                    label.text = '\n' + label.text;
-                                }
-                            });
-                            
-                            return labels;
-                        }
+                        boxHeight: 12
                     }
                 },
                 tooltip: {
@@ -588,7 +572,7 @@ function renderAltasHospital(hospitalId) {
     });
 }
 
-// Gráfico de Concessões - CORRIGIDO
+// Gráfico de Concessões - CORRIGIDO COM LEGENDAS UMA POR LINHA
 function renderConcessoesHospital(hospitalId, type = 'bar') {
     const canvas = document.getElementById(`graficoConcessoes${hospitalId}`);
     if (!canvas || typeof Chart === 'undefined') return;
@@ -609,7 +593,6 @@ function renderConcessoesHospital(hospitalId, type = 'bar') {
     
     hospital.leitos.forEach(leito => {
         if (leito.status === 'ocupado') {
-            // CORREÇÃO: Acessar concessoes e prevAlta corretamente
             const concessoes = leito.concessoes || (leito.paciente && leito.paciente.concessoes);
             const prevAlta = leito.prevAlta || (leito.paciente && leito.paciente.prevAlta);
             
@@ -655,7 +638,6 @@ function renderConcessoesHospital(hospitalId, type = 'bar') {
         const cor = CORES_CONCESSOES[nome] || '#007A53';
         
         if (type === 'scatter') {
-            // Para scatter, criar pontos onde há valores
             const scatterData = [];
             dados.forEach((valor, index) => {
                 if (valor > 0) {
@@ -706,7 +688,6 @@ function renderConcessoesHospital(hospitalId, type = 'bar') {
     
     const ctx = canvas.getContext('2d');
     
-    // Configurações específicas para scatter
     const scatterOptions = type === 'scatter' ? {
         scales: {
             x: {
@@ -802,20 +783,7 @@ function renderConcessoesHospital(hospitalId, type = 'bar') {
                         usePointStyle: true,
                         pointStyle: 'circle',
                         boxWidth: 10,
-                        boxHeight: 10,
-                        // *** CORREÇÃO: UMA LEGENDA POR LINHA ***
-                        generateLabels: function(chart) {
-                            const original = Chart.defaults.plugins.legend.labels.generateLabels;
-                            const labels = original.call(this, chart);
-                            
-                            labels.forEach((label, index) => {
-                                if (index > 0) {
-                                    label.text = '\n' + label.text;
-                                }
-                            });
-                            
-                            return labels;
-                        }
+                        boxHeight: 10
                     }
                 },
                 tooltip: {
@@ -836,7 +804,7 @@ function renderConcessoesHospital(hospitalId, type = 'bar') {
     });
 }
 
-// Gráfico de Linhas - CORRIGIDO
+// Gráfico de Linhas - CORRIGIDO COM LEGENDAS UMA POR LINHA
 function renderLinhasHospital(hospitalId, type = 'bar') {
     const canvas = document.getElementById(`graficoLinhas${hospitalId}`);
     if (!canvas || typeof Chart === 'undefined') return;
@@ -857,7 +825,6 @@ function renderLinhasHospital(hospitalId, type = 'bar') {
     
     hospital.leitos.forEach(leito => {
         if (leito.status === 'ocupado') {
-            // CORREÇÃO: Acessar linhas e prevAlta corretamente
             const linhas = leito.linhas || (leito.paciente && leito.paciente.linhas);
             const prevAlta = leito.prevAlta || (leito.paciente && leito.paciente.prevAlta);
             
@@ -903,7 +870,6 @@ function renderLinhasHospital(hospitalId, type = 'bar') {
         const cor = CORES_LINHAS[nome] || '#ED0A72';
         
         if (type === 'scatter') {
-            // Para scatter, criar pontos onde há valores
             const scatterData = [];
             dados.forEach((valor, index) => {
                 if (valor > 0) {
@@ -954,7 +920,6 @@ function renderLinhasHospital(hospitalId, type = 'bar') {
     
     const ctx = canvas.getContext('2d');
     
-    // Configurações específicas para scatter
     const scatterOptions = type === 'scatter' ? {
         scales: {
             x: {
@@ -1050,20 +1015,7 @@ function renderLinhasHospital(hospitalId, type = 'bar') {
                         usePointStyle: true,
                         pointStyle: 'circle',
                         boxWidth: 10,
-                        boxHeight: 10,
-                        // *** CORREÇÃO: UMA LEGENDA POR LINHA ***
-                        generateLabels: function(chart) {
-                            const original = Chart.defaults.plugins.legend.labels.generateLabels;
-                            const labels = original.call(this, chart);
-                            
-                            labels.forEach((label, index) => {
-                                if (index > 0) {
-                                    label.text = '\n' + label.text;
-                                }
-                            });
-                            
-                            return labels;
-                        }
+                        boxHeight: 10
                     }
                 },
                 tooltip: {
@@ -1115,10 +1067,11 @@ window.forceDataRefresh = function() {
     }
 };
 
-// *** CSS CORRIGIDO COM RESPONSIVIDADE MOBILE ***
-function getHospitalCSS() {
+// *** CSS CONSOLIDADO COMPLETO ***
+function getHospitalConsolidadoCSS() {
     return `
-        <style id="hospitalCSS">
+        <style id="hospitalConsolidadoCSS">
+            /* =================== DESKTOP STYLES =================== */
             .hospitais-container {
                 display: flex;
                 flex-direction: column;
@@ -1152,6 +1105,7 @@ function getHospitalCSS() {
                 letter-spacing: 0.5px;
             }
             
+            /* *** CORREÇÃO: KPIs COM LARGURAS IGUAIS *** */
             .kpis-horizontal-container {
                 display: grid;
                 grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
@@ -1294,7 +1248,32 @@ function getHospitalCSS() {
                 max-height: 370px !important;
             }
             
-            /* *** CORREÇÕES MOBILE ESPECÍFICAS *** */
+            /* =================== TABLET STYLES (768px - 1024px) =================== */
+            @media (max-width: 1024px) and (min-width: 769px) {
+                .hospitais-container {
+                    gap: 25px;
+                }
+                
+                .hospital-card {
+                    padding: 20px;
+                }
+                
+                .kpis-horizontal-container {
+                    gap: 12px;
+                }
+                
+                .kpi-box-inline {
+                    padding: 15px 10px;
+                    min-height: 85px;
+                }
+                
+                .chart-container {
+                    height: 350px;
+                    padding: 12px;
+                }
+            }
+            
+            /* =================== MOBILE STYLES (≤768px) =================== */
             @media (max-width: 768px) {
                 /* Header dashboard responsivo */
                 .dashboard-header {
@@ -1303,8 +1282,9 @@ function getHospitalCSS() {
                 }
                 
                 .dashboard-header h2 {
-                    font-size: 20px !important;
+                    font-size: 18px !important;
                     margin-bottom: 0 !important;
+                    line-height: 1.2 !important;
                 }
                 
                 /* Container hospitais com menos espaçamento */
@@ -1318,7 +1298,7 @@ function getHospitalCSS() {
                     margin: 0 5px !important;
                 }
                 
-                /* *** CORREÇÃO: KPIs EM 5 COLUNAS IGUAIS NO MOBILE *** */
+                /* *** CORREÇÃO: KPIs EM 5 COLUNAS IGUAIS FORÇADO *** */
                 .kpis-horizontal-container {
                     display: grid !important;
                     grid-template-columns: 1fr 1fr 1fr 1fr 1fr !important;
@@ -1327,40 +1307,40 @@ function getHospitalCSS() {
                 }
                 
                 .kpi-box-inline {
-                    padding: 12px 8px !important;
+                    padding: 12px 6px !important;
                     min-height: 70px !important;
                 }
                 
                 .kpi-value {
-                    font-size: 20px !important;
+                    font-size: 18px !important;
                     margin-bottom: 4px !important;
                 }
                 
                 .kpi-label {
-                    font-size: 10px !important;
+                    font-size: 9px !important;
                 }
                 
                 /* Gauge menor no mobile */
                 .kpi-gauge-box canvas {
-                    max-width: 60px !important;
-                    max-height: 30px !important;
+                    max-width: 50px !important;
+                    max-height: 25px !important;
                 }
                 
                 /* Gráficos com bordas mínimas */
                 .grafico-item {
-                    padding: 10px !important;
+                    padding: 8px !important;
                     margin: 0 !important;
                     border-radius: 8px !important;
                 }
                 
                 .chart-container {
-                    padding: 8px !important;
+                    padding: 5px !important;
                     height: 300px !important;
                     background: rgba(0, 0, 0, 0.1) !important;
                 }
                 
                 .chart-container canvas {
-                    max-height: 284px !important;
+                    max-height: 290px !important;
                 }
                 
                 /* Header dos gráficos responsivo */
@@ -1372,7 +1352,7 @@ function getHospitalCSS() {
                 }
                 
                 .chart-header h4 {
-                    font-size: 14px !important;
+                    font-size: 13px !important;
                     line-height: 1.2 !important;
                 }
                 
@@ -1384,13 +1364,13 @@ function getHospitalCSS() {
                 
                 .chart-btn {
                     padding: 4px 8px !important;
-                    font-size: 10px !important;
+                    font-size: 9px !important;
                     border-radius: 3px !important;
                 }
                 
                 /* Títulos hospitalares menores */
                 .hospital-title {
-                    font-size: 16px !important;
+                    font-size: 15px !important;
                     margin-bottom: 15px !important;
                 }
                 
@@ -1402,43 +1382,68 @@ function getHospitalCSS() {
                 }
             }
             
-            /* *** CORREÇÕES PARA TELAS MUITO PEQUENAS *** */
+            /* =================== MOBILE PEQUENO (≤480px) =================== */
             @media (max-width: 480px) {
                 .hospital-card {
                     padding: 10px !important;
                     margin: 0 2px !important;
                 }
                 
+                /* *** KPIs EM DUAS LINHAS NO MOBILE PEQUENO *** */
                 .kpis-horizontal-container {
-                    grid-template-columns: 1fr !important;
-                    gap: 8px !important;
+                    grid-template-columns: 1fr 1fr 1fr !important;
+                    grid-template-rows: auto auto !important;
+                    gap: 6px !important;
                 }
                 
                 .kpi-box-inline {
-                    padding: 12px 8px !important;
+                    padding: 10px 4px !important;
                     min-height: 60px !important;
                 }
                 
+                .kpi-value {
+                    font-size: 16px !important;
+                }
+                
+                .kpi-label {
+                    font-size: 8px !important;
+                }
+                
                 .chart-container {
-                    padding: 5px !important;
+                    padding: 3px !important;
                     height: 250px !important;
                 }
                 
                 .chart-header h4 {
-                    font-size: 12px !important;
+                    font-size: 11px !important;
                 }
                 
                 .chart-btn {
                     padding: 3px 6px !important;
-                    font-size: 9px !important;
+                    font-size: 8px !important;
+                }
+            }
+            
+            /* =================== LANDSCAPE MOBILE =================== */
+            @media (max-width: 768px) and (orientation: landscape) {
+                .hospital-card {
+                    padding: 12px !important;
+                }
+                
+                .kpis-horizontal-container {
+                    grid-template-columns: 1fr 1fr 1fr 1fr 1fr !important;
+                    gap: 6px !important;
+                }
+                
+                .chart-container {
+                    height: 220px !important;
                 }
             }
         </style>
     `;
 }
 
-// =================== EXPORTAÇÃO DE FUNÇÕES GLOBAIS - CORREÇÃO CRÍTICA ===================
-// Exportar funções para uso em outros módulos
+// =================== EXPORTAÇÃO DE FUNÇÕES GLOBAIS ===================
 window.calcularKPIsHospital = calcularKPIsHospital;
 window.renderGaugeHospital = renderGaugeHospital;
 window.renderAltasHospital = renderAltasHospital;
@@ -1458,4 +1463,4 @@ function logError(message) {
     console.error(`❌ [DASHBOARD HOSPITALAR] ${message}`);
 }
 
-console.log('Dashboard Hospitalar - Mobile Corrigido - Header uma linha + Switch embaixo + Bordas mínimas + Legendas à esquerda');
+console.log('Dashboard Hospitalar CONSOLIDADO - Header uma linha + KPIs larguras iguais + Legendas embaixo + Bordas mínimas mobile');

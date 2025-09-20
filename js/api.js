@@ -1,7 +1,7 @@
 // =================== API V4.0 - NOVA ESTRUTURA 44 COLUNAS - SEM PARSING ===================
 
 // *** URL ATUALIZADA DA API V4.0 ***
-window.API_URL = 'https://script.google.com/macros/s/AKfycbyqIpfU93T4o1f-PW42PL4qvJTEJk1g-1qHZic-lHItt1rwQFtLvbw09zW7a7FuMQ0l/exec';
+window.API_URL = 'https://script.google.com/macros/s/AKfycbwjS4n74PmLnX-moIaX-fAAmF3Mv5gNtrFNUwvKH4SHgQkdACtr5POYJoHZUSxnymLr/exec';
 
 // =================== VARIÁVEIS GLOBAIS ===================
 window.hospitalData = {};

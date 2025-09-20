@@ -1,7 +1,7 @@
 // =================== API V4.0 - NOVA ESTRUTURA 44 COLUNAS - SEM PARSING ===================
 
 // *** URL ATUALIZADA DA API V4.0 ***
-window.API_URL = 'https://script.google.com/macros/s/AKfycbwjS4n74PmLnX-moIaX-fAAmF3Mv5gNtrFNUwvKH4SHgQkdACtr5POYJoHZUSxnymLr/exec';
+window.API_URL = 'https://script.google.com/macros/s/AKfycbyqIpfU93T4o1f-PW42PL4qvJTEJk1g-1qHZic-lHItt1rwQFtLvbw09zW7a7FuMQ0l/exec';
 
 // =================== VARIÁVEIS GLOBAIS ===================
 window.hospitalData = {};
@@ -9,11 +9,11 @@ window.apiCache = {};
 window.lastAPICall = 0;
 window.API_TIMEOUT = 15000; // 15 segundos para CORS
 
-// =================== TIMELINE CORRIGIDA (9 OPÇÕES) ===================
+// =================== TIMELINE CORRIGIDA (10 OPÇÕES) ===================
 window.TIMELINE_OPCOES = [
     "Hoje Ouro", "Hoje 2R", "Hoje 3R",
     "24h Ouro", "24h 2R", "24h 3R", 
-    "48h", "72h", "SP"
+    "48h", "72h", "96h", "SP"
 ];
 
 // =================== LISTAS PARA VALIDAÇÃO ===================

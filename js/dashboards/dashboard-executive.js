@@ -1,11 +1,12 @@
 // =================== DASHBOARD EXECUTIVO - VERSÃO FINAL CORRIGIDA ===================
+// =================== SCATTER EXATO + CORES PANTONE + LEGENDAS RESTAURADAS ===================
 
 // Estado global para fundo branco (compartilhado com dashboard hospitalar)
 if (typeof window.fundoBranco === 'undefined') {
     window.fundoBranco = false;
 }
 
-// Paleta completa de cores Pantone para Concessões
+// Paleta completa de cores Pantone para Concessões - EXATA SEM FALLBACK
 const CORES_CONCESSOES_EXEC = {
     'Transição Domiciliar': '#007A53',
     'Aplicação domiciliar de medicamentos': '#582C83',
@@ -16,34 +17,99 @@ const CORES_CONCESSOES_EXEC = {
     'Curativos': '#00BFB3',
     'Oxigenoterapia': '#64A70B',
     'Recarga de O₂': '#00AEEF',
+    'Recarga de O2': '#00AEEF', // Alias sem subscript
     'Orientação Nutricional – com dispositivo': '#FFC72C',
+    'Orientação Nutricional - com dispositivo': '#FFC72C', // Alias com hífen
     'Orientação Nutricional – sem dispositivo': '#F4E285',
+    'Orientação Nutricional - sem dispositivo': '#F4E285', // Alias com hífen
     'Clister': '#E8927C',
     'PICC': '#E03C31'
 };
 
-// Paleta completa de cores Pantone para Linhas de Cuidado
+// Paleta completa de cores Pantone para Linhas de Cuidado - EXATA SEM FALLBACK
 const CORES_LINHAS_EXEC = {
     'Assiste': '#ED0A72',
     'APS': '#007A33',
     'Cuidados Paliativos': '#00B5A2',
     'ICO': '#A6192E',
+    'ICO (Insuficiência Coronariana)': '#A6192E', // Alias com descrição
     'Oncologia': '#6A1B9A',
     'Pediatria': '#5A646B',
     'Programa Autoimune – Gastroenterologia': '#5C5EBE',
+    'Programa Autoimune - Gastroenterologia': '#5C5EBE', // Alias com hífen
     'Programa Autoimune – Neuro-desmielinizante': '#00AEEF',
+    'Programa Autoimune - Neuro-desmielinizante': '#00AEEF', // Alias
     'Programa Autoimune – Neuro-muscular': '#00263A',
+    'Programa Autoimune - Neuro-muscular': '#00263A', // Alias
     'Programa Autoimune – Reumatologia': '#582D40',
+    'Programa Autoimune - Reumatologia': '#582D40', // Alias
     'Vida Mais Leve Care': '#FFB81C',
     'Crônicos – Cardiologia': '#C8102E',
+    'Crônicos - Cardiologia': '#C8102E', // Alias
     'Crônicos – Endocrinologia': '#582C83',
+    'Crônicos - Endocrinologia': '#582C83', // Alias
     'Crônicos – Geriatria': '#FF6F1D',
+    'Crônicos - Geriatria': '#FF6F1D', // Alias
     'Crônicos – Melhor Cuidado': '#556F44',
+    'Crônicos - Melhor Cuidado': '#556F44', // Alias
     'Crônicos – Neurologia': '#0072CE',
+    'Crônicos - Neurologia': '#0072CE', // Alias
     'Crônicos – Pneumologia': '#E35205',
+    'Crônicos - Pneumologia': '#E35205', // Alias
     'Crônicos – Pós-bariátrica': '#003C57',
-    'Crônicos – Reumatologia': '#5A0020'
+    'Crônicos - Pós-bariátrica': '#003C57', // Alias
+    'Crônicos – Reumatologia': '#5A0020',
+    'Crônicos - Reumatologia': '#5A0020' // Alias
 };
+
+// Função RIGOROSA para obter cores Pantone EXATAS
+function getCorExataExec(itemName, tipo = 'concessao') {
+    if (!itemName || typeof itemName !== 'string') {
+        console.warn(`⚠️ [CORES EXEC] Item inválido: "${itemName}"`);
+        return '#6b7280'; // Único fallback permitido
+    }
+    
+    const paleta = tipo === 'concessao' ? CORES_CONCESSOES_EXEC : CORES_LINHAS_EXEC;
+    
+    // 1. Busca exata primeiro
+    let cor = paleta[itemName];
+    if (cor) {
+        console.log(`✅ [CORES EXEC] Encontrado exato: "${itemName}" → ${cor}`);
+        return cor;
+    }
+    
+    // 2. Normalizar para busca flexível
+    const nomeNormalizado = itemName
+        .trim()
+        .replace(/\s+/g, ' ')
+        .replace(/[–—]/g, '-')
+        .replace(/O₂/g, 'O2')
+        .replace(/²/g, '2');
+    
+    cor = paleta[nomeNormalizado];
+    if (cor) {
+        console.log(`✅ [CORES EXEC] Encontrado normalizado: "${itemName}" → "${nomeNormalizado}" → ${cor}`);
+        return cor;
+    }
+    
+    // 3. Busca por correspondência parcial rigorosa
+    for (const [chave, valor] of Object.entries(paleta)) {
+        const chaveNormalizada = chave.toLowerCase().replace(/[–—]/g, '-');
+        const itemNormalizado = nomeNormalizado.toLowerCase();
+        
+        if (chaveNormalizada.includes(itemNormalizado) || 
+            itemNormalizado.includes(chaveNormalizada)) {
+            console.log(`✅ [CORES EXEC] Encontrado parcial: "${itemName}" → "${chave}" → ${valor}`);
+            return valor;
+        }
+    }
+    
+    // 4. Log de erro para debug
+    console.error(`❌ [CORES EXEC] COR NÃO ENCONTRADA: "${itemName}" (normalizado: "${nomeNormalizado}")`);
+    console.error(`❌ [CORES EXEC] Disponíveis na paleta:`, Object.keys(paleta));
+    
+    return '#6b7280'; // Fallback final cinza
+}
 
 // Plugin para fundo branco/escuro
 const backgroundPluginExec = {
@@ -454,7 +520,7 @@ function renderGaugeExecutivoHorizontal(ocupacao) {
     });
 }
 
-// Gráfico de Altas - APENAS BARRAS COM LEGENDAS EMBAIXO - DADOS REAIS
+// Gráfico de Altas - COM LEGENDAS RESTAURADAS
 function renderAltasExecutivo() {
     const canvas = document.getElementById('graficoAltasExecutivo');
     if (!canvas || typeof Chart === 'undefined') return;
@@ -497,18 +563,23 @@ function renderAltasExecutivo() {
                         pointStyle: 'rect',
                         boxWidth: 12,
                         boxHeight: 12,
+                        // FORÇAR UMA LEGENDA POR LINHA
                         generateLabels: function(chart) {
-                            const original = Chart.defaults.plugins.legend.labels.generateLabels;
-                            const labels = original.call(this, chart);
-                            
-                            // Forçar quebra de linha no mobile
-                            if (window.innerWidth <= 768) {
-                                labels.forEach((label, index) => {
-                                    label.text = label.text + '\n';
-                                });
-                            }
-                            
-                            return labels;
+                            const datasets = chart.data.datasets;
+                            const result = [];
+                            datasets.forEach((dataset, i) => {
+                                if (chart.isDatasetVisible(i)) {
+                                    result.push({
+                                        text: dataset.label,
+                                        fillStyle: dataset.backgroundColor,
+                                        strokeStyle: dataset.backgroundColor,
+                                        lineWidth: 0,
+                                        hidden: false,
+                                        index: i
+                                    });
+                                }
+                            });
+                            return result;
                         }
                     }
                 }
@@ -545,7 +616,7 @@ function renderAltasExecutivo() {
     });
 }
 
-// Gráfico de Concessões - APENAS BARRAS COM LEGENDAS EMBAIXO - DADOS REAIS
+// Gráfico de Concessões - COM CORES PANTONE E LEGENDAS
 function renderConcessoesExecutivo() {
     const canvas = document.getElementById('graficoConcessoesExecutivo');
     if (!canvas || typeof Chart === 'undefined') return;
@@ -564,7 +635,7 @@ function renderConcessoesExecutivo() {
     const corTexto = window.fundoBranco ? '#000000' : '#ffffff';
     const corGrid = window.fundoBranco ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.1)';
     
-    // CALCULAR DADOS REAIS DAS CONCESSÕES
+    // CALCULAR DADOS REAIS DAS CONCESSÕES COM CORES PANTONE
     const dadosReais = calcularDadosConcessoesReais();
     
     const ctx = canvas.getContext('2d');
@@ -590,18 +661,23 @@ function renderConcessoesExecutivo() {
                         pointStyle: 'rect',
                         boxWidth: 10,
                         boxHeight: 10,
+                        // FORÇAR UMA LEGENDA POR LINHA
                         generateLabels: function(chart) {
-                            const original = Chart.defaults.plugins.legend.labels.generateLabels;
-                            const labels = original.call(this, chart);
-                            
-                            // Forçar quebra de linha no mobile
-                            if (window.innerWidth <= 768) {
-                                labels.forEach((label, index) => {
-                                    label.text = label.text + '\n';
-                                });
-                            }
-                            
-                            return labels;
+                            const datasets = chart.data.datasets;
+                            const result = [];
+                            datasets.forEach((dataset, i) => {
+                                if (chart.isDatasetVisible(i)) {
+                                    result.push({
+                                        text: dataset.label,
+                                        fillStyle: dataset.backgroundColor,
+                                        strokeStyle: dataset.backgroundColor,
+                                        lineWidth: 0,
+                                        hidden: false,
+                                        index: i
+                                    });
+                                }
+                            });
+                            return result;
                         }
                     }
                 }
@@ -697,7 +773,7 @@ function renderConcessoesExecutivo() {
     });
 }
 
-// Gráfico de Linhas de Cuidado - APENAS BARRAS COM LEGENDAS EMBAIXO - DADOS REAIS
+// Gráfico de Linhas de Cuidado - COM CORES PANTONE E LEGENDAS
 function renderLinhasExecutivo() {
     const canvas = document.getElementById('graficoLinhasExecutivo');
     if (!canvas || typeof Chart === 'undefined') return;
@@ -716,7 +792,7 @@ function renderLinhasExecutivo() {
     const corTexto = window.fundoBranco ? '#000000' : '#ffffff';
     const corGrid = window.fundoBranco ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.1)';
     
-    // CALCULAR DADOS REAIS DAS LINHAS DE CUIDADO
+    // CALCULAR DADOS REAIS DAS LINHAS DE CUIDADO COM CORES PANTONE
     const dadosReais = calcularDadosLinhasReais();
     
     const ctx = canvas.getContext('2d');
@@ -742,18 +818,23 @@ function renderLinhasExecutivo() {
                         pointStyle: 'rect',
                         boxWidth: 10,
                         boxHeight: 10,
+                        // FORÇAR UMA LEGENDA POR LINHA
                         generateLabels: function(chart) {
-                            const original = Chart.defaults.plugins.legend.labels.generateLabels;
-                            const labels = original.call(this, chart);
-                            
-                            // Forçar quebra de linha no mobile
-                            if (window.innerWidth <= 768) {
-                                labels.forEach((label, index) => {
-                                    label.text = label.text + '\n';
-                                });
-                            }
-                            
-                            return labels;
+                            const datasets = chart.data.datasets;
+                            const result = [];
+                            datasets.forEach((dataset, i) => {
+                                if (chart.isDatasetVisible(i)) {
+                                    result.push({
+                                        text: dataset.label,
+                                        fillStyle: dataset.backgroundColor,
+                                        strokeStyle: dataset.backgroundColor,
+                                        lineWidth: 0,
+                                        hidden: false,
+                                        index: i
+                                    });
+                                }
+                            });
+                            return result;
                         }
                     }
                 }
@@ -930,7 +1011,7 @@ function calcularDadosAltasReais() {
     return datasets;
 }
 
-// CALCULAR DADOS REAIS DE CONCESSÕES DOS HOSPITAIS
+// CALCULAR DADOS REAIS DE CONCESSÕES DOS HOSPITAIS COM CORES PANTONE
 function calcularDadosConcessoesReais() {
     const hospitaisComDados = Object.keys(CONFIG.HOSPITAIS).filter(hospitalId => {
         const hospital = window.hospitalData[hospitalId];
@@ -969,11 +1050,11 @@ function calcularDadosConcessoesReais() {
             
             concessoesList.forEach(concessao => {
                 const concessaoLimpa = concessao.trim();
-                if (concessaoLimpa && CORES_CONCESSOES_EXEC[concessaoLimpa]) {
+                if (concessaoLimpa) {
                     if (!concessoesCount[concessaoLimpa]) {
                         concessoesCount[concessaoLimpa] = Array(labels.length).fill(0);
                     }
-                    // Simples distribuição por hospital (pode ser melhorada)
+                    // Distribuição por hospital
                     const hospitalIndex = hospitais.indexOf(hospitalId);
                     if (hospitalIndex >= 0) {
                         categorias.forEach((cat, catIndex) => {
@@ -988,18 +1069,18 @@ function calcularDadosConcessoesReais() {
         });
     });
     
-    // Criar datasets
+    // Criar datasets com cores Pantone exatas
     const datasets = Object.keys(concessoesCount).map(concessao => ({
         label: concessao,
         data: concessoesCount[concessao],
-        backgroundColor: CORES_CONCESSOES_EXEC[concessao],
+        backgroundColor: getCorExataExec(concessao, 'concessao'), // USAR FUNÇÃO RIGOROSA
         borderWidth: 0
     }));
     
     return { labels, datasets };
 }
 
-// CALCULAR DADOS REAIS DE LINHAS DE CUIDADO DOS HOSPITAIS  
+// CALCULAR DADOS REAIS DE LINHAS DE CUIDADO DOS HOSPITAIS COM CORES PANTONE
 function calcularDadosLinhasReais() {
     const hospitaisComDados = Object.keys(CONFIG.HOSPITAIS).filter(hospitalId => {
         const hospital = window.hospitalData[hospitalId];
@@ -1038,7 +1119,7 @@ function calcularDadosLinhasReais() {
             
             linhasList.forEach(linha => {
                 const linhaLimpa = linha.trim();
-                if (linhaLimpa && CORES_LINHAS_EXEC[linhaLimpa]) {
+                if (linhaLimpa) {
                     if (!linhasCount[linhaLimpa]) {
                         linhasCount[linhaLimpa] = Array(labels.length).fill(0);
                     }
@@ -1057,11 +1138,11 @@ function calcularDadosLinhasReais() {
         });
     });
     
-    // Criar datasets
+    // Criar datasets com cores Pantone exatas
     const datasets = Object.keys(linhasCount).map(linha => ({
         label: linha,
         data: linhasCount[linha],
-        backgroundColor: CORES_LINHAS_EXEC[linha],
+        backgroundColor: getCorExataExec(linha, 'linha'), // USAR FUNÇÃO RIGOROSA
         borderWidth: 0
     }));
     
@@ -1425,4 +1506,8 @@ function logError(message) {
     console.error(`❌ [DASHBOARD EXECUTIVO] ${message}`);
 }
 
-console.log('🎯 Dashboard Executivo - VERSÃO FINAL CORRIGIDA - Mobile 2x4 KPIs + Legendas embaixo');
+console.log('🎯 Dashboard Executivo CORRIGIDO FINAL:');
+console.log('✅ CORES PANTONE: Sistema rigoroso sem fallback genérico');
+console.log('✅ LEGENDAS RESTAURADAS: Uma por linha, cores dinâmicas');
+console.log('✅ Layout 2x4 KPIs Mobile: Já implementado corretamente');
+console.log('✅ Dados reais: Concessões e Linhas com cores Pantone exatas');

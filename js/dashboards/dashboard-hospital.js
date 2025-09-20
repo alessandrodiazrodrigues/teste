@@ -100,7 +100,7 @@ window.renderDashboardHospitalar = function() {
     
     const hospitaisComDados = Object.keys(CONFIG.HOSPITAIS).filter(hospitalId => {
         const hospital = window.hospitalData[hospitalId];
-        return hospital && hospital.leitos && hospital.leitos.some(l => l.status === 'ocupado' || l.status === 'vago' || l.status === 'Em uso' || l.status === 'Vago');
+        return hospital && hospital.leitos && hospital.leitos.some(l => l.status === 'ocupado' || l.status === 'vago');
     });
     
     if (hospitaisComDados.length === 0) {
@@ -121,7 +121,7 @@ window.renderDashboardHospitalar = function() {
     container.innerHTML = `
         <div style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); min-height: 100vh; padding: 20px; color: white;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; padding: 20px; background: rgba(255, 255, 255, 0.05); border-radius: 12px; border-left: 4px solid #60a5fa;">
-                <h2 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 700;">Dashboard Hospitalar</h2>
+                <h2 style="margin: 0; color: #60a5fa; font-size: 24px; font-weight: 700;">Dashboard Hospitalar</h2>
                 <div style="display: flex; align-items: center; gap: 15px;">
                     <button id="toggleFundoBtn" class="toggle-fundo-btn" style="padding: 8px 16px; background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 8px; color: #e2e8f0; font-size: 14px; cursor: pointer; transition: all 0.3s ease; display: flex; align-items: center; gap: 8px;">
                         <span id="toggleIcon">🌙</span>
@@ -132,6 +132,13 @@ window.renderDashboardHospitalar = function() {
                         ${hospitaisComDados.length} hospital${hospitaisComDados.length > 1 ? 'ais' : ''} com dados reais
                     </div>
                 </div>
+            </div>
+            
+            <div style="background: rgba(34, 197, 94, 0.1); border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 8px; padding: 15px; margin-bottom: 25px; text-align: center;">
+                <strong style="color: #22c55e;">Dados Reais da Planilha</strong>
+                <p style="margin: 5px 0 0 0; color: #9ca3af; font-size: 14px;">
+                    Hospitais: ${hospitaisComDados.map(id => CONFIG.HOSPITAIS[id].nome).join(', ')} • Atualizado em ${hoje}
+                </p>
             </div>
             
             <div class="hospitais-container">
@@ -325,45 +332,49 @@ function renderHospitalSection(hospitalId) {
     `;
 }
 
-// Calcular KPIs de um hospital - CORREÇÃO DEFINITIVA
+// Calcular KPIs de um hospital
 function calcularKPIsHospital(hospitalId) {
     const hospital = window.hospitalData[hospitalId];
     if (!hospital || !hospital.leitos) {
         return { ocupacao: 0, total: 0, ocupados: 0, vagos: 0, altas: 0 };
     }
     
-    const total = hospital.leitos.length;
-    let ocupados = 0;
-    let altas = 0;
-    
-    // Array com TODAS as previsões válidas incluindo 96h e SP
-    const PREVISOES_VALIDAS = [
-        'Hoje Ouro', 'Hoje 2R', 'Hoje 3R',
-        '24h Ouro', '24h 2R', '24h 3R',
-        '48h', '72h', '96h', 'SP'
-    ];
+    let totalEnf = 0, totalApt = 0, totalUti = 0;
+    let ocupadosEnf = 0, ocupadosApt = 0, ocupadosUti = 0;
     
     hospital.leitos.forEach(leito => {
-        // Verificar se está ocupado
-        if (leito.status === 'ocupado') {
-            ocupados++;
-            
-            // Verificar se tem previsão de alta válida
-            // O campo vem direto do leito, não de leito.paciente
-            if (leito.prevAlta && PREVISOES_VALIDAS.includes(leito.prevAlta)) {
-                altas++;
-            }
+        const tipo = leito.tipo || leito.categoria || 'ENF';
+        
+        if (tipo.includes('ENF') || tipo.includes('Enfermaria')) {
+            totalEnf++;
+            if (leito.status === 'ocupado') ocupadosEnf++;
+        } else if (tipo.includes('APT') || tipo.includes('Apartamento')) {
+            totalApt++;
+            if (leito.status === 'ocupado') ocupadosApt++;
+        } else if (tipo.includes('UTI')) {
+            totalUti++;
+            if (leito.status === 'ocupado') ocupadosUti++;
+        } else {
+            totalEnf++;
+            if (leito.status === 'ocupado') ocupadosEnf++;
         }
     });
     
+    const total = totalEnf + totalApt + totalUti;
+    const ocupados = ocupadosEnf + ocupadosApt + ocupadosUti;
     const vagos = total - ocupados;
+    
+    const TIMELINE_ALTA = ['Hoje Ouro', 'Hoje 2R', 'Hoje 3R'];
+    const altas = hospital.leitos.filter(l => 
+        l.status === 'ocupado' && 
+        l.paciente && 
+        l.paciente.prevAlta && 
+        TIMELINE_ALTA.includes(l.paciente.prevAlta)
+    ).length;
+    
     const ocupacao = total > 0 ? Math.round((ocupados / total) * 100) : 0;
     
-    // Debug para ver os valores
-    console.log(`Hospital ${hospitalId} - Total: ${total}, Ocupados: ${ocupados}, Altas: ${altas}`);
-    
     return { ocupacao, total, ocupados, vagos, altas };
-}
 }
 
 // Plugin para fundo branco/escuro nos gráficos (NÃO usado no gauge)
@@ -418,6 +429,7 @@ function renderGaugeHospital(hospitalId) {
                 rotation: -90,
                 circumference: 180
             }
+            // NÃO adicionar plugins aqui
         });
     } catch (error) {
         logError(`Erro ao renderizar gauge ${hospitalId}:`, error);
@@ -439,7 +451,6 @@ function renderAltasHospital(hospitalId) {
     
     if (!window.chartInstances) window.chartInstances = {};
     
-    // 5 CATEGORIAS - sem SP nos gráficos
     const categorias = ['HOJE', '24H', '48H', '72H', '96H'];
     
     const dados = {
@@ -452,22 +463,19 @@ function renderAltasHospital(hospitalId) {
     };
     
     hospital.leitos.forEach(leito => {
-        const isOcupado = leito.status === 'ocupado' || leito.status === 'Em uso';
-        if (isOcupado && leito.prevAlta) {
+        if (leito.status === 'ocupado' && leito.paciente && leito.paciente.prevAlta) {
             let index = -1;
             let tipo = '';
             
-            const prevAltaNorm = leito.prevAlta.trim();
-            
-            if (prevAltaNorm === 'Hoje Ouro') { index = 0; tipo = 'Ouro'; }
-            else if (prevAltaNorm === 'Hoje 2R') { index = 0; tipo = '2R'; }
-            else if (prevAltaNorm === 'Hoje 3R') { index = 0; tipo = '3R'; }
-            else if (prevAltaNorm === '24h Ouro') { index = 1; tipo = 'Ouro'; }
-            else if (prevAltaNorm === '24h 2R') { index = 1; tipo = '2R'; }
-            else if (prevAltaNorm === '24h 3R') { index = 1; tipo = '3R'; }
-            else if (prevAltaNorm === '48h') { index = 2; tipo = '48H'; }
-            else if (prevAltaNorm === '72h') { index = 3; tipo = '72H'; }
-            else if (prevAltaNorm === '96h') { index = 4; tipo = '96H'; }
+            if (leito.paciente.prevAlta === 'Hoje Ouro') { index = 0; tipo = 'Ouro'; }
+            else if (leito.paciente.prevAlta === 'Hoje 2R') { index = 0; tipo = '2R'; }
+            else if (leito.paciente.prevAlta === 'Hoje 3R') { index = 0; tipo = '3R'; }
+            else if (leito.paciente.prevAlta === '24h Ouro') { index = 1; tipo = 'Ouro'; }
+            else if (leito.paciente.prevAlta === '24h 2R') { index = 1; tipo = '2R'; }
+            else if (leito.paciente.prevAlta === '24h 3R') { index = 1; tipo = '3R'; }
+            else if (leito.paciente.prevAlta === '48h') { index = 2; tipo = '48H'; }
+            else if (leito.paciente.prevAlta === '72h') { index = 3; tipo = '72H'; }
+            else if (leito.paciente.prevAlta === '96h') { index = 4; tipo = '96H'; }
             
             if (index >= 0 && tipo && dados[tipo]) {
                 dados[tipo][index]++;
@@ -584,29 +592,28 @@ function renderConcessoesHospital(hospitalId, type = 'bar') {
     const concessoesPorTimeline = {};
     
     hospital.leitos.forEach(leito => {
-        if (leito.status === 'ocupado' || leito.status === 'Em uso') {
-            const concessoesList = leito.concessoes || [];
-            const prevAlta = leito.prevAlta;
+        if (leito.status === 'ocupado' && leito.paciente && leito.paciente.concessoes && leito.paciente.prevAlta) {
+            const concessoesList = Array.isArray(leito.paciente.concessoes) ? 
+                leito.paciente.concessoes : 
+                String(leito.paciente.concessoes).split('|');
             
-            if (prevAlta && concessoesList.length > 0) {
-                let timelineIndex = -1;
-                if (prevAlta.includes('Hoje')) timelineIndex = 0;
-                else if (prevAlta.includes('24h')) timelineIndex = 1;
-                else if (prevAlta === '48h') timelineIndex = 2;
-                else if (prevAlta === '72h') timelineIndex = 3;
-                else if (prevAlta === '96h') timelineIndex = 4;
-                
-                if (timelineIndex >= 0) {
-                    concessoesList.forEach(concessao => {
-                        if (concessao) {
-                            const nome = concessao.trim();
-                            if (!concessoesPorTimeline[nome]) {
-                                concessoesPorTimeline[nome] = [0, 0, 0, 0, 0];
-                            }
-                            concessoesPorTimeline[nome][timelineIndex]++;
+            let timelineIndex = -1;
+            if (leito.paciente.prevAlta.includes('Hoje')) timelineIndex = 0;
+            else if (leito.paciente.prevAlta.includes('24h')) timelineIndex = 1;
+            else if (leito.paciente.prevAlta === '48h') timelineIndex = 2;
+            else if (leito.paciente.prevAlta === '72h') timelineIndex = 3;
+            else if (leito.paciente.prevAlta === '96h') timelineIndex = 4;
+            
+            if (timelineIndex >= 0) {
+                concessoesList.forEach(concessao => {
+                    if (concessao && concessao.trim()) {
+                        const nome = concessao.trim();
+                        if (!concessoesPorTimeline[nome]) {
+                            concessoesPorTimeline[nome] = [0, 0, 0, 0, 0];
                         }
-                    });
-                }
+                        concessoesPorTimeline[nome][timelineIndex]++;
+                    }
+                });
             }
         }
     });
@@ -626,6 +633,7 @@ function renderConcessoesHospital(hospitalId, type = 'bar') {
         const cor = CORES_CONCESSOES[nome] || '#007A53';
         
         if (type === 'scatter') {
+            // Para scatter, criar pontos onde há valores
             const scatterData = [];
             dados.forEach((valor, index) => {
                 if (valor > 0) {
@@ -676,6 +684,7 @@ function renderConcessoesHospital(hospitalId, type = 'bar') {
     
     const ctx = canvas.getContext('2d');
     
+    // Configurações específicas para scatter
     const scatterOptions = type === 'scatter' ? {
         scales: {
             x: {
@@ -812,29 +821,28 @@ function renderLinhasHospital(hospitalId, type = 'bar') {
     const linhasPorTimeline = {};
     
     hospital.leitos.forEach(leito => {
-        if (leito.status === 'ocupado' || leito.status === 'Em uso') {
-            const linhasList = leito.linhas || [];
-            const prevAlta = leito.prevAlta;
+        if (leito.status === 'ocupado' && leito.paciente && leito.paciente.linhas && leito.paciente.prevAlta) {
+            const linhasList = Array.isArray(leito.paciente.linhas) ? 
+                leito.paciente.linhas : 
+                String(leito.paciente.linhas).split('|');
             
-            if (prevAlta && linhasList.length > 0) {
-                let timelineIndex = -1;
-                if (prevAlta.includes('Hoje')) timelineIndex = 0;
-                else if (prevAlta.includes('24h')) timelineIndex = 1;
-                else if (prevAlta === '48h') timelineIndex = 2;
-                else if (prevAlta === '72h') timelineIndex = 3;
-                else if (prevAlta === '96h') timelineIndex = 4;
-                
-                if (timelineIndex >= 0) {
-                    linhasList.forEach(linha => {
-                        if (linha) {
-                            const nome = linha.trim();
-                            if (!linhasPorTimeline[nome]) {
-                                linhasPorTimeline[nome] = [0, 0, 0, 0, 0];
-                            }
-                            linhasPorTimeline[nome][timelineIndex]++;
+            let timelineIndex = -1;
+            if (leito.paciente.prevAlta.includes('Hoje')) timelineIndex = 0;
+            else if (leito.paciente.prevAlta.includes('24h')) timelineIndex = 1;
+            else if (leito.paciente.prevAlta === '48h') timelineIndex = 2;
+            else if (leito.paciente.prevAlta === '72h') timelineIndex = 3;
+            else if (leito.paciente.prevAlta === '96h') timelineIndex = 4;
+            
+            if (timelineIndex >= 0) {
+                linhasList.forEach(linha => {
+                    if (linha && linha.trim()) {
+                        const nome = linha.trim();
+                        if (!linhasPorTimeline[nome]) {
+                            linhasPorTimeline[nome] = [0, 0, 0, 0, 0];
                         }
-                    });
-                }
+                        linhasPorTimeline[nome][timelineIndex]++;
+                    }
+                });
             }
         }
     });
@@ -854,6 +862,7 @@ function renderLinhasHospital(hospitalId, type = 'bar') {
         const cor = CORES_LINHAS[nome] || '#ED0A72';
         
         if (type === 'scatter') {
+            // Para scatter, criar pontos onde há valores
             const scatterData = [];
             dados.forEach((valor, index) => {
                 if (valor > 0) {
@@ -904,6 +913,7 @@ function renderLinhasHospital(hospitalId, type = 'bar') {
     
     const ctx = canvas.getContext('2d');
     
+    // Configurações específicas para scatter
     const scatterOptions = type === 'scatter' ? {
         scales: {
             x: {
@@ -1264,17 +1274,4 @@ function getHospitalCSS() {
     `;
 }
 
-// Sistema de logs
-function logInfo(message) {
-    console.log(`🔷 [DASHBOARD HOSPITALAR] ${message}`);
-}
-
-function logSuccess(message) {
-    console.log(`✅ [DASHBOARD HOSPITALAR] ${message}`);
-}
-
-function logError(message, error) {
-    console.error(`❌ [DASHBOARD HOSPITALAR] ${message}`, error || '');
-}
-
-console.log('Dashboard Hospitalar - Versão Corrigida V4.0');
+console.log('Dashboard Hospitalar - Versão Final Corrigida');

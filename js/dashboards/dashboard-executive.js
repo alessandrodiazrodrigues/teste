@@ -538,7 +538,7 @@ function renderAltasExecutivo() {
             plugins: {
                 legend: {
                     display: true,
-                    position: 'left',
+                    position: 'bottom',
                     align: 'start',
                     labels: {
                         color: corTexto,
@@ -547,7 +547,20 @@ function renderAltasExecutivo() {
                         usePointStyle: true,
                         pointStyle: 'rect',
                         boxWidth: 10,
-                        boxHeight: 10
+                        boxHeight: 10,
+                        // *** CORREÇÃO: UMA LEGENDA POR LINHA ***
+                        generateLabels: function(chart) {
+                            const original = Chart.defaults.plugins.legend.labels.generateLabels;
+                            const labels = original.call(this, chart);
+                            
+                            labels.forEach((label, index) => {
+                                if (index > 0) {
+                                    label.text = '\n' + label.text;
+                                }
+                            });
+                            
+                            return labels;
+                        }
                     }
                 }
             },
@@ -643,7 +656,7 @@ function renderConcessoesExecutivo() {
             plugins: {
                 legend: {
                     display: true,
-                    position: 'left',
+                    position: 'bottom',
                     align: 'start',
                     labels: {
                         color: corTexto,
@@ -652,7 +665,20 @@ function renderConcessoesExecutivo() {
                         usePointStyle: true,
                         pointStyle: 'rect',
                         boxWidth: 8,
-                        boxHeight: 8
+                        boxHeight: 8,
+                        // *** CORREÇÃO: UMA LEGENDA POR LINHA ***
+                        generateLabels: function(chart) {
+                            const original = Chart.defaults.plugins.legend.labels.generateLabels;
+                            const labels = original.call(this, chart);
+                            
+                            labels.forEach((label, index) => {
+                                if (index > 0) {
+                                    label.text = '\n' + label.text;
+                                }
+                            });
+                            
+                            return labels;
+                        }
                     }
                 }
             },
@@ -805,7 +831,7 @@ function renderLinhasExecutivo() {
             plugins: {
                 legend: {
                     display: true,
-                    position: 'left',
+                    position: 'bottom',
                     align: 'start',
                     labels: {
                         color: corTexto,
@@ -814,7 +840,20 @@ function renderLinhasExecutivo() {
                         usePointStyle: true,
                         pointStyle: 'rect',
                         boxWidth: 8,
-                        boxHeight: 8
+                        boxHeight: 8,
+                        // *** CORREÇÃO: UMA LEGENDA POR LINHA ***
+                        generateLabels: function(chart) {
+                            const original = Chart.defaults.plugins.legend.labels.generateLabels;
+                            const labels = original.call(this, chart);
+                            
+                            labels.forEach((label, index) => {
+                                if (index > 0) {
+                                    label.text = '\n' + label.text;
+                                }
+                            });
+                            
+                            return labels;
+                        }
                     }
                 }
             },
@@ -1140,7 +1179,7 @@ function getExecutiveCSS() {
                     line-height: 1.2 !important;
                 }
                 
-                /* *** CORREÇÃO: KPIs GRID 2x4 EMBAIXO DO GAUGE *** */
+                /* *** CORREÇÃO: KPIs EM 2 COLUNAS NO MOBILE *** */
                 .executive-kpis-grid {
                     display: grid !important;
                     grid-template-columns: 1fr !important;
@@ -1152,29 +1191,23 @@ function getExecutiveCSS() {
                     grid-column: 1 !important;
                     grid-row: auto !important;
                     padding: 15px !important;
+                    margin-bottom: 15px !important;
                 }
                 
-                .gauge-container {
-                    height: 120px !important;
-                    margin: 10px 0 !important;
-                }
-                
-                .gauge-container canvas {
-                    max-height: 120px !important;
-                }
-                
-                .gauge-value {
-                    font-size: 24px !important;
-                }
-                
-                .gauge-label {
-                    font-size: 10px !important;
-                }
-                
-                /* KPIs pequenos em 2x4 */
-                .kpi-box {
+                /* Container para os 8 KPIs restantes em 2 colunas */
+                .executive-kpis-grid .kpi-box {
+                    display: inline-block !important;
+                    width: calc(50% - 7.5px) !important;
+                    margin-right: 15px !important;
+                    margin-bottom: 15px !important;
+                    vertical-align: top !important;
                     padding: 12px 8px !important;
                     min-height: 60px !important;
+                }
+                
+                /* Remover margin direita dos pares */
+                .executive-kpis-grid .kpi-box:nth-child(even) {
+                    margin-right: 0 !important;
                 }
                 
                 .kpi-value {

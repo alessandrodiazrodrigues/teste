@@ -521,7 +521,21 @@ function renderAltasHospital(hospitalId) {
                         usePointStyle: true,
                         pointStyle: 'rect',
                         boxWidth: 12,
-                        boxHeight: 12
+                        boxHeight: 12,
+                        generateLabels: function(chart) {
+                            const datasets = chart.data.datasets;
+                            return datasets.map((dataset, i) => {
+                                return {
+                                    text: dataset.label,
+                                    fillStyle: dataset.backgroundColor,
+                                    strokeStyle: dataset.backgroundColor,
+                                    lineWidth: 0,
+                                    pointStyle: 'rect',
+                                    hidden: !chart.isDatasetVisible(i),
+                                    index: i
+                                };
+                            });
+                        }
                     }
                 },
                 tooltip: {
@@ -783,7 +797,21 @@ function renderConcessoesHospital(hospitalId, type = 'bar') {
                         usePointStyle: true,
                         pointStyle: 'circle',
                         boxWidth: 10,
-                        boxHeight: 10
+                        boxHeight: 10,
+                        generateLabels: function(chart) {
+                            const datasets = chart.data.datasets;
+                            return datasets.map((dataset, i) => {
+                                return {
+                                    text: dataset.label,
+                                    fillStyle: dataset.backgroundColor || dataset.borderColor,
+                                    strokeStyle: dataset.backgroundColor || dataset.borderColor,
+                                    lineWidth: 0,
+                                    pointStyle: 'circle',
+                                    hidden: !chart.isDatasetVisible(i),
+                                    index: i
+                                };
+                            });
+                        }
                     }
                 },
                 tooltip: {
@@ -1015,7 +1043,21 @@ function renderLinhasHospital(hospitalId, type = 'bar') {
                         usePointStyle: true,
                         pointStyle: 'circle',
                         boxWidth: 10,
-                        boxHeight: 10
+                        boxHeight: 10,
+                        generateLabels: function(chart) {
+                            const datasets = chart.data.datasets;
+                            return datasets.map((dataset, i) => {
+                                return {
+                                    text: dataset.label,
+                                    fillStyle: dataset.backgroundColor || dataset.borderColor,
+                                    strokeStyle: dataset.backgroundColor || dataset.borderColor,
+                                    lineWidth: 0,
+                                    pointStyle: 'circle',
+                                    hidden: !chart.isDatasetVisible(i),
+                                    index: i
+                                };
+                            });
+                        }
                     }
                 },
                 tooltip: {
@@ -1067,7 +1109,7 @@ window.forceDataRefresh = function() {
     }
 };
 
-// *** CSS CONSOLIDADO COMPLETO ***
+// *** CSS CONSOLIDADO COMPLETO COM CORREÇÕES ***
 function getHospitalConsolidadoCSS() {
     return `
         <style id="hospitalConsolidadoCSS">
@@ -1289,70 +1331,71 @@ function getHospitalConsolidadoCSS() {
                 
                 /* Container hospitais com menos espaçamento */
                 .hospitais-container {
-                    gap: 20px !important;
+                    gap: 15px !important;
                 }
                 
-                /* Cards hospitalares com menos padding */
+                /* Cards hospitalares com bordas mínimas */
                 .hospital-card {
-                    padding: 15px !important;
-                    margin: 0 5px !important;
+                    padding: 10px !important;
+                    margin: 0 3px !important;
+                    border-radius: 8px !important;
                 }
                 
                 /* *** CORREÇÃO: KPIs EM 5 COLUNAS IGUAIS FORÇADO *** */
                 .kpis-horizontal-container {
                     display: grid !important;
                     grid-template-columns: 1fr 1fr 1fr 1fr 1fr !important;
-                    gap: 8px !important;
-                    margin-bottom: 20px !important;
+                    gap: 6px !important;
+                    margin-bottom: 15px !important;
                 }
                 
                 .kpi-box-inline {
-                    padding: 12px 6px !important;
-                    min-height: 70px !important;
+                    padding: 8px 4px !important;
+                    min-height: 60px !important;
                 }
                 
                 .kpi-value {
-                    font-size: 18px !important;
-                    margin-bottom: 4px !important;
+                    font-size: 16px !important;
+                    margin-bottom: 3px !important;
                 }
                 
                 .kpi-label {
-                    font-size: 9px !important;
+                    font-size: 8px !important;
                 }
                 
                 /* Gauge menor no mobile */
                 .kpi-gauge-box canvas {
-                    max-width: 50px !important;
-                    max-height: 25px !important;
+                    max-width: 40px !important;
+                    max-height: 20px !important;
                 }
                 
                 /* Gráficos com bordas mínimas */
                 .grafico-item {
                     padding: 8px !important;
                     margin: 0 !important;
-                    border-radius: 8px !important;
+                    border-radius: 6px !important;
                 }
                 
                 .chart-container {
                     padding: 5px !important;
-                    height: 300px !important;
+                    height: 280px !important;
                     background: rgba(0, 0, 0, 0.1) !important;
                 }
                 
                 .chart-container canvas {
-                    max-height: 290px !important;
+                    max-height: 270px !important;
                 }
                 
                 /* Header dos gráficos responsivo */
                 .chart-header {
                     flex-direction: column !important;
                     align-items: flex-start !important;
-                    gap: 8px !important;
-                    margin-bottom: 10px !important;
+                    gap: 6px !important;
+                    margin-bottom: 8px !important;
                 }
                 
                 .chart-header h4 {
-                    font-size: 13px !important;
+                    font-size: 12px !important;
                     line-height: 1.2 !important;
                 }
                 
@@ -1360,32 +1403,33 @@ function getHospitalConsolidadoCSS() {
                 .chart-controls {
                     justify-content: flex-start !important;
                     width: 100% !important;
+                    gap: 4px !important;
                 }
                 
                 .chart-btn {
-                    padding: 4px 8px !important;
-                    font-size: 9px !important;
+                    padding: 3px 6px !important;
+                    font-size: 8px !important;
                     border-radius: 3px !important;
                 }
                 
                 /* Títulos hospitalares menores */
                 .hospital-title {
-                    font-size: 15px !important;
-                    margin-bottom: 15px !important;
+                    font-size: 14px !important;
+                    margin-bottom: 12px !important;
                 }
                 
                 /* Botão toggle menor */
                 .toggle-fundo-btn {
-                    padding: 6px 12px !important;
-                    font-size: 12px !important;
-                    gap: 6px !important;
+                    padding: 4px 8px !important;
+                    font-size: 11px !important;
+                    gap: 4px !important;
                 }
             }
             
             /* =================== MOBILE PEQUENO (≤480px) =================== */
             @media (max-width: 480px) {
                 .hospital-card {
-                    padding: 10px !important;
+                    padding: 8px !important;
                     margin: 0 2px !important;
                 }
                 
@@ -1393,50 +1437,50 @@ function getHospitalConsolidadoCSS() {
                 .kpis-horizontal-container {
                     grid-template-columns: 1fr 1fr 1fr !important;
                     grid-template-rows: auto auto !important;
-                    gap: 6px !important;
+                    gap: 4px !important;
                 }
                 
                 .kpi-box-inline {
-                    padding: 10px 4px !important;
-                    min-height: 60px !important;
+                    padding: 6px 3px !important;
+                    min-height: 50px !important;
                 }
                 
                 .kpi-value {
-                    font-size: 16px !important;
+                    font-size: 14px !important;
                 }
                 
                 .kpi-label {
-                    font-size: 8px !important;
+                    font-size: 7px !important;
                 }
                 
                 .chart-container {
                     padding: 3px !important;
-                    height: 250px !important;
+                    height: 220px !important;
                 }
                 
                 .chart-header h4 {
-                    font-size: 11px !important;
+                    font-size: 10px !important;
                 }
                 
                 .chart-btn {
-                    padding: 3px 6px !important;
-                    font-size: 8px !important;
+                    padding: 2px 4px !important;
+                    font-size: 7px !important;
                 }
             }
             
             /* =================== LANDSCAPE MOBILE =================== */
             @media (max-width: 768px) and (orientation: landscape) {
                 .hospital-card {
-                    padding: 12px !important;
+                    padding: 8px !important;
                 }
                 
                 .kpis-horizontal-container {
                     grid-template-columns: 1fr 1fr 1fr 1fr 1fr !important;
-                    gap: 6px !important;
+                    gap: 4px !important;
                 }
                 
                 .chart-container {
-                    height: 220px !important;
+                    height: 200px !important;
                 }
             }
         </style>
@@ -1463,4 +1507,4 @@ function logError(message) {
     console.error(`❌ [DASHBOARD HOSPITALAR] ${message}`);
 }
 
-console.log('Dashboard Hospitalar CONSOLIDADO - Header uma linha + KPIs larguras iguais + Legendas embaixo + Bordas mínimas mobile');
+console.log('🎯 Dashboard Hospitalar CORRIGIDO - KPIs larguras iguais + Legendas uma por linha + Bordas mínimas mobile');

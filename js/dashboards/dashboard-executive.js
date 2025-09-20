@@ -1,4 +1,4 @@
-// =================== DASHBOARD EXECUTIVO - VERSÃO MOBILE CORRIGIDA ===================
+// =================== DASHBOARD EXECUTIVO - VERSÃO FINAL CONSOLIDADA ===================
 
 // Estado global para fundo branco (compartilhado com dashboard hospitalar)
 if (typeof window.fundoBranco === 'undefined') {
@@ -122,12 +122,11 @@ window.renderDashboardExecutivo = function() {
     container.innerHTML = `
         <div style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); min-height: 100vh; padding: 20px; color: white;">
             
-            <!-- *** CORREÇÃO: HEADER EM UMA LINHA *** -->
+            <!-- HEADER CORRIGIDO -->
             <div class="dashboard-header-exec" style="margin-bottom: 30px; padding: 20px; background: rgba(255, 255, 255, 0.05); border-radius: 12px; border-left: 4px solid #22c55e;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                    <h2 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 700; white-space: nowrap;">Rede Hospitalar Externa</h2>
+                    <h2 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 700;">Rede Hospitalar Externa</h2>
                 </div>
-                <!-- *** CORREÇÃO: SWITCH NA LINHA DE BAIXO *** -->
                 <div style="display: flex; justify-content: flex-end;">
                     <button id="toggleFundoBtnExec" class="toggle-fundo-btn" style="padding: 8px 16px; background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 8px; color: #e2e8f0; font-size: 14px; cursor: pointer; transition: all 0.3s ease; display: flex; align-items: center; gap: 8px;">
                         <span id="toggleIconExec">🌙</span>
@@ -136,7 +135,7 @@ window.renderDashboardExecutivo = function() {
                 </div>
             </div>
             
-            <!-- *** CORREÇÃO: KPIS GRID 2x4 *** -->
+            <!-- KPIS GRID CORRIGIDO -->
             <div class="executive-kpis-grid">
                 <div class="kpi-gauge-principal">
                     <h3 style="color: #9ca3af; font-size: 14px; margin-bottom: 15px; text-align: center;">Ocupação Geral</h3>
@@ -547,20 +546,7 @@ function renderAltasExecutivo() {
                         usePointStyle: true,
                         pointStyle: 'rect',
                         boxWidth: 10,
-                        boxHeight: 10,
-                        // *** CORREÇÃO: UMA LEGENDA POR LINHA ***
-                        generateLabels: function(chart) {
-                            const original = Chart.defaults.plugins.legend.labels.generateLabels;
-                            const labels = original.call(this, chart);
-                            
-                            labels.forEach((label, index) => {
-                                if (index > 0) {
-                                    label.text = '\n' + label.text;
-                                }
-                            });
-                            
-                            return labels;
-                        }
+                        boxHeight: 10
                     }
                 }
             },
@@ -665,20 +651,7 @@ function renderConcessoesExecutivo() {
                         usePointStyle: true,
                         pointStyle: 'rect',
                         boxWidth: 8,
-                        boxHeight: 8,
-                        // *** CORREÇÃO: UMA LEGENDA POR LINHA ***
-                        generateLabels: function(chart) {
-                            const original = Chart.defaults.plugins.legend.labels.generateLabels;
-                            const labels = original.call(this, chart);
-                            
-                            labels.forEach((label, index) => {
-                                if (index > 0) {
-                                    label.text = '\n' + label.text;
-                                }
-                            });
-                            
-                            return labels;
-                        }
+                        boxHeight: 8
                     }
                 }
             },
@@ -840,20 +813,7 @@ function renderLinhasExecutivo() {
                         usePointStyle: true,
                         pointStyle: 'rect',
                         boxWidth: 8,
-                        boxHeight: 8,
-                        // *** CORREÇÃO: UMA LEGENDA POR LINHA ***
-                        generateLabels: function(chart) {
-                            const original = Chart.defaults.plugins.legend.labels.generateLabels;
-                            const labels = original.call(this, chart);
-                            
-                            labels.forEach((label, index) => {
-                                if (index > 0) {
-                                    label.text = '\n' + label.text;
-                                }
-                            });
-                            
-                            return labels;
-                        }
+                        boxHeight: 8
                     }
                 }
             },
@@ -999,10 +959,11 @@ function criarDadosMockExecutivo() {
     };
 }
 
-// *** CSS CORRIGIDO COM RESPONSIVIDADE MOBILE ***  
+// CSS CORRIGIDO COM RESPONSIVIDADE MOBILE ESPECIFICA
 function getExecutiveCSS() {
     return `
         <style id="executiveCSS">
+            /* =================== LAYOUT DESKTOP (MANTIDO 100%) =================== */
             .executive-kpis-grid {
                 display: grid;
                 grid-template-columns: repeat(6, 1fr);
@@ -1165,9 +1126,9 @@ function getExecutiveCSS() {
                 width: 100% !important;
             }
             
-            /* *** CORREÇÕES MOBILE ESPECÍFICAS *** */
+            /* =================== MOBILE - CORREÇÕES ESPECÍFICAS =================== */
             @media (max-width: 768px) {
-                /* Header dashboard responsivo */
+                /* Header corrigido: título em linha única */
                 .dashboard-header-exec {
                     padding: 15px !important;
                     margin-bottom: 20px !important;
@@ -1175,37 +1136,40 @@ function getExecutiveCSS() {
                 
                 .dashboard-header-exec h2 {
                     font-size: 18px !important;
-                    margin-bottom: 0 !important;
-                    line-height: 1.2 !important;
+                    white-space: nowrap !important;
+                    overflow: hidden !important;
+                    text-overflow: ellipsis !important;
                 }
                 
-                /* *** CORREÇÃO: KPIs EM 2 COLUNAS NO MOBILE *** */
+                /* KPIs: CORREÇÃO PRINCIPAL - Gauge + 2x4 colunas */
                 .executive-kpis-grid {
-                    display: grid !important;
-                    grid-template-columns: 1fr !important;
+                    display: flex !important;
+                    flex-direction: column !important;
                     gap: 15px !important;
                     margin-bottom: 20px !important;
                 }
                 
+                /* Gauge ocupa linha completa */
                 .kpi-gauge-principal {
-                    grid-column: 1 !important;
+                    grid-column: auto !important;
                     grid-row: auto !important;
                     padding: 15px !important;
-                    margin-bottom: 15px !important;
+                    order: 1;
                 }
                 
-                /* Container para os 8 KPIs restantes em 2 colunas */
+                /* Container dos 8 KPIs em 2x4 */
                 .executive-kpis-grid .kpi-box {
-                    display: inline-block !important;
+                    order: 2;
                     width: calc(50% - 7.5px) !important;
+                    display: inline-block !important;
+                    vertical-align: top !important;
                     margin-right: 15px !important;
                     margin-bottom: 15px !important;
-                    vertical-align: top !important;
-                    padding: 12px 8px !important;
+                    padding: 12px !important;
                     min-height: 60px !important;
                 }
                 
-                /* Remover margin direita dos pares */
+                /* Remover margin dos pares (2º, 4º, 6º, 8º) */
                 .executive-kpis-grid .kpi-box:nth-child(even) {
                     margin-right: 0 !important;
                 }
@@ -1219,7 +1183,7 @@ function getExecutiveCSS() {
                     font-size: 10px !important;
                 }
                 
-                /* Gráficos com bordas mínimas */
+                /* Gráficos: bordas mínimas */
                 .executivo-grafico-card {
                     padding: 10px !important;
                     margin: 0 5px !important;
@@ -1268,7 +1232,7 @@ function getExecutiveCSS() {
                 }
             }
             
-            /* *** MOBILE PEQUENO - KPIs EM GRADE 2x2 *** */
+            /* Mobile pequeno: KPIs em grid 2x2 */
             @media (max-width: 480px) {
                 .executive-kpis-grid {
                     display: grid !important;
@@ -1280,7 +1244,7 @@ function getExecutiveCSS() {
                     margin-bottom: 10px !important;
                 }
                 
-                /* Grid 2x2 para os 8 KPIs restantes */
+                /* Grid 2x2 para os 8 KPIs */
                 .kpi-box:nth-child(n+2) {
                     display: inline-block !important;
                     width: calc(50% - 5px) !important;
@@ -1323,4 +1287,4 @@ function logError(message) {
     console.error(`❌ [DASHBOARD EXECUTIVO] ${message}`);
 }
 
-console.log('Dashboard Executivo - Mobile Corrigido - Header uma linha + KPIs 2x4 + Bordas mínimas + Legendas à esquerda');
+console.log('🎯 Dashboard Executivo - VERSÃO FINAL CONSOLIDADA - Desktop preservado + Mobile corrigido');

@@ -167,6 +167,7 @@ window.renderDashboardHospitalar = function() {
         </style>
     `;
     
+    // Adicionar event listener para o botão único de toggle
     const toggleBtn = document.getElementById('toggleFundoBtn');
     if (toggleBtn) {
         toggleBtn.addEventListener('click', () => {
@@ -185,7 +186,9 @@ window.renderDashboardHospitalar = function() {
                 text.textContent = 'ESCURO';
             }
             
+            // Re-renderizar todos os gráficos (exceto gauge)
             hospitaisComDados.forEach(hospitalId => {
+                // Gauge não muda com o fundo
                 renderAltasHospital(hospitalId);
                 renderConcessoesHospital(hospitalId, window.graficosState[hospitalId]?.concessoes || 'bar');
                 renderLinhasHospital(hospitalId, window.graficosState[hospitalId]?.linhas || 'bar');
@@ -202,21 +205,25 @@ window.renderDashboardHospitalar = function() {
         }
         
         setTimeout(() => {
+            // Event listeners para botões de tipos de gráficos
             document.querySelectorAll('[data-hospital][data-chart][data-type]').forEach(btn => {
                 btn.addEventListener('click', (e) => {
                     const hospital = e.target.dataset.hospital;
                     const chart = e.target.dataset.chart;
                     const type = e.target.dataset.type;
                     
+                    // Atualizar botão ativo
                     const grupo = e.target.parentElement;
                     grupo.querySelectorAll('.chart-btn').forEach(b => b.classList.remove('active'));
                     e.target.classList.add('active');
                     
+                    // Atualizar state
                     if (!window.graficosState[hospital]) {
                         window.graficosState[hospital] = { concessoes: 'bar', linhas: 'bar' };
                     }
                     window.graficosState[hospital][chart] = type;
                     
+                    // Renderizar gráfico com o tipo correto
                     if (chart === 'concessoes') {
                         renderConcessoesHospital(hospital, type);
                     } else if (chart === 'linhas') {
@@ -227,6 +234,7 @@ window.renderDashboardHospitalar = function() {
                 });
             });
             
+            // Renderizar todos os gráficos iniciais
             hospitaisComDados.forEach(hospitalId => {
                 renderGaugeHospital(hospitalId);
                 renderAltasHospital(hospitalId);
@@ -241,10 +249,10 @@ window.renderDashboardHospitalar = function() {
     aguardarChartJS();
 };
 
+// Renderizar seção de um hospital
 function renderHospitalSection(hospitalId) {
     const hospital = CONFIG.HOSPITAIS[hospitalId];
-    // *** CORREÇÃO: Chamar a função com nome único ***
-    const kpis = calcularKPIsParaHospitalDashboard(hospitalId);
+    const kpis = calcularKPIsHospital(hospitalId);
     
     return `
         <div class="hospital-card" data-hospital="${hospitalId}">
@@ -324,26 +332,47 @@ function renderHospitalSection(hospitalId) {
     `;
 }
 
-// *** CORREÇÃO: Função renomeada e lógica de "altas" corrigida ***
-function calcularKPIsParaHospitalDashboard(hospitalId) {
+// Calcular KPIs de um hospital
+function calcularKPIsHospital(hospitalId) {
     const hospital = window.hospitalData[hospitalId];
     if (!hospital || !hospital.leitos) {
         return { ocupacao: 0, total: 0, ocupados: 0, vagos: 0, altas: 0 };
     }
     
-    const total = hospital.leitos.length;
-    const ocupados = hospital.leitos.filter(l => l.status === 'ocupado').length;
+    let totalEnf = 0, totalApt = 0, totalUti = 0;
+    let ocupadosEnf = 0, ocupadosApt = 0, ocupadosUti = 0;
+    
+    hospital.leitos.forEach(leito => {
+        const tipo = leito.tipo || leito.categoria || 'ENF';
+        
+        if (tipo.includes('ENF') || tipo.includes('Enfermaria')) {
+            totalEnf++;
+            if (leito.status === 'ocupado') ocupadosEnf++;
+        } else if (tipo.includes('APT') || tipo.includes('Apartamento')) {
+            totalApt++;
+            if (leito.status === 'ocupado') ocupadosApt++;
+        } else if (tipo.includes('UTI')) {
+            totalUti++;
+            if (leito.status === 'ocupado') ocupadosUti++;
+        } else {
+            totalEnf++;
+            if (leito.status === 'ocupado') ocupadosEnf++;
+        }
+    });
+    
+    const total = totalEnf + totalApt + totalUti;
+    const ocupados = ocupadosEnf + ocupadosApt + ocupadosUti;
     const vagos = total - ocupados;
-    const ocupacao = total > 0 ? Math.round((ocupados / total) * 100) : 0;
-
-    // *** LÓGICA CORRIGIDA: Contar apenas altas previstas para HOJE, conforme manual ***
-    const TIMELINE_ALTA_HOJE = ['Hoje Ouro', 'Hoje 2R', 'Hoje 3R'];
+    
+    const TIMELINE_ALTA = ['Hoje Ouro', 'Hoje 2R', 'Hoje 3R'];
     const altas = hospital.leitos.filter(l => 
         l.status === 'ocupado' && 
         l.paciente && 
         l.paciente.prevAlta && 
-        TIMELINE_ALTA_HOJE.includes(l.paciente.prevAlta)
+        TIMELINE_ALTA.includes(l.paciente.prevAlta)
     ).length;
+    
+    const ocupacao = total > 0 ? Math.round((ocupados / total) * 100) : 0;
     
     return { ocupacao, total, ocupados, vagos, altas };
 }
@@ -365,7 +394,7 @@ function renderGaugeHospital(hospitalId) {
     const canvas = document.getElementById(`gauge${hospitalId}`);
     if (!canvas || typeof Chart === 'undefined') return;
     
-    const kpis = calcularKPIsParaHospitalDashboard(hospitalId);
+    const kpis = calcularKPIsHospital(hospitalId);
     const ocupacao = kpis.ocupacao;
     
     const chartKey = `gauge${hospitalId}`;
@@ -400,6 +429,7 @@ function renderGaugeHospital(hospitalId) {
                 rotation: -90,
                 circumference: 180
             }
+            // NÃO adicionar plugins aqui
         });
     } catch (error) {
         logError(`Erro ao renderizar gauge ${hospitalId}:`, error);
@@ -603,6 +633,7 @@ function renderConcessoesHospital(hospitalId, type = 'bar') {
         const cor = CORES_CONCESSOES[nome] || '#007A53';
         
         if (type === 'scatter') {
+            // Para scatter, criar pontos onde há valores
             const scatterData = [];
             dados.forEach((valor, index) => {
                 if (valor > 0) {
@@ -653,6 +684,7 @@ function renderConcessoesHospital(hospitalId, type = 'bar') {
     
     const ctx = canvas.getContext('2d');
     
+    // Configurações específicas para scatter
     const scatterOptions = type === 'scatter' ? {
         scales: {
             x: {
@@ -675,21 +707,53 @@ function renderConcessoesHospital(hospitalId, type = 'bar') {
                 beginAtZero: true,
                 max: limiteSuperior,
                 min: 0,
-                title: { display: true, text: 'Beneficiários', color: corTexto, font: { size: 12, weight: 600 } },
-                ticks: { stepSize: 1, color: corTexto, font: { size: 11 }, callback: function(value) { return Number.isInteger(value) && value >= 0 ? value : ''; } },
+                title: {
+                    display: true,
+                    text: 'Beneficiários',
+                    color: corTexto,
+                    font: { size: 12, weight: 600 }
+                },
+                ticks: {
+                    stepSize: 1,
+                    color: corTexto,
+                    font: { size: 11 },
+                    callback: function(value) {
+                        return Number.isInteger(value) && value >= 0 ? value : '';
+                    }
+                },
                 grid: { color: corGrid }
             }
         }
     } : {
         scales: {
-            x: { stacked: false, ticks: { color: corTexto, font: { size: 12, weight: 600 }, maxRotation: 0 }, grid: { color: corGrid } },
+            x: {
+                stacked: false,
+                ticks: {
+                    color: corTexto,
+                    font: { size: 12, weight: 600 },
+                    maxRotation: 0
+                },
+                grid: { color: corGrid }
+            },
             y: {
                 beginAtZero: true,
                 stacked: false,
                 max: limiteSuperior,
                 min: 0,
-                title: { display: true, text: 'Beneficiários', color: corTexto, font: { size: 12, weight: 600 } },
-                ticks: { stepSize: 1, color: corTexto, font: { size: 11 }, callback: function(value) { return Number.isInteger(value) && value >= 0 ? value : ''; } },
+                title: {
+                    display: true,
+                    text: 'Beneficiários',
+                    color: corTexto,
+                    font: { size: 12, weight: 600 }
+                },
+                ticks: {
+                    stepSize: 1,
+                    color: corTexto,
+                    font: { size: 11 },
+                    callback: function(value) {
+                        return Number.isInteger(value) && value >= 0 ? value : '';
+                    }
+                },
                 grid: { color: corGrid }
             }
         }
@@ -709,7 +773,15 @@ function renderConcessoesHospital(hospitalId, type = 'bar') {
                     display: true,
                     position: 'bottom',
                     align: 'start',
-                    labels: { color: corTexto, padding: 15, font: { size: 13, weight: 500 }, usePointStyle: true, pointStyle: 'circle', boxWidth: 12, boxHeight: 12 }
+                    labels: {
+                        color: corTexto,
+                        padding: 15,
+                        font: { size: 13, weight: 500 },
+                        usePointStyle: true,
+                        pointStyle: 'circle',
+                        boxWidth: 12,
+                        boxHeight: 12
+                    }
                 },
                 tooltip: {
                     backgroundColor: 'rgba(26, 31, 46, 0.95)',
@@ -790,6 +862,7 @@ function renderLinhasHospital(hospitalId, type = 'bar') {
         const cor = CORES_LINHAS[nome] || '#ED0A72';
         
         if (type === 'scatter') {
+            // Para scatter, criar pontos onde há valores
             const scatterData = [];
             dados.forEach((valor, index) => {
                 if (valor > 0) {
@@ -840,6 +913,7 @@ function renderLinhasHospital(hospitalId, type = 'bar') {
     
     const ctx = canvas.getContext('2d');
     
+    // Configurações específicas para scatter
     const scatterOptions = type === 'scatter' ? {
         scales: {
             x: {
@@ -862,21 +936,53 @@ function renderLinhasHospital(hospitalId, type = 'bar') {
                 beginAtZero: true,
                 max: limiteSuperior,
                 min: 0,
-                title: { display: true, text: 'Beneficiários', color: corTexto, font: { size: 12, weight: 600 } },
-                ticks: { stepSize: 1, color: corTexto, font: { size: 11 }, callback: function(value) { return Number.isInteger(value) && value >= 0 ? value : ''; } },
+                title: {
+                    display: true,
+                    text: 'Beneficiários',
+                    color: corTexto,
+                    font: { size: 12, weight: 600 }
+                },
+                ticks: {
+                    stepSize: 1,
+                    color: corTexto,
+                    font: { size: 11 },
+                    callback: function(value) {
+                        return Number.isInteger(value) && value >= 0 ? value : '';
+                    }
+                },
                 grid: { color: corGrid }
             }
         }
     } : {
         scales: {
-            x: { stacked: false, ticks: { color: corTexto, font: { size: 12, weight: 600 }, maxRotation: 0 }, grid: { color: corGrid } },
+            x: {
+                stacked: false,
+                ticks: {
+                    color: corTexto,
+                    font: { size: 12, weight: 600 },
+                    maxRotation: 0
+                },
+                grid: { color: corGrid }
+            },
             y: {
                 beginAtZero: true,
                 stacked: false,
                 max: limiteSuperior,
                 min: 0,
-                title: { display: true, text: 'Beneficiários', color: corTexto, font: { size: 12, weight: 600 } },
-                ticks: { stepSize: 1, color: corTexto, font: { size: 11 }, callback: function(value) { return Number.isInteger(value) && value >= 0 ? value : ''; } },
+                title: {
+                    display: true,
+                    text: 'Beneficiários',
+                    color: corTexto,
+                    font: { size: 12, weight: 600 }
+                },
+                ticks: {
+                    stepSize: 1,
+                    color: corTexto,
+                    font: { size: 11 },
+                    callback: function(value) {
+                        return Number.isInteger(value) && value >= 0 ? value : '';
+                    }
+                },
                 grid: { color: corGrid }
             }
         }
@@ -896,7 +1002,15 @@ function renderLinhasHospital(hospitalId, type = 'bar') {
                     display: true,
                     position: 'bottom',
                     align: 'start',
-                    labels: { color: corTexto, padding: 15, font: { size: 13, weight: 500 }, usePointStyle: true, pointStyle: 'circle', boxWidth: 12, boxHeight: 12 }
+                    labels: {
+                        color: corTexto,
+                        padding: 15,
+                        font: { size: 13, weight: 500 },
+                        usePointStyle: true,
+                        pointStyle: 'circle',
+                        boxWidth: 12,
+                        boxHeight: 12
+                    }
                 },
                 tooltip: {
                     backgroundColor: 'rgba(26, 31, 46, 0.95)',
@@ -922,7 +1036,16 @@ window.forceDataRefresh = function() {
     
     const container = document.getElementById('dashHospitalarContent');
     if (container) {
-        container.innerHTML = `<div style="text-align: center; padding: 50px;"><div style="color: #60a5fa; font-size: 18px;">Recarregando dados...</div></div>`;
+        container.innerHTML = `
+            <div style="text-align: center; padding: 50px;">
+                <div style="color: #60a5fa; font-size: 18px; margin-bottom: 15px;">
+                    Recarregando dados reais da API...
+                </div>
+                <div style="color: #9ca3af; font-size: 14px;">
+                    Conectando com Google Apps Script
+                </div>
+            </div>
+        `;
     }
     
     if (window.loadHospitalData) {
@@ -931,6 +1054,10 @@ window.forceDataRefresh = function() {
                 window.renderDashboardHospitalar();
             }, 1000);
         });
+    } else {
+        setTimeout(() => {
+            window.renderDashboardHospitalar();
+        }, 2000);
     }
 };
 
@@ -938,23 +1065,211 @@ window.forceDataRefresh = function() {
 function getHospitalCSS() {
     return `
         <style id="hospitalCSS">
-            .hospitais-container { display: flex; flex-direction: column; gap: 30px; }
-            .hospital-card { background: #1a1f2e; border-radius: 16px; padding: 25px; box-shadow: 0 8px 32px rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); }
-            .hospital-header { margin-bottom: 25px; }
-            .hospital-title { color: #60a5fa; font-size: 20px; font-weight: 700; text-transform: uppercase; }
-            .kpis-horizontal-container { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; }
-            .kpi-box-inline { text-align: center; }
-            .kpi-value { font-size: 28px; font-weight: 700; color: white; }
-            .kpi-label { font-size: 12px; color: #9ca3af; text-transform: uppercase; }
-            .graficos-verticais { display: flex; flex-direction: column; gap: 25px; }
-            .grafico-item { background: rgba(255,255,255,0.03); border-radius: 12px; padding: 20px; }
-            .chart-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-            .chart-header h4 { color: #e2e8f0; }
-            .chart-controls { display: flex; gap: 6px; }
-            .chart-btn { padding: 6px 12px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 4px; color: #e2e8f0; cursor: pointer; }
-            .chart-btn.active { background: #60a5fa; }
-            .chart-container { position: relative; height: 400px; }
-            @media (max-width: 768px) { .kpis-horizontal-container { grid-template-columns: 1fr; } }
+            .hospitais-container {
+                display: flex;
+                flex-direction: column;
+                gap: 30px;
+            }
+            
+            .hospital-card {
+                background: #1a1f2e;
+                border-radius: 16px;
+                padding: 25px;
+                box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                transition: all 0.3s ease;
+            }
+            
+            .hospital-card:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+            }
+            
+            .hospital-header {
+                margin-bottom: 25px;
+            }
+            
+            .hospital-title {
+                color: #60a5fa;
+                font-size: 20px;
+                font-weight: 700;
+                margin: 0 0 20px 0;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+            }
+            
+            .kpis-horizontal-container {
+                display: grid;
+                grid-template-columns: repeat(5, 1fr);
+                gap: 16px;
+                margin-bottom: 30px;
+                padding: 0;
+                background: transparent;
+                border-radius: 0;
+            }
+            
+            .kpi-box-inline {
+                background: #1a1f2e;
+                border-radius: 12px;
+                padding: 20px;
+                color: white;
+                box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                text-align: center;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                transition: all 0.3s ease;
+                min-height: 100px;
+            }
+            
+            .kpi-box-inline:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+            }
+            
+            .kpi-gauge-box {
+                position: relative;
+            }
+            
+            .kpi-gauge-box canvas {
+                margin-bottom: 8px;
+                max-width: 80px;
+                max-height: 40px;
+            }
+            
+            .kpi-value {
+                display: block;
+                font-size: 28px;
+                font-weight: 700;
+                color: white;
+                line-height: 1;
+                margin-bottom: 6px;
+            }
+            
+            .kpi-label {
+                display: block;
+                font-size: 12px;
+                color: #9ca3af;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                font-weight: 600;
+            }
+            
+            .graficos-verticais {
+                display: flex;
+                flex-direction: column;
+                gap: 25px;
+                width: 100%;
+            }
+            
+            .grafico-item {
+                width: 100%;
+                background: rgba(255, 255, 255, 0.03);
+                border-radius: 12px;
+                padding: 20px;
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                box-sizing: border-box;
+            }
+            
+            .chart-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 15px;
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+            
+            .chart-header h4 {
+                margin: 0;
+                color: #e2e8f0;
+                font-size: 16px;
+                font-weight: 600;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+            }
+            
+            .chart-controls {
+                display: flex;
+                gap: 6px;
+                flex-wrap: wrap;
+                align-items: center;
+            }
+            
+            .chart-btn {
+                padding: 6px 12px;
+                background: rgba(255, 255, 255, 0.1);
+                border: 1px solid rgba(255, 255, 255, 0.2);
+                border-radius: 4px;
+                color: #e2e8f0;
+                font-size: 11px;
+                cursor: pointer;
+                transition: all 0.2s ease;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                font-weight: 500;
+            }
+            
+            .chart-btn:hover {
+                background: rgba(255, 255, 255, 0.2);
+                border-color: #60a5fa;
+            }
+            
+            .chart-btn.active {
+                background: #60a5fa;
+                border-color: #60a5fa;
+                color: white;
+                box-shadow: 0 2px 8px rgba(96, 165, 250, 0.3);
+            }
+            
+            .chart-container {
+                position: relative;
+                height: 400px;
+                width: 100%;
+                background: rgba(0, 0, 0, 0.2);
+                border-radius: 8px;
+                padding: 15px;
+                box-sizing: border-box;
+            }
+            
+            .chart-container canvas {
+                width: 100% !important;
+                height: 100% !important;
+                max-height: 370px !important;
+            }
+            
+            @media (max-width: 1200px) {
+                .kpis-horizontal-container {
+                    grid-template-columns: repeat(3, 1fr);
+                }
+            }
+            
+            @media (max-width: 768px) {
+                .kpis-horizontal-container {
+                    grid-template-columns: 1fr;
+                    gap: 10px;
+                }
+                
+                .chart-header {
+                    flex-direction: column;
+                    align-items: flex-start;
+                }
+                
+                .chart-controls {
+                    width: 100%;
+                    justify-content: center;
+                }
+                
+                .chart-container {
+                    height: 300px;
+                }
+                
+                .chart-container canvas {
+                    max-height: 270px !important;
+                }
+            }
         </style>
     `;
 }

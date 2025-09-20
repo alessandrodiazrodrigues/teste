@@ -391,19 +391,31 @@ function calcularKPIsExecutivos(hospitaisComDados) {
 }
 
 // Calcular KPIs de um hospital
+// Calcular KPIs de um hospital
 function calcularKPIsHospital(hospitalId) {
     const hospital = window.hospitalData[hospitalId];
     if (!hospital || !hospital.leitos) {
-        return { ocupacao: 0, total: 0, ocupados: 0, vagos: 0 };
+        return { ocupacao: 0, total: 0, ocupados: 0, vagos: 0, altas: 0 };  // ADICIONADO 'altas'
     }
     
     const total = hospital.leitos.length;
     const ocupados = hospital.leitos.filter(l => 
         l.status === 'ocupado' || l.status === 'Em uso'
     ).length;
+    
+    // CALCULAR ALTAS
+    const TIMELINE_ALTA = ['Hoje Ouro', 'Hoje 2R', 'Hoje 3R'];
+    const altas = hospital.leitos.filter(l => {
+        if (l.status === 'ocupado' || l.status === 'Em uso') {
+            const prevAlta = l.prevAlta || (l.paciente && l.paciente.prevAlta);
+            return prevAlta && TIMELINE_ALTA.includes(prevAlta);
+        }
+        return false;
+    }).length;
+    
     const ocupacao = total > 0 ? Math.round((ocupados / total) * 100) : 0;
     
-    return { ocupacao, total, ocupados, vagos: total - ocupados };
+    return { ocupacao, total, ocupados, vagos: total - ocupados, altas };  // ADICIONADO 'altas'
 }
 
 // Gauge horizontal

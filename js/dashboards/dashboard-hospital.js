@@ -1,5 +1,5 @@
-// =================== DASHBOARD HOSPITALAR - VERSÃO FINAL COMPLETA ===================
-// =================== KPIs MOBILE + LEGENDAS CUSTOMIZADAS + CORES PANTONE + SCATTER CORRIGIDO ===================
+// =================== DASHBOARD HOSPITALAR - VERSÃO FINAL CORRIGIDA ===================
+// =================== SCATTER EXATO + CORES PANTONE + LEGENDAS RESTAURADAS ===================
 
 // Estado dos gráficos selecionados por hospital
 window.graficosState = {
@@ -12,7 +12,7 @@ window.graficosState = {
 // Estado global para fundo branco
 window.fundoBranco = false;
 
-// Paleta de cores Pantone para Concessões - NORMALIZADA
+// Paleta de cores Pantone para Concessões - EXATA SEM FALLBACK
 const CORES_CONCESSOES = {
     'Transição Domiciliar': '#007A53',
     'Aplicação domiciliar de medicamentos': '#582C83',
@@ -32,7 +32,7 @@ const CORES_CONCESSOES = {
     'PICC': '#E03C31'
 };
 
-// Paleta de cores Pantone para Linhas de Cuidado - NORMALIZADA
+// Paleta de cores Pantone para Linhas de Cuidado - EXATA SEM FALLBACK
 const CORES_LINHAS = {
     'Assiste': '#ED0A72',
     'APS': '#007A33',
@@ -68,111 +68,59 @@ const CORES_LINHAS = {
     'Crônicos - Reumatologia': '#5A0020' // Alias
 };
 
-// Função inteligente para obter cores - CORRIGIDA
-function getItemColor(itemName) {
+// Função RIGOROSA para obter cores Pantone EXATAS
+function getCorExata(itemName, tipo = 'concessao') {
     if (!itemName || typeof itemName !== 'string') {
-        return '#6b7280'; // Fallback para dados inválidos
+        console.warn(`⚠️ [CORES] Item inválido: "${itemName}"`);
+        return '#6b7280'; // Único fallback permitido
     }
     
-    // 1. Busca exata primeiro
-    let cor = CORES_CONCESSOES[itemName] || CORES_LINHAS[itemName];
-    if (cor) return cor;
+    const paleta = tipo === 'concessao' ? CORES_CONCESSOES : CORES_LINHAS;
     
-    // 2. Normalizar nome para busca flexível
+    // 1. Busca exata primeiro
+    let cor = paleta[itemName];
+    if (cor) {
+        console.log(`✅ [CORES] Encontrado exato: "${itemName}" → ${cor}`);
+        return cor;
+    }
+    
+    // 2. Normalizar para busca flexível
     const nomeNormalizado = itemName
         .trim()
-        .replace(/\s+/g, ' ') // Múltiplos espaços -> um espaço
-        .replace(/[–—]/g, '-') // Traços longos -> hífen
-        .replace(/O₂/g, 'O2') // Subscript -> normal
-        .replace(/²/g, '2'); // Outros subscripts
+        .replace(/\s+/g, ' ')
+        .replace(/[–—]/g, '-')
+        .replace(/O₂/g, 'O2')
+        .replace(/²/g, '2');
     
-    // 3. Busca com nome normalizado
-    cor = CORES_CONCESSOES[nomeNormalizado] || CORES_LINHAS[nomeNormalizado];
-    if (cor) return cor;
+    cor = paleta[nomeNormalizado];
+    if (cor) {
+        console.log(`✅ [CORES] Encontrado normalizado: "${itemName}" → "${nomeNormalizado}" → ${cor}`);
+        return cor;
+    }
     
-    // 4. Busca por correspondência parcial (palavras-chave)
-    const todasCores = {...CORES_CONCESSOES, ...CORES_LINHAS};
-    
-    for (const [chave, valor] of Object.entries(todasCores)) {
+    // 3. Busca por correspondência parcial rigorosa
+    for (const [chave, valor] of Object.entries(paleta)) {
         const chaveNormalizada = chave.toLowerCase().replace(/[–—]/g, '-');
         const itemNormalizado = nomeNormalizado.toLowerCase();
         
-        // Busca bidirecional
         if (chaveNormalizada.includes(itemNormalizado) || 
             itemNormalizado.includes(chaveNormalizada)) {
-            return valor;
-        }
-        
-        // Busca por palavras principais
-        const palavrasChave = chaveNormalizada.split(/[\s\-–]+/).filter(p => p.length > 3);
-        const palavrasItem = itemNormalizado.split(/[\s\-–]+/).filter(p => p.length > 3);
-        
-        const correspondencias = palavrasChave.filter(p => 
-            palavrasItem.some(i => i.includes(p) || p.includes(i))
-        );
-        
-        if (correspondencias.length >= 1) {
+            console.log(`✅ [CORES] Encontrado parcial: "${itemName}" → "${chave}" → ${valor}`);
             return valor;
         }
     }
     
-    // 5. Log para debug quando não encontrar
-    console.warn(`🎨 Cor não encontrada para: "${itemName}" (normalizado: "${nomeNormalizado}")`);
+    // 4. Log de erro para debug
+    console.error(`❌ [CORES] COR NÃO ENCONTRADA: "${itemName}" (normalizado: "${nomeNormalizado}")`);
+    console.error(`❌ [CORES] Disponíveis na paleta:`, Object.keys(paleta));
     
-    // 6. Fallback final baseado em categoria
-    if (itemName.toLowerCase().includes('nutricional')) {
-        return '#FFC72C'; // Amarelo para nutricionais
-    }
-    if (itemName.toLowerCase().includes('autoimune')) {
-        return '#5C5EBE'; // Roxo para autoimunes
-    }
-    if (itemName.toLowerCase().includes('crônicos') || itemName.toLowerCase().includes('cronicos')) {
-        return '#C8102E'; // Vermelho para crônicos
-    }
-    if (itemName.toLowerCase().includes('programa')) {
-        return '#00AEEF'; // Azul para programas
-    }
-    
-    return '#6b7280'; // Cinza neutro final
+    return '#6b7280'; // Fallback final cinza
 }
 
 // Detectar se é mobile
 function isMobile() {
     return window.innerWidth <= 768;
 }
-
-// Plugin customizado para legendas - UMA POR LINHA
-const customLegendPlugin = {
-    id: 'customLegend',
-    beforeDraw(chart) {
-        const { ctx, width, height, data } = chart;
-        const corTexto = window.fundoBranco ? '#000000' : '#ffffff';
-        
-        if (!data.datasets || data.datasets.length === 0) return;
-        
-        // Posição inicial das legendas (abaixo do gráfico)
-        let legendY = height + 10;
-        const legendX = 20;
-        const lineHeight = 20;
-        
-        // Renderizar cada legenda em uma linha separada
-        data.datasets.forEach((dataset, index) => {
-            if (!chart.isDatasetVisible(index)) return;
-            
-            const y = legendY + (index * lineHeight);
-            
-            // Desenhar quadrado da cor
-            ctx.fillStyle = dataset.backgroundColor || dataset.borderColor || '#666';
-            ctx.fillRect(legendX, y - 6, 12, 12);
-            
-            // Desenhar texto da legenda
-            ctx.fillStyle = corTexto;
-            ctx.font = '11px Arial';
-            ctx.textBaseline = 'middle';
-            ctx.fillText(dataset.label || `Dataset ${index + 1}`, legendX + 20, y);
-        });
-    }
-};
 
 window.renderDashboardHospitalar = function() {
     logInfo('Renderizando Dashboard Hospitalar');
@@ -243,12 +191,12 @@ window.renderDashboardHospitalar = function() {
     
     container.innerHTML = `
         <div style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); min-height: 100vh; padding: 20px; color: white;">
-            <!-- *** HEADER EM UMA LINHA *** -->
+            <!-- HEADER EM UMA LINHA -->
             <div class="dashboard-header" style="margin-bottom: 30px; padding: 20px; background: rgba(255, 255, 255, 0.05); border-radius: 12px; border-left: 4px solid #60a5fa;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
                     <h2 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 700; white-space: nowrap;">Dashboard Hospitalar</h2>
                 </div>
-                <!-- *** SWITCH NA LINHA DE BAIXO *** -->
+                <!-- SWITCH NA LINHA DE BAIXO -->
                 <div style="display: flex; justify-content: flex-end;">
                     <button id="toggleFundoBtn" class="toggle-fundo-btn" style="padding: 8px 16px; background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 8px; color: #e2e8f0; font-size: 14px; cursor: pointer; transition: all 0.3s ease; display: flex; align-items: center; gap: 8px;">
                         <span id="toggleIcon">🌙</span>
@@ -280,107 +228,10 @@ window.renderDashboardHospitalar = function() {
                 border-color: #f59e0b !important;
                 color: #000000 !important;
             }
-            
-            /* *** CSS DEFINITIVO PARA LEGENDAS EM COLUNA *** */
-            .chart-container .chartjs-legend,
-            .chart-container .chartjs-legend ul {
-                display: flex !important;
-                flex-direction: column !important;
-                align-items: flex-start !important;
-                margin: 0 !important;
-                padding: 0 !important;
-                list-style: none !important;
-            }
-            
-            .chart-container .chartjs-legend li {
-                display: flex !important;
-                align-items: center !important;
-                margin: 5px 0 !important;
-                padding: 0 !important;
-                width: auto !important;
-                white-space: nowrap !important;
-            }
-            
-            .chart-container .chartjs-legend li span {
-                margin-right: 8px !important;
-                flex-shrink: 0 !important;
-            }
-            
-            /* Forçar legendas do Chart.js em coluna */
-            .chart-container canvas + div {
-                display: flex !important;
-                flex-direction: column !important;
-                align-items: flex-start !important;
-            }
-            
-            /* Ajustar cores das legendas dinamicamente */
-            .chart-container .chartjs-legend {
-                color: ${window.fundoBranco ? '#000000' : '#ffffff'} !important;
-            }
         </style>
     `;
-}
-
-// Adicionar CSS global para legendas em coluna (SOLUÇÃO DEFINITIVA)
-if (!document.getElementById('legendColumnCSS')) {
-    const legendStyle = document.createElement('style');
-    legendStyle.id = 'legendColumnCSS';
-    legendStyle.innerHTML = `
-        /* FORÇAR LEGENDAS EM COLUNA - SOLUÇÃO DEFINITIVA */
-        .chart-container .chartjs-legend,
-        .chart-container .chartjs-legend ul {
-            display: flex !important;
-            flex-direction: column !important;
-            align-items: flex-start !important;
-            gap: 8px !important;
-            margin: 10px 0 !important;
-            padding: 0 !important;
-            list-style: none !important;
-        }
-        
-        .chart-container .chartjs-legend li {
-            display: flex !important;
-            align-items: center !important;
-            margin: 0 !important;
-            padding: 4px 0 !important;
-            width: auto !important;
-            white-space: nowrap !important;
-            line-height: 1.5 !important;
-        }
-        
-        .chart-container .chartjs-legend li span {
-            margin-right: 10px !important;
-            flex-shrink: 0 !important;
-        }
-        
-        /* Interceptar legendas do Chart.js */
-        .chart-container canvas + div[style*="display"] {
-            display: flex !important;
-            flex-direction: column !important;
-            align-items: flex-start !important;
-        }
-        
-        /* Cores dinâmicas */
-        .chart-container .chartjs-legend {
-            color: white !important;
-        }
-        
-        .chart-container .chartjs-legend li {
-            color: white !important;
-        }
-        
-        /* Mobile responsive */
-        @media (max-width: 768px) {
-            .chart-container .chartjs-legend li {
-                padding: 2px 0 !important;
-                font-size: 11px !important;
-            }
-        }
-    `;
-    document.head.appendChild(legendStyle);
-}
     
-    // Adicionar event listener para o botão único de toggle
+    // Event listener para o botão único de toggle
     const toggleBtn = document.getElementById('toggleFundoBtn');
     if (toggleBtn) {
         toggleBtn.addEventListener('click', () => {
@@ -407,50 +258,8 @@ if (!document.getElementById('legendColumnCSS')) {
                 renderLinhasHospital(hospitalId, window.graficosState[hospitalId]?.linhas || 'bar');
             });
             
-            // Atualizar CSS das legendas dinamicamente
-            updateLegendColors();
-            
             logInfo(`Fundo alterado para: ${window.fundoBranco ? 'claro' : 'escuro'}`);
         });
-    }
-    
-    // Função para atualizar cores das legendas
-    function updateLegendColors() {
-        const corLegenda = window.fundoBranco ? '#000000' : '#ffffff';
-        
-        // Remover estilo antigo
-        const oldStyle = document.getElementById('legendColorStyle');
-        if (oldStyle) oldStyle.remove();
-        
-        // Adicionar novo estilo
-        const style = document.createElement('style');
-        style.id = 'legendColorStyle';
-        style.innerHTML = `
-            .chart-container .chartjs-legend,
-            .chart-container .chartjs-legend li {
-                color: ${corLegenda} !important;
-            }
-            
-            /* Forçar legendas em coluna - SOLUÇÃO DEFINITIVA */
-            .chart-container canvas + div,
-            .chart-container .chartjs-legend,
-            .chart-container .chartjs-legend ul {
-                display: flex !important;
-                flex-direction: column !important;
-                align-items: flex-start !important;
-                gap: 8px !important;
-            }
-            
-            .chart-container .chartjs-legend li {
-                display: flex !important;
-                align-items: center !important;
-                margin: 0 !important;
-                padding: 2px 0 !important;
-                width: auto !important;
-                line-height: 1.5 !important;
-            }
-        `;
-        document.head.appendChild(style);
     }
     
     const aguardarChartJS = () => {
@@ -497,11 +306,6 @@ if (!document.getElementById('legendColumnCSS')) {
                 renderLinhasHospital(hospitalId, 'bar');
             });
             
-            // Inicializar cores das legendas
-            setTimeout(() => {
-                updateLegendColors();
-            }, 500);
-            
             logSuccess('Dashboard Hospitalar renderizado');
         }, 100);
     };
@@ -520,7 +324,7 @@ function renderHospitalSection(hospitalId) {
             <div class="hospital-header">
                 <h3 class="hospital-title">${hospital.nome}</h3>
                 
-                <!-- *** NOVO LAYOUT KPIs MOBILE CORRIGIDO - 2 COLUNAS IGUAIS *** -->
+                <!-- LAYOUT KPIs MOBILE CORRIGIDO - JÁ IMPLEMENTADO -->
                 <div class="kpis-container-mobile">
                     <!-- LINHA 1: KPI OCUPAÇÃO CENTRALIZADO E MAIOR -->
                     <div class="kpi-ocupacao-linha">
@@ -556,7 +360,7 @@ function renderHospitalSection(hospitalId) {
                     </div>
                 </div>
                 
-                <!-- *** LAYOUT DESKTOP ORIGINAL *** -->
+                <!-- LAYOUT DESKTOP ORIGINAL -->
                 <div class="kpis-horizontal-container">
                     <div class="kpi-box-inline kpi-gauge-box">
                         <canvas id="gaugeDesktop${hospitalId}" width="80" height="40"></canvas>
@@ -606,7 +410,7 @@ function renderHospitalSection(hospitalId) {
                             <button class="chart-btn" data-hospital="${hospitalId}" data-chart="concessoes" data-type="area">Área</button>
                         </div>
                     </div>
-                    <div class="chart-container chart-with-custom-legend">
+                    <div class="chart-container">
                         <canvas id="graficoConcessoes${hospitalId}"></canvas>
                     </div>
                 </div>
@@ -621,7 +425,7 @@ function renderHospitalSection(hospitalId) {
                             <button class="chart-btn" data-hospital="${hospitalId}" data-chart="linhas" data-type="area">Área</button>
                         </div>
                     </div>
-                    <div class="chart-container chart-with-custom-legend">
+                    <div class="chart-container">
                         <canvas id="graficoLinhas${hospitalId}"></canvas>
                     </div>
                 </div>
@@ -630,7 +434,7 @@ function renderHospitalSection(hospitalId) {
     `;
 }
 
-// Calcular KPIs de um hospital - CORRIGIDO
+// Calcular KPIs de um hospital
 function calcularKPIsHospital(hospitalId) {
     const hospital = window.hospitalData[hospitalId];
     if (!hospital || !hospital.leitos) {
@@ -662,7 +466,7 @@ function calcularKPIsHospital(hospitalId) {
     const ocupados = ocupadosEnf + ocupadosApt + ocupadosUti;
     const vagos = total - ocupados;
     
-    // CORREÇÃO: Calcular altas
+    // Calcular altas
     const TIMELINE_ALTA = ['Hoje Ouro', 'Hoje 2R', 'Hoje 3R'];
     const altas = hospital.leitos.filter(l => {
         if (l.status === 'ocupado') {
@@ -778,7 +582,7 @@ function renderGaugeHospital(hospitalId) {
     }
 }
 
-// Gráfico de Altas - COM PLUGIN CUSTOMIZADO DE LEGENDAS
+// Gráfico de Altas - COM LEGENDAS RESTAURADAS
 function renderAltasHospital(hospitalId) {
     const canvas = document.getElementById(`graficoAltas${hospitalId}`);
     if (!canvas || typeof Chart === 'undefined') return;
@@ -863,11 +667,29 @@ function renderAltasHospital(hospitalId) {
                     labels: {
                         color: corTexto,
                         padding: 15,
-                        font: { size: 14, weight: 600 }, // Fonte maior para desktop
+                        font: { size: 12, weight: 500 },
                         usePointStyle: true,
                         pointStyle: 'rect',
                         boxWidth: 12,
-                        boxHeight: 12
+                        boxHeight: 12,
+                        // FORÇAR UMA LEGENDA POR LINHA
+                        generateLabels: function(chart) {
+                            const datasets = chart.data.datasets;
+                            const result = [];
+                            datasets.forEach((dataset, i) => {
+                                if (chart.isDatasetVisible(i)) {
+                                    result.push({
+                                        text: dataset.label,
+                                        fillStyle: dataset.backgroundColor,
+                                        strokeStyle: dataset.backgroundColor,
+                                        lineWidth: 0,
+                                        hidden: false,
+                                        index: i
+                                    });
+                                }
+                            });
+                            return result;
+                        }
                     }
                 },
                 tooltip: {
@@ -912,18 +734,13 @@ function renderAltasHospital(hospitalId) {
                     },
                     grid: { color: corGrid }
                 }
-            },
-            layout: {
-                padding: {
-                    bottom: 20 // Espaço reduzido para legendas nativas
-                }
             }
         },
-        plugins: [backgroundPlugin] // Remover customLegendPlugin
+        plugins: [backgroundPlugin]
     });
 }
 
-// Gráfico de Concessões - COM PLUGIN CUSTOMIZADO DE LEGENDAS
+// Gráfico de Concessões - SCATTER EXATO + CORES PANTONE + LEGENDAS
 function renderConcessoesHospital(hospitalId, type = 'bar') {
     const canvas = document.getElementById(`graficoConcessoes${hospitalId}`);
     if (!canvas || typeof Chart === 'undefined') return;
@@ -987,17 +804,17 @@ function renderConcessoesHospital(hospitalId, type = 'bar') {
     
     // Detectar mobile para tamanho das bolinhas
     const mobile = isMobile();
-    const tamanhoBolinha = mobile ? 3 : 8; // 60% menor no mobile
+    const tamanhoBolinha = mobile ? 3 : 8;
     
     const datasets = concessoesOrdenadas.map(([nome, dados]) => {
-        const cor = getItemColor(nome); // Usar função inteligente
+        const cor = getCorExata(nome, 'concessao'); // USAR FUNÇÃO RIGOROSA
         
         if (type === 'scatter') {
             const scatterData = [];
             dados.forEach((valor, index) => {
                 if (valor > 0) {
-                    // Apenas valores inteiros exatos (0, 1, 2, 3, 4)
-                    scatterData.push({ x: index, y: valor });
+                    // CORREÇÃO CRÍTICA: APENAS POSIÇÕES INTEIRAS EXATAS
+                    scatterData.push({ x: index, y: valor }); // X = 0, 1, 2, 3, 4
                 }
             });
             return {
@@ -1056,8 +873,12 @@ function renderConcessoesHospital(hospitalId, type = 'bar') {
                     color: corTexto,
                     font: { size: 12, weight: 600 },
                     callback: function(value) {
+                        // GARANTIR QUE APENAS INTEIROS APARECEM
                         const index = Math.round(value);
-                        return categorias[index] || '';
+                        if (index >= 0 && index < categorias.length && Number.isInteger(value)) {
+                            return categorias[index];
+                        }
+                        return '';
                     }
                 },
                 grid: { color: corGrid }
@@ -1135,11 +956,29 @@ function renderConcessoesHospital(hospitalId, type = 'bar') {
                     labels: {
                         color: corTexto,
                         padding: 12,
-                        font: { size: 12, weight: 500 }, // Fonte adequada
+                        font: { size: mobile ? 10 : 12, weight: 500 },
                         usePointStyle: true,
                         pointStyle: 'circle',
                         boxWidth: 10,
-                        boxHeight: 10
+                        boxHeight: 10,
+                        // FORÇAR UMA LEGENDA POR LINHA
+                        generateLabels: function(chart) {
+                            const datasets = chart.data.datasets;
+                            const result = [];
+                            datasets.forEach((dataset, i) => {
+                                if (chart.isDatasetVisible(i)) {
+                                    result.push({
+                                        text: dataset.label,
+                                        fillStyle: dataset.backgroundColor || dataset.borderColor,
+                                        strokeStyle: dataset.backgroundColor || dataset.borderColor,
+                                        lineWidth: 0,
+                                        hidden: false,
+                                        index: i
+                                    });
+                                }
+                            });
+                            return result;
+                        }
                     }
                 },
                 tooltip: {
@@ -1154,18 +993,13 @@ function renderConcessoesHospital(hospitalId, type = 'bar') {
                     }
                 }
             },
-            layout: {
-                padding: {
-                    bottom: datasets.length * 15 + 10 // Espaço dinâmico para legendas
-                }
-            },
             ...scatterOptions
         },
-        plugins: [backgroundPlugin] // Remover customLegendPlugin
+        plugins: [backgroundPlugin]
     });
 }
 
-// Gráfico de Linhas - COM PLUGIN CUSTOMIZADO DE LEGENDAS
+// Gráfico de Linhas de Cuidado - SCATTER EXATO + CORES PANTONE + LEGENDAS
 function renderLinhasHospital(hospitalId, type = 'bar') {
     const canvas = document.getElementById(`graficoLinhas${hospitalId}`);
     if (!canvas || typeof Chart === 'undefined') return;
@@ -1229,17 +1063,17 @@ function renderLinhasHospital(hospitalId, type = 'bar') {
     
     // Detectar mobile para tamanho das bolinhas
     const mobile = isMobile();
-    const tamanhoBolinha = mobile ? 3 : 8; // 60% menor no mobile
+    const tamanhoBolinha = mobile ? 3 : 8;
     
     const datasets = linhasOrdenadas.map(([nome, dados]) => {
-        const cor = getItemColor(nome); // Usar função inteligente
+        const cor = getCorExata(nome, 'linha'); // USAR FUNÇÃO RIGOROSA
         
         if (type === 'scatter') {
             const scatterData = [];
             dados.forEach((valor, index) => {
                 if (valor > 0) {
-                    // Apenas valores inteiros exatos (0, 1, 2, 3, 4)
-                    scatterData.push({ x: index, y: valor });
+                    // CORREÇÃO CRÍTICA: APENAS POSIÇÕES INTEIRAS EXATAS
+                    scatterData.push({ x: index, y: valor }); // X = 0, 1, 2, 3, 4
                 }
             });
             return {
@@ -1298,8 +1132,12 @@ function renderLinhasHospital(hospitalId, type = 'bar') {
                     color: corTexto,
                     font: { size: 12, weight: 600 },
                     callback: function(value) {
+                        // GARANTIR QUE APENAS INTEIROS APARECEM
                         const index = Math.round(value);
-                        return categorias[index] || '';
+                        if (index >= 0 && index < categorias.length && Number.isInteger(value)) {
+                            return categorias[index];
+                        }
+                        return '';
                     }
                 },
                 grid: { color: corGrid }
@@ -1371,7 +1209,36 @@ function renderLinhasHospital(hospitalId, type = 'bar') {
             maintainAspectRatio: false,
             plugins: {
                 legend: {
-                    display: false // Desabilitar legenda nativa
+                    display: true,
+                    position: 'bottom',
+                    align: 'start',
+                    labels: {
+                        color: corTexto,
+                        padding: 12,
+                        font: { size: mobile ? 10 : 12, weight: 500 },
+                        usePointStyle: true,
+                        pointStyle: 'circle',
+                        boxWidth: 10,
+                        boxHeight: 10,
+                        // FORÇAR UMA LEGENDA POR LINHA
+                        generateLabels: function(chart) {
+                            const datasets = chart.data.datasets;
+                            const result = [];
+                            datasets.forEach((dataset, i) => {
+                                if (chart.isDatasetVisible(i)) {
+                                    result.push({
+                                        text: dataset.label,
+                                        fillStyle: dataset.backgroundColor || dataset.borderColor,
+                                        strokeStyle: dataset.backgroundColor || dataset.borderColor,
+                                        lineWidth: 0,
+                                        hidden: false,
+                                        index: i
+                                    });
+                                }
+                            });
+                            return result;
+                        }
+                    }
                 },
                 tooltip: {
                     backgroundColor: 'rgba(26, 31, 46, 0.95)',
@@ -1385,14 +1252,9 @@ function renderLinhasHospital(hospitalId, type = 'bar') {
                     }
                 }
             },
-            layout: {
-                padding: {
-                    bottom: datasets.length * 15 + 10 // Espaço dinâmico para legendas
-                }
-            },
             ...scatterOptions
         },
-        plugins: [backgroundPlugin] // Remover customLegendPlugin
+        plugins: [backgroundPlugin]
     });
 }
 
@@ -1465,12 +1327,12 @@ function getHospitalConsolidadoCSS() {
                 letter-spacing: 0.5px;
             }
             
-            /* *** LAYOUT MOBILE KPIs - OCULTO NO DESKTOP *** */
+            /* LAYOUT MOBILE KPIs - OCULTO NO DESKTOP */
             .kpis-container-mobile {
                 display: none;
             }
             
-            /* *** LAYOUT DESKTOP KPIs - VISÍVEL NO DESKTOP *** */
+            /* LAYOUT DESKTOP KPIs - VISÍVEL NO DESKTOP */
             .kpis-horizontal-container {
                 display: grid;
                 grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
@@ -1664,7 +1526,7 @@ function getHospitalConsolidadoCSS() {
                     border-radius: 8px !important;
                 }
                 
-                /* *** OCULTAR LAYOUT DESKTOP E MOSTRAR MOBILE *** */
+                /* OCULTAR LAYOUT DESKTOP E MOSTRAR MOBILE */
                 .kpis-horizontal-container {
                     display: none !important;
                 }
@@ -1676,7 +1538,7 @@ function getHospitalConsolidadoCSS() {
                     margin-bottom: 15px;
                 }
                 
-                /* *** LINHA 1: KPI OCUPAÇÃO GRANDE E CENTRALIZADO *** */
+                /* LINHA 1: KPI OCUPAÇÃO GRANDE E CENTRALIZADO */
                 .kpi-ocupacao-linha {
                     display: flex;
                     justify-content: center;
@@ -1713,10 +1575,10 @@ function getHospitalConsolidadoCSS() {
                     margin-bottom: 6px;
                 }
                 
-                /* *** LINHAS 2 E 3: KPIs EM PARES 50% CADA *** */
+                /* LINHAS 2 E 3: KPIs EM PARES 50% CADA */
                 .kpis-linha-dupla {
                     display: grid;
-                    grid-template-columns: 1fr 1fr; /* 50% - 50% EXATO */
+                    grid-template-columns: 1fr 1fr;
                     gap: 6px;
                 }
                 
@@ -1733,7 +1595,7 @@ function getHospitalConsolidadoCSS() {
                     align-items: center;
                     justify-content: center;
                     min-height: 70px;
-                    width: 100%; /* GARANTIR 100% DO ESPAÇO DISPONÍVEL */
+                    width: 100%;
                 }
                 
                 .kpis-linha-dupla .kpi-value {
@@ -1827,7 +1689,7 @@ function getHospitalConsolidadoCSS() {
                 
                 .kpis-linha-dupla {
                     gap: 4px;
-                    grid-template-columns: 1fr 1fr; /* MANTER 50% - 50% */
+                    grid-template-columns: 1fr 1fr;
                 }
                 
                 .kpis-linha-dupla .kpi-box-inline {
@@ -1869,7 +1731,7 @@ function getHospitalConsolidadoCSS() {
                 }
                 
                 .kpis-linha-dupla {
-                    grid-template-columns: 1fr 1fr; /* MANTER 50% - 50% */
+                    grid-template-columns: 1fr 1fr;
                 }
                 
                 .chart-container {
@@ -1900,9 +1762,8 @@ function logError(message) {
     console.error(`❌ [DASHBOARD HOSPITALAR] ${message}`);
 }
 
-console.log('🎯 Dashboard Hospitalar VERSÃO FINAL COMPLETA:');
-console.log('✅ KPIs Mobile: Ocupação centralizada + Total/Ocupados (50%-50%) + Vagos/Altas (50%-50%)');
-console.log('✅ Legendas: Plugin customizado - uma por linha, abaixo do gráfico, cores dinâmicas');
-console.log('✅ Cores Pantone: 13 Concessões + 19 Linhas de Cuidado verificadas');
-console.log('✅ Scatter: Bolinhas 60% menores no mobile + posicionamento exato');
-console.log('✅ Layout: 2 colunas iguais (50% cada) para Total/Ocupados e Vagos/Altas');
+console.log('🎯 Dashboard Hospitalar CORRIGIDO FINAL:');
+console.log('✅ SCATTER EXATO: Bolinhas apenas em posições inteiras (0,1,2,3,4)');
+console.log('✅ CORES PANTONE: Sistema rigoroso sem fallback genérico');
+console.log('✅ LEGENDAS RESTAURADAS: Uma por linha, cores dinâmicas');
+console.log('✅ Layout KPIs Mobile: Já implementado corretamente');

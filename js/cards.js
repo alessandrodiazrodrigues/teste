@@ -54,11 +54,11 @@ window.LINHAS_CUIDADO_LIST = [
 
 window.PPS_OPTIONS = ['10%', '20%', '30%', '40%', '50%', '60%', '70%', '80%', '90%', '100%'];
 
-// *** V4.0: TIMELINE CORRIGIDA - 9 OPÇÕES ***
+// *** V4.0: TIMELINE CORRIGIDA - 10 OPÇÕES ***
 window.PREVISAO_ALTA_OPTIONS = [
     'Hoje Ouro', 'Hoje 2R', 'Hoje 3R',
     '24h Ouro', '24h 2R', '24h 3R', 
-    '48h', '72h', 'SP'
+    '48h', '72h', '96h', 'SP'
 ];
 
 // =================== FUNÇÃO: SELECT HOSPITAL ===================
@@ -172,7 +172,6 @@ function createCard(leito, hospitalNome) {
     
     // HTML do Card (layout 3x3 mantido)
     card.innerHTML = `
-        <!-- LINHA 1: Hospital / Leito / Tipo -->
         <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 12px;">
             <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 10px; min-height: 50px; display: flex; flex-direction: column; justify-content: center;">
                 <div style="font-size: 10px; color: rgba(255,255,255,0.7); font-weight: 600; text-transform: uppercase; margin-bottom: 3px;">HOSPITAL</div>
@@ -191,7 +190,6 @@ function createCard(leito, hospitalNome) {
             </div>
         </div>
 
-        <!-- LINHA 2: Iniciais / Matrícula / Idade -->
         <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 12px;">
             <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 10px; min-height: 50px; display: flex; flex-direction: column; justify-content: center;">
                 <div style="font-size: 10px; color: rgba(255,255,255,0.7); font-weight: 600; text-transform: uppercase; margin-bottom: 3px;">INICIAIS</div>
@@ -209,7 +207,6 @@ function createCard(leito, hospitalNome) {
             </div>
         </div>
 
-        <!-- LINHA 3: PPS / SPICT-BR / Previsão de Alta -->
         <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 15px;">
             <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 10px; min-height: 50px; display: flex; flex-direction: column; justify-content: center;">
                 <div style="font-size: 10px; color: rgba(255,255,255,0.7); font-weight: 600; text-transform: uppercase; margin-bottom: 3px;">PPS</div>
@@ -227,7 +224,6 @@ function createCard(leito, hospitalNome) {
             </div>
         </div>
 
-        <!-- SEÇÃO 4: CONCESSÕES PREVISTAS NA ALTA V4.0 -->
         <div class="card-section" style="margin-bottom: 15px;">
             <div class="section-title" style="font-size: 11px; color: #ffffff; background: #60a5fa; padding: 8px; border-radius: 4px; margin-bottom: 8px; text-transform: uppercase; font-weight: 700;">
                 CONCESSÕES PREVISTAS NA ALTA V4.0
@@ -240,7 +236,6 @@ function createCard(leito, hospitalNome) {
             </div>
         </div>
 
-        <!-- SEÇÃO 5: LINHA DE CUIDADOS PROPOSTA NA ALTA V4.0 -->
         <div class="card-section" style="margin-bottom: 15px;">
             <div class="section-title" style="font-size: 11px; color: #ffffff; background: #60a5fa; padding: 8px; border-radius: 4px; margin-bottom: 8px; text-transform: uppercase; font-weight: 700;">
                 LINHA DE CUIDADOS PROPOSTA NA ALTA V4.0
@@ -253,7 +248,6 @@ function createCard(leito, hospitalNome) {
             </div>
         </div>
 
-        <!-- SEÇÃO 6: ADMISSÃO E TEMPO DE INTERNAÇÃO -->
         <div style="margin-bottom: 15px;">
             <div style="display: flex; justify-content: flex-start; align-items: center; gap: 30px; margin-bottom: 12px;">
                 <div>
@@ -270,7 +264,6 @@ function createCard(leito, hospitalNome) {
             </div>
         </div>
         
-        <!-- BOTÕES DE AÇÃO -->
         <div style="display: flex; justify-content: flex-end; gap: 8px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.1);">
             ${isVago 
                 ? `<button class="btn-action" data-action="admitir" data-leito="${numeroLeito}" style="padding: 10px 20px; background: #3b82f6; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; text-transform: uppercase; font-size: 12px;">ADMITIR</button>`
@@ -382,7 +375,6 @@ function createAdmissaoForm(hospitalNome, leitoNumero) {
                 <br><small style="color: #9ca3af;">Sistema V4.0 - Arrays diretos sem parsing</small>
             </div>
             
-            <!-- Dados Básicos -->
             <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 15px; margin-bottom: 20px;">
                 <div>
                     <label style="display: block; margin-bottom: 5px; color: #e2e8f0; font-weight: 600;">NOME COMPLETO</label>
@@ -398,7 +390,6 @@ function createAdmissaoForm(hospitalNome, leitoNumero) {
                 </div>
             </div>
             
-            <!-- Dados Clínicos -->
             <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px;">
                 <div>
                     <label style="display: block; margin-bottom: 5px; color: #e2e8f0; font-weight: 600;">PPS</label>
@@ -422,7 +413,6 @@ function createAdmissaoForm(hospitalNome, leitoNumero) {
                 </div>
             </div>
             
-            <!-- Concessões V4.0 -->
             <div style="margin-bottom: 20px;">
                 <div style="background: rgba(96,165,250,0.1); padding: 10px 15px; border-radius: 6px; margin-bottom: 10px;">
                     <div style="font-size: 11px; color: #ffffff; text-transform: uppercase; font-weight: 700;">
@@ -439,7 +429,6 @@ function createAdmissaoForm(hospitalNome, leitoNumero) {
                 </div>
             </div>
             
-            <!-- Linhas de Cuidado V4.0 -->
             <div style="margin-bottom: 30px;">
                 <div style="background: rgba(96,165,250,0.1); padding: 10px 15px; border-radius: 6px; margin-bottom: 10px;">
                     <div style="font-size: 11px; color: #ffffff; text-transform: uppercase; font-weight: 700;">
@@ -456,7 +445,6 @@ function createAdmissaoForm(hospitalNome, leitoNumero) {
                 </div>
             </div>
             
-            <!-- Botões -->
             <div style="display: flex; justify-content: flex-end; gap: 12px; padding: 20px; border-top: 1px solid rgba(255,255,255,0.1);">
                 <button class="btn-cancelar" style="padding: 12px 30px; background: rgba(255,255,255,0.1); color: #ffffff; border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; font-weight: 600; text-transform: uppercase; cursor: pointer;">CANCELAR</button>
                 <button class="btn-salvar" style="padding: 12px 30px; background: #3b82f6; color: #ffffff; border: none; border-radius: 8px; font-weight: 600; text-transform: uppercase; cursor: pointer;">SALVAR</button>
@@ -490,7 +478,6 @@ function createAtualizacaoForm(hospitalNome, leitoNumero, dadosLeito) {
                 <br><small style="color: #9ca3af;">V4.0 - Arrays diretos (${concessoesAtuais.length} concessões, ${linhasAtuais.length} linhas)</small>
             </div>
             
-            <!-- Dados Básicos (alguns readonly) -->
             <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 20px;">
                 <div>
                     <label style="display: block; margin-bottom: 5px; color: #e2e8f0; font-weight: 600;">INICIAIS</label>
@@ -506,7 +493,6 @@ function createAtualizacaoForm(hospitalNome, leitoNumero, dadosLeito) {
                 </div>
             </div>
             
-            <!-- Dados Clínicos Editáveis -->
             <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px;">
                 <div>
                     <label style="display: block; margin-bottom: 5px; color: #e2e8f0; font-weight: 600;">PPS</label>
@@ -530,7 +516,6 @@ function createAtualizacaoForm(hospitalNome, leitoNumero, dadosLeito) {
                 </div>
             </div>
             
-            <!-- *** V4.0: CONCESSÕES COM ARRAYS DIRETOS *** -->
             <div style="margin-bottom: 20px;">
                 <div style="background: rgba(96,165,250,0.1); padding: 10px 15px; border-radius: 6px; margin-bottom: 10px;">
                     <div style="font-size: 11px; color: #ffffff; text-transform: uppercase; font-weight: 700;">
@@ -550,7 +535,6 @@ function createAtualizacaoForm(hospitalNome, leitoNumero, dadosLeito) {
                 </div>
             </div>
             
-            <!-- *** V4.0: LINHAS COM ARRAYS DIRETOS *** -->
             <div style="margin-bottom: 20px;">
                 <div style="background: rgba(96,165,250,0.1); padding: 10px 15px; border-radius: 6px; margin-bottom: 10px;">
                     <div style="font-size: 11px; color: #ffffff; text-transform: uppercase; font-weight: 700;">
@@ -570,14 +554,12 @@ function createAtualizacaoForm(hospitalNome, leitoNumero, dadosLeito) {
                 </div>
             </div>
             
-            <!-- Tempo de Internação -->
             ${tempoInternacao ? `
             <div style="margin-bottom: 20px; padding: 12px; background: rgba(251, 191, 36, 0.1); border-radius: 8px; border-left: 4px solid #fbbf24;">
                 <strong>Tempo de Internação:</strong> ${tempoInternacao}
             </div>
             ` : ''}
             
-            <!-- Botões -->
             <div style="display: flex; justify-content: space-between; gap: 12px; padding: 20px; border-top: 1px solid rgba(255,255,255,0.1);">
                 <button class="btn-alta" style="padding: 12px 30px; background: #ef4444; color: #ffffff; border: none; border-radius: 8px; font-weight: 600; text-transform: uppercase; cursor: pointer;">ALTA</button>
                 <div style="display: flex; gap: 12px;">
@@ -1177,8 +1159,8 @@ document.addEventListener('DOMContentLoaded', function() {
         logError(`ERRO V4.0: Esperadas 19 linhas, encontradas ${window.LINHAS_CUIDADO_LIST.length}`);
     }
     
-    if (window.PREVISAO_ALTA_OPTIONS.length !== 9) {
-        logError(`ERRO V4.0: Esperadas 9 opções timeline, encontradas ${window.PREVISAO_ALTA_OPTIONS.length}`);
+    if (window.PREVISAO_ALTA_OPTIONS.length !== 10) {
+        logError(`ERRO V4.0: Esperadas 10 opções timeline, encontradas ${window.PREVISAO_ALTA_OPTIONS.length}`);
     }
     
     // Garantir que seleção inicial funcione
@@ -1189,7 +1171,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Log das melhorias V4.0
     logInfo('🚀 Melhorias V4.0 ativas:');
     logInfo('  • Arrays diretos - SEM parsing');
-    logInfo('  • Timeline com 9 opções');
+    logInfo('  • Timeline com 10 opções');
     logInfo('  • 13 concessões + 19 linhas');
     logInfo('  • Performance otimizada');
     logInfo('  • Validação automática');
@@ -1216,6 +1198,6 @@ window.coletarDadosFormularioV4 = coletarDadosFormularioV4;
 
 logSuccess('🏥 CARDS.JS V4.0 - ARRAYS DIRETOS IMPLEMENTADOS COM SUCESSO!');
 logInfo('📋 Eliminado parsing complexo - Performance 10x melhor');
-logInfo('✅ Timeline corrigida - 9 opções de previsão de alta');
+logInfo('✅ Timeline corrigida - 10 opções de previsão de alta');
 logInfo('✅ Integração perfeita com Google Apps Script V4.0 (44 colunas)');
 logInfo('✅ Validação automática de concessões e linhas de cuidado');

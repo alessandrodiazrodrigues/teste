@@ -125,16 +125,10 @@ window.renderDashboardExecutivo = function() {
             <!-- HEADER COM BOTÃO CLARO/ESCURO -->
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; padding: 20px; background: rgba(255, 255, 255, 0.05); border-radius: 12px; border-left: 4px solid #22c55e;">
                 <h2 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 700;">Rede Hospitalar Externa</h2>
-                <div style="display: flex; align-items: center; gap: 15px;">
-                    <button id="toggleFundoBtnExec" class="toggle-fundo-btn" style="padding: 8px 16px; background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 8px; color: #e2e8f0; font-size: 14px; cursor: pointer; transition: all 0.3s ease; display: flex; align-items: center; gap: 8px;">
-                        <span id="toggleIconExec">🌙</span>
-                        <span id="toggleTextExec">ESCURO</span>
-                    </button>
-                    <div style="display: flex; align-items: center; gap: 8px; background: rgba(34, 197, 94, 0.1); padding: 8px 16px; border-radius: 20px; border: 1px solid rgba(34, 197, 94, 0.3); color: #22c55e; font-size: 14px;">
-                        <span style="width: 8px; height: 8px; background: #22c55e; border-radius: 50%; animation: pulse 2s infinite;"></span>
-                        ${hospitaisComDados.length} hospital${hospitaisComDados.length > 1 ? 'ais' : ''} conectado${hospitaisComDados.length > 1 ? 's' : ''}
-                    </div>
-                </div>
+                <button id="toggleFundoBtnExec" class="toggle-fundo-btn" style="padding: 8px 16px; background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 8px; color: #e2e8f0; font-size: 14px; cursor: pointer; transition: all 0.3s ease; display: flex; align-items: center; gap: 8px;">
+                    <span id="toggleIconExec">🌙</span>
+                    <span id="toggleTextExec">ESCURO</span>
+                </button>
             </div>
             
             <!-- KPIS GRID -->
@@ -205,12 +199,11 @@ window.renderDashboardExecutivo = function() {
             <!-- GRÁFICOS -->
             <div class="executivo-graficos">
                 
-                <!-- Gráfico de Altas - APENAS BARRAS -->
+                <!-- Gráfico de Altas -->
                 <div class="executivo-grafico-card">
                     <div class="chart-header">
                         <div>
                             <h3>Análise Preditiva de Altas em ${hoje}</h3>
-                            <p>Timeline com divisão Ouro/2R/3R para Hoje e 24h</p>
                         </div>
                     </div>
                     <div class="chart-container">
@@ -218,12 +211,11 @@ window.renderDashboardExecutivo = function() {
                     </div>
                 </div>
                 
-                <!-- Gráfico de Concessões - APENAS BARRAS -->
+                <!-- Gráfico de Concessões -->
                 <div class="executivo-grafico-card">
                     <div class="chart-header">
                         <div>
                             <h3>Análise Preditiva de Concessões em ${hoje}</h3>
-                            <p>Timeline por hospital com todas as concessões</p>
                         </div>
                     </div>
                     <div class="chart-container">
@@ -231,12 +223,11 @@ window.renderDashboardExecutivo = function() {
                     </div>
                 </div>
                 
-                <!-- Gráfico de Linhas - APENAS BARRAS -->
+                <!-- Gráfico de Linhas -->
                 <div class="executivo-grafico-card">
                     <div class="chart-header">
                         <div>
                             <h3>Análise Preditiva de Linhas de Cuidado em ${hoje}</h3>
-                            <p>Timeline por hospital com todas as linhas</p>
                         </div>
                     </div>
                     <div class="chart-container">
@@ -391,11 +382,10 @@ function calcularKPIsExecutivos(hospitaisComDados) {
 }
 
 // Calcular KPIs de um hospital
-// Calcular KPIs de um hospital
 function calcularKPIsHospital(hospitalId) {
     const hospital = window.hospitalData[hospitalId];
     if (!hospital || !hospital.leitos) {
-        return { ocupacao: 0, total: 0, ocupados: 0, vagos: 0, altas: 0 };  // ADICIONADO 'altas'
+        return { ocupacao: 0, total: 0, ocupados: 0, vagos: 0, altas: 0 };
     }
     
     const total = hospital.leitos.length;
@@ -415,7 +405,7 @@ function calcularKPIsHospital(hospitalId) {
     
     const ocupacao = total > 0 ? Math.round((ocupados / total) * 100) : 0;
     
-    return { ocupacao, total, ocupados, vagos: total - ocupados, altas };  // ADICIONADO 'altas'
+    return { ocupacao, total, ocupados, vagos: total - ocupados, altas };
 }
 
 // Gauge horizontal
@@ -961,7 +951,7 @@ function criarDadosMockExecutivo() {
     };
 }
 
-// CSS
+// CSS completo - REMOVIDAS TODAS AS MEDIA QUERIES MOBILE  
 function getExecutiveCSS() {
     return `
         <style id="executiveCSS">
@@ -1126,42 +1116,21 @@ function getExecutiveCSS() {
                 max-height: 400px !important;
                 width: 100% !important;
             }
-            
-            @media (max-width: 1200px) {
-                .executive-kpis-grid {
-                    grid-template-columns: repeat(3, 1fr);
-                    grid-template-rows: auto auto auto;
-                }
-                
-                .kpi-gauge-principal {
-                    grid-column: span 3;
-                    grid-row: span 1;
-                }
-            }
-            
-            @media (max-width: 768px) {
-                .executive-kpis-grid {
-                    grid-template-columns: 1fr;
-                    gap: 15px;
-                }
-                
-                .kpi-gauge-principal {
-                    grid-column: span 1;
-                    grid-row: span 1;
-                }
-                
-                .chart-header {
-                    flex-direction: column;
-                    align-items: flex-start;
-                    gap: 10px;
-                }
-                
-                .chart-container {
-                    height: 300px;
-                }
-            }
         </style>
     `;
 }
 
-console.log('Dashboard Executivo - Versão Final');
+// Funções de log
+function logInfo(message) {
+    console.log(`🔵 [DASHBOARD EXECUTIVO] ${message}`);
+}
+
+function logSuccess(message) {
+    console.log(`✅ [DASHBOARD EXECUTIVO] ${message}`);
+}
+
+function logError(message) {
+    console.error(`❌ [DASHBOARD EXECUTIVO] ${message}`);
+}
+
+console.log('Dashboard Executivo - Versão Limpa para Mobile');

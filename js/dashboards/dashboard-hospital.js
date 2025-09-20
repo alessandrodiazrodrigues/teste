@@ -121,17 +121,11 @@ window.renderDashboardHospitalar = function() {
     container.innerHTML = `
         <div style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); min-height: 100vh; padding: 20px; color: white;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; padding: 20px; background: rgba(255, 255, 255, 0.05); border-radius: 12px; border-left: 4px solid #60a5fa;">
-                <h2 style="margin: 0; color: #60a5fa; font-size: 24px; font-weight: 700;">Dashboard Hospitalar</h2>
-                <div style="display: flex; align-items: center; gap: 15px;">
-                    <button id="toggleFundoBtn" class="toggle-fundo-btn" style="padding: 8px 16px; background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 8px; color: #e2e8f0; font-size: 14px; cursor: pointer; transition: all 0.3s ease; display: flex; align-items: center; gap: 8px;">
-                        <span id="toggleIcon">🌙</span>
-                        <span id="toggleText">ESCURO</span>
-                    </button>
-                    <div style="display: flex; align-items: center; gap: 8px; background: rgba(34, 197, 94, 0.1); padding: 8px 16px; border-radius: 20px; border: 1px solid rgba(34, 197, 94, 0.3); color: #22c55e; font-size: 14px;">
-                        <span style="width: 8px; height: 8px; background: #22c55e; border-radius: 50%; animation: pulse 2s infinite;"></span>
-                        ${hospitaisComDados.length} hospital${hospitaisComDados.length > 1 ? 'ais' : ''} com dados reais
-                    </div>
-                </div>
+                <h2 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 700;">Dashboard Hospitalar</h2>
+                <button id="toggleFundoBtn" class="toggle-fundo-btn" style="padding: 8px 16px; background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 8px; color: #e2e8f0; font-size: 14px; cursor: pointer; transition: all 0.3s ease; display: flex; align-items: center; gap: 8px;">
+                    <span id="toggleIcon">🌙</span>
+                    <span id="toggleText">ESCURO</span>
+                </button>
             </div>
             
             <div class="hospitais-container">
@@ -246,6 +240,7 @@ window.renderDashboardHospitalar = function() {
 function renderHospitalSection(hospitalId) {
     const hospital = CONFIG.HOSPITAIS[hospitalId];
     const kpis = calcularKPIsHospital(hospitalId);
+    const hoje = new Date().toLocaleDateString('pt-BR');
     
     return `
         <div class="hospital-card" data-hospital="${hospitalId}">
@@ -284,7 +279,7 @@ function renderHospitalSection(hospitalId) {
             <div class="graficos-verticais">
                 <div class="grafico-item">
                     <div class="chart-header">
-                        <h4>Análise Preditiva de Altas em ${new Date().toLocaleDateString('pt-BR')}</h4>
+                        <h4>Análise Preditiva de Altas em ${hoje}</h4>
                     </div>
                     <div class="chart-container">
                         <canvas id="graficoAltas${hospitalId}"></canvas>
@@ -293,7 +288,7 @@ function renderHospitalSection(hospitalId) {
                 
                 <div class="grafico-item">
                     <div class="chart-header">
-                        <h4>Concessões Previstas em ${new Date().toLocaleDateString('pt-BR')}</h4>
+                        <h4>Concessões Previstas em ${hoje}</h4>
                         <div class="chart-controls">
                             <button class="chart-btn active" data-hospital="${hospitalId}" data-chart="concessoes" data-type="bar">Barras</button>
                             <button class="chart-btn" data-hospital="${hospitalId}" data-chart="concessoes" data-type="scatter">Bolinhas</button>
@@ -308,7 +303,7 @@ function renderHospitalSection(hospitalId) {
                 
                 <div class="grafico-item">
                     <div class="chart-header">
-                        <h4>Linhas de Cuidado em ${new Date().toLocaleDateString('pt-BR')}</h4>
+                        <h4>Linhas de Cuidado em ${hoje}</h4>
                         <div class="chart-controls">
                             <button class="chart-btn active" data-hospital="${hospitalId}" data-chart="linhas" data-type="bar">Barras</button>
                             <button class="chart-btn" data-hospital="${hospitalId}" data-chart="linhas" data-type="scatter">Bolinhas</button>
@@ -1073,7 +1068,7 @@ window.forceDataRefresh = function() {
     }
 };
 
-// CSS completo
+// CSS completo - REMOVIDAS TODAS AS MEDIA QUERIES MOBILE
 function getHospitalCSS() {
     return `
         <style id="hospitalCSS">
@@ -1251,37 +1246,6 @@ function getHospitalCSS() {
                 height: 100% !important;
                 max-height: 370px !important;
             }
-            
-            @media (max-width: 1200px) {
-                .kpis-horizontal-container {
-                    grid-template-columns: repeat(3, 1fr);
-                }
-            }
-            
-            @media (max-width: 768px) {
-                .kpis-horizontal-container {
-                    grid-template-columns: 1fr;
-                    gap: 10px;
-                }
-                
-                .chart-header {
-                    flex-direction: column;
-                    align-items: flex-start;
-                }
-                
-                .chart-controls {
-                    width: 100%;
-                    justify-content: center;
-                }
-                
-                .chart-container {
-                    height: 300px;
-                }
-                
-                .chart-container canvas {
-                    max-height: 270px !important;
-                }
-            }
         </style>
     `;
 }
@@ -1307,4 +1271,4 @@ function logError(message) {
     console.error(`❌ [DASHBOARD HOSPITALAR] ${message}`);
 }
 
-console.log('Dashboard Hospitalar - Versão Final Corrigida - EM ALTA funcionando');
+console.log('Dashboard Hospitalar - Versão Limpa para Mobile - EM ALTA funcionando');

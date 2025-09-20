@@ -179,6 +179,7 @@ body {
     display: flex;
     align-items: center;
     gap: var(--space-lg);
+    justify-content: flex-start; /* CORREÇÃO: FORÇAR À ESQUERDA */
 }
 
 .hamburger {
@@ -188,6 +189,8 @@ body {
     border-radius: var(--rounded);
     transition: var(--transition-fast);
     user-select: none;
+    text-align: left; /* CORREÇÃO: ALINHAMENTO À ESQUERDA */
+    margin-right: var(--space-md); /* CORREÇÃO: ESPAÇAMENTO ESPECÍFICO */
 }
 
 .hamburger:hover {
@@ -518,55 +521,87 @@ body.menu-open {
     overflow: hidden;
 }
 
-/* === RESPONSIVIDADE === */
+/* =================== RESPONSIVIDADE MOBILE CORRIGIDA =================== */
 @media (max-width: 768px) {
+    /* HEADER MOBILE CORRIGIDO */
     .header {
         padding: var(--space-md) var(--space-lg);
-        flex-direction: column;
+        flex-direction: row !important; /* CORREÇÃO: MANTER EM LINHA */
         gap: var(--space-md);
         min-height: auto;
+        align-items: center !important;
+        justify-content: space-between !important;
     }
     
+    /* HEADER LEFT - HAMBÚRGUER À ESQUERDA */
+    .header-left {
+        display: flex !important;
+        align-items: center !important;
+        gap: var(--space-sm) !important;
+        justify-content: flex-start !important;
+        flex: none !important;
+        width: auto !important;
+    }
+    
+    /* HAMBÚRGUER ESPECÍFICO MOBILE */
+    .hamburger {
+        font-size: var(--text-xl) !important;
+        padding: var(--space-xs) !important;
+        margin: 0 !important;
+        text-align: left !important;
+        align-self: flex-start !important;
+        order: 1 !important;
+    }
+    
+    /* TÍTULO MOBILE */
     .header h1 {
-        font-size: var(--text-lg);
+        font-size: var(--text-base) !important;
+        order: 2 !important;
+        margin-left: var(--space-sm) !important;
     }
     
+    /* HEADER RIGHT MOBILE */
     .header-right {
-        width: 100%;
-        justify-content: space-between;
+        display: flex !important;
+        align-items: center !important;
+        gap: var(--space-sm) !important;
+        justify-content: flex-end !important;
+        flex: 1 !important;
+        max-width: none !important;
     }
     
     .header #timer,
     .header #updateTimer {
-        font-size: var(--text-xs);
+        font-size: var(--text-xs) !important;
+        padding: var(--space-xs) var(--space-sm) !important;
     }
     
+    .header button {
+        font-size: var(--text-xs) !important;
+        padding: var(--space-xs) var(--space-sm) !important;
+    }
+    
+    /* HOSPITAL SELECTOR MOBILE */
     .hospital-selector {
         flex-direction: column;
         padding: var(--space-lg);
+        gap: var(--space-sm);
     }
     
     .hospital-btn {
         width: 100%;
+        padding: var(--space-md) var(--space-lg);
+        font-size: var(--text-sm);
     }
     
-    .filter-controls {
-        flex-direction: column;
-        align-items: center;
-    }
-    
-    .main-content {
-        margin: var(--space-lg) auto;
-        padding: 0 var(--space-lg);
-    }
-    
-    .leitos-header h2 {
-        font-size: var(--text-2xl);
-    }
-    
+    /* MENU LATERAL MOBILE */
     .side-menu {
-        width: 100%;
-        left: -100%;
+        width: 100% !important;
+        left: -100% !important;
+    }
+    
+    .side-menu.open {
+        left: 0 !important;
     }
     
     .menu-items {
@@ -574,15 +609,34 @@ body.menu-open {
     }
     
     .side-menu-item {
-        padding: var(--space-lg);
+        padding: var(--space-md) var(--space-lg);
+        font-size: var(--text-sm);
     }
     
+    /* CONTEÚDO PRINCIPAL MOBILE */
+    .main-content {
+        margin: var(--space-lg) auto;
+        padding: 0 var(--space-lg);
+    }
+    
+    .leitos-header h2 {
+        font-size: var(--text-xl);
+    }
+    
+    .filter-controls {
+        flex-direction: column;
+        align-items: center;
+        gap: var(--space-sm);
+    }
+    
+    /* FOOTER MOBILE */
     .footer {
         padding: var(--space-xl) var(--space-lg);
         font-size: var(--text-xs);
     }
 }
 
+/* MOBILE PEQUENO */
 @media (max-width: 480px) {
     .auth-container {
         padding: var(--space-xl);
@@ -594,8 +648,28 @@ body.menu-open {
         padding: var(--space-md);
     }
     
+    /* HEADER AINDA MAIS COMPACTO */
     .header {
         padding: var(--space-sm) var(--space-md);
+    }
+    
+    .hamburger {
+        font-size: var(--text-lg) !important;
+        padding: var(--space-xs) !important;
+    }
+    
+    .header h1 {
+        font-size: var(--text-sm) !important;
+    }
+    
+    .header #timer,
+    .header #updateTimer {
+        display: none; /* OCULTAR TIMER EM TELAS MUITO PEQUENAS */
+    }
+    
+    .header button {
+        padding: var(--space-xs) !important;
+        font-size: 10px !important;
     }
     
     .hospital-selector {

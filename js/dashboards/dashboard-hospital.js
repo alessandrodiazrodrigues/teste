@@ -325,53 +325,30 @@ function renderHospitalSection(hospitalId) {
     `;
 }
 
-// Calcular KPIs de um hospital - CORRIGIDO PARA V4.0 COM 96h E SP
+// Calcular KPIs de um hospital - VERSÃO CORRIGIDA E SIMPLIFICADA
 function calcularKPIsHospital(hospitalId) {
     const hospital = window.hospitalData[hospitalId];
     if (!hospital || !hospital.leitos) {
         return { ocupacao: 0, total: 0, ocupados: 0, vagos: 0, altas: 0 };
     }
     
-    let totalEnf = 0, totalApt = 0, totalUti = 0;
-    let ocupadosEnf = 0, ocupadosApt = 0, ocupadosUti = 0;
-    
-    hospital.leitos.forEach(leito => {
-        const tipo = leito.tipo || leito.categoria || 'ENF';
-        
-        if (tipo.includes('ENF') || tipo.includes('Enfermaria')) {
-            totalEnf++;
-            if (leito.status === 'ocupado' || leito.status === 'Em uso') ocupadosEnf++;
-        } else if (tipo.includes('APT') || tipo.includes('Apartamento')) {
-            totalApt++;
-            if (leito.status === 'ocupado' || leito.status === 'Em uso') ocupadosApt++;
-        } else if (tipo.includes('UTI')) {
-            totalUti++;
-            if (leito.status === 'ocupado' || leito.status === 'Em uso') ocupadosUti++;
-        } else {
-            totalEnf++;
-            if (leito.status === 'ocupado' || leito.status === 'Em uso') ocupadosEnf++;
-        }
-    });
-    
-    const total = totalEnf + totalApt + totalUti;
-    const ocupados = ocupadosEnf + ocupadosApt + ocupadosUti;
-    const vagos = total - ocupados;
-    
-    // CORREÇÃO V4.0: Contar altas incluindo 96h e SP
-    const TIMELINE_ALTA = ['Hoje Ouro', 'Hoje 2R', 'Hoje 3R', '24h Ouro', '24h 2R', '24h 3R', '48h', '72h', '96h', 'SP'];
+    const total = hospital.leitos.length;
+    let ocupados = 0;
     let altas = 0;
     
     hospital.leitos.forEach(leito => {
-        const isOcupado = leito.status === 'ocupado' || leito.status === 'Em uso';
-        if (isOcupado) {
-            // V4.0: Campo está direto no leito
-            const prevAlta = leito.prevAlta;
-            if (prevAlta && TIMELINE_ALTA.includes(prevAlta)) {
+        // Verificar se está ocupado
+        if (leito.status === 'ocupado') {
+            ocupados++;
+            
+            // Contar altas - buscar prevAlta diretamente no leito
+            if (leito.prevAlta) {
                 altas++;
             }
         }
     });
     
+    const vagos = total - ocupados;
     const ocupacao = total > 0 ? Math.round((ocupados / total) * 100) : 0;
     
     return { ocupacao, total, ocupados, vagos, altas };

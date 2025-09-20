@@ -328,6 +328,28 @@ function renderHospitalSection(hospitalId) {
 // Calcular KPIs de um hospital - VERSÃO CORRIGIDA E SIMPLIFICADA
 function calcularKPIsHospital(hospitalId) {
     const hospital = window.hospitalData[hospitalId];
+    
+    // DEBUG: Ver estrutura exata
+    console.log(`=== DEBUG KPI ${hospitalId} ===`);
+    console.log('Hospital data:', hospital);
+    
+    if (hospital && hospital.leitos && hospital.leitos.length > 0) {
+        console.log('Primeiro leito completo:', hospital.leitos[0]);
+        console.log('Campos disponíveis:', Object.keys(hospital.leitos[0]));
+        
+        // Contar manualmente
+        let contadorAltas = 0;
+        hospital.leitos.forEach((leito, idx) => {
+            if (leito.status === 'ocupado' && leito.prevAlta) {
+                contadorAltas++;
+                console.log(`Leito ${idx}: status="${leito.status}", prevAlta="${leito.prevAlta}" - CONTADO`);
+            }
+        });
+        console.log(`Total de altas contadas: ${contadorAltas}`);
+    }
+    console.log(`=== FIM DEBUG ===`);
+    
+    // Resto do código original
     if (!hospital || !hospital.leitos) {
         return { ocupacao: 0, total: 0, ocupados: 0, vagos: 0, altas: 0 };
     }
@@ -337,11 +359,8 @@ function calcularKPIsHospital(hospitalId) {
     let altas = 0;
     
     hospital.leitos.forEach(leito => {
-        // Verificar se está ocupado
         if (leito.status === 'ocupado') {
             ocupados++;
-            
-            // Contar altas - buscar prevAlta diretamente no leito
             if (leito.prevAlta) {
                 altas++;
             }
@@ -352,6 +371,7 @@ function calcularKPIsHospital(hospitalId) {
     const ocupacao = total > 0 ? Math.round((ocupados / total) * 100) : 0;
     
     return { ocupacao, total, ocupados, vagos, altas };
+}
 }
 
 // Plugin para fundo branco/escuro nos gráficos (NÃO usado no gauge)

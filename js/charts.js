@@ -280,6 +280,43 @@ window.renderDashboardHospitalar = function() {
                 border-color: #f59e0b !important;
                 color: #000000 !important;
             }
+            
+            /* *** CSS DEFINITIVO PARA LEGENDAS EM COLUNA *** */
+            .chart-container .chartjs-legend,
+            .chart-container .chartjs-legend ul {
+                display: flex !important;
+                flex-direction: column !important;
+                align-items: flex-start !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                list-style: none !important;
+            }
+            
+            .chart-container .chartjs-legend li {
+                display: flex !important;
+                align-items: center !important;
+                margin: 5px 0 !important;
+                padding: 0 !important;
+                width: auto !important;
+                white-space: nowrap !important;
+            }
+            
+            .chart-container .chartjs-legend li span {
+                margin-right: 8px !important;
+                flex-shrink: 0 !important;
+            }
+            
+            /* Forçar legendas do Chart.js em coluna */
+            .chart-container canvas + div {
+                display: flex !important;
+                flex-direction: column !important;
+                align-items: flex-start !important;
+            }
+            
+            /* Ajustar cores das legendas dinamicamente */
+            .chart-container .chartjs-legend {
+                color: ${window.fundoBranco ? '#000000' : '#ffffff'} !important;
+            }
         </style>
     `;
     
@@ -310,8 +347,50 @@ window.renderDashboardHospitalar = function() {
                 renderLinhasHospital(hospitalId, window.graficosState[hospitalId]?.linhas || 'bar');
             });
             
+            // Atualizar CSS das legendas dinamicamente
+            updateLegendColors();
+            
             logInfo(`Fundo alterado para: ${window.fundoBranco ? 'claro' : 'escuro'}`);
         });
+    }
+    
+    // Função para atualizar cores das legendas
+    function updateLegendColors() {
+        const corLegenda = window.fundoBranco ? '#000000' : '#ffffff';
+        
+        // Remover estilo antigo
+        const oldStyle = document.getElementById('legendColorStyle');
+        if (oldStyle) oldStyle.remove();
+        
+        // Adicionar novo estilo
+        const style = document.createElement('style');
+        style.id = 'legendColorStyle';
+        style.innerHTML = `
+            .chart-container .chartjs-legend,
+            .chart-container .chartjs-legend li {
+                color: ${corLegenda} !important;
+            }
+            
+            /* Forçar legendas em coluna - SOLUÇÃO DEFINITIVA */
+            .chart-container canvas + div,
+            .chart-container .chartjs-legend,
+            .chart-container .chartjs-legend ul {
+                display: flex !important;
+                flex-direction: column !important;
+                align-items: flex-start !important;
+                gap: 8px !important;
+            }
+            
+            .chart-container .chartjs-legend li {
+                display: flex !important;
+                align-items: center !important;
+                margin: 0 !important;
+                padding: 2px 0 !important;
+                width: auto !important;
+                line-height: 1.5 !important;
+            }
+        `;
+        document.head.appendChild(style);
     }
     
     const aguardarChartJS = () => {
@@ -357,6 +436,11 @@ window.renderDashboardHospitalar = function() {
                 renderConcessoesHospital(hospitalId, 'bar');
                 renderLinhasHospital(hospitalId, 'bar');
             });
+            
+            // Inicializar cores das legendas
+            setTimeout(() => {
+                updateLegendColors();
+            }, 500);
             
             logSuccess('Dashboard Hospitalar renderizado');
         }, 100);
@@ -719,39 +803,11 @@ function renderAltasHospital(hospitalId) {
                     labels: {
                         color: corTexto,
                         padding: 15,
-                        font: { size: 13, weight: 600 },
+                        font: { size: 14, weight: 600 }, // Fonte maior para desktop
                         usePointStyle: true,
                         pointStyle: 'rect',
                         boxWidth: 12,
-                        boxHeight: 12,
-                        // *** FORÇAR UMA LEGENDA POR LINHA COM QUEBRA MANUAL ***
-                        generateLabels: function(chart) {
-                            const datasets = chart.data.datasets;
-                            const labels = [];
-                            
-                            datasets.forEach((dataset, i) => {
-                                if (chart.isDatasetVisible(i)) {
-                                    labels.push({
-                                        text: dataset.label,
-                                        fillStyle: dataset.backgroundColor,
-                                        strokeStyle: dataset.backgroundColor,
-                                        lineWidth: 0,
-                                        pointStyle: 'rect',
-                                        hidden: false,
-                                        index: i
-                                    });
-                                }
-                            });
-                            
-                            return labels;
-                        }
-                    },
-                    onClick: function(e, legendItem, legend) {
-                        const index = legendItem.index;
-                        const chart = legend.chart;
-                        const meta = chart.getDatasetMeta(index);
-                        meta.hidden = meta.hidden === null ? !chart.data.datasets[index].hidden : null;
-                        chart.update();
+                        boxHeight: 12
                     }
                 },
                 tooltip: {
@@ -1019,32 +1075,11 @@ function renderConcessoesHospital(hospitalId, type = 'bar') {
                     labels: {
                         color: corTexto,
                         padding: 12,
-                        font: { size: mobile ? 9 : 10, weight: 500 },
-                        usePointStyle: false,
+                        font: { size: 12, weight: 500 }, // Fonte adequada
+                        usePointStyle: true,
                         pointStyle: 'circle',
                         boxWidth: 10,
-                        boxHeight: 10,
-                        // *** FORÇAR UMA LEGENDA POR LINHA ***
-                        generateLabels: function(chart) {
-                            const datasets = chart.data.datasets;
-                            const labels = [];
-                            
-                            datasets.forEach((dataset, i) => {
-                                if (chart.isDatasetVisible(i)) {
-                                    labels.push({
-                                        text: dataset.label,
-                                        fillStyle: dataset.backgroundColor || dataset.borderColor,
-                                        strokeStyle: dataset.backgroundColor || dataset.borderColor,
-                                        lineWidth: 0,
-                                        pointStyle: 'circle',
-                                        hidden: false,
-                                        index: i
-                                    });
-                                }
-                            });
-                            
-                            return labels;
-                        }
+                        boxHeight: 10
                     }
                 },
                 tooltip: {

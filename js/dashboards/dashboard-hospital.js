@@ -1,5 +1,5 @@
-// =================== DASHBOARD HOSPITALAR - VERSÃO FINAL CORRIGIDA ===================
-// =================== LEGENDAS HTML + CORES DINÂMICAS + SCATTER EXATO ===================
+// =================== DASHBOARD HOSPITALAR - VERSÃO FINAL COMPLETA ===================
+// =================== LEGENDAS HTML + CORES DINÂMICAS + SCATTER COM JITTER ===================
 
 // Estado dos gráficos selecionados por hospital
 window.graficosState = {
@@ -120,6 +120,23 @@ function getCorExata(itemName, tipo = 'concessao') {
 // Detectar se é mobile
 function isMobile() {
     return window.innerWidth <= 768;
+}
+
+// =================== FUNÇÃO PARA GERAR JITTER (DESLOCAMENTO) ===================
+function getJitter(label, index) {
+    // Usar o hash do label para gerar um offset consistente
+    let hash = 0;
+    for (let i = 0; i < label.length; i++) {
+        hash = ((hash << 5) - hash) + label.charCodeAt(i);
+        hash = hash & hash;
+    }
+    
+    // Jitter menor no mobile para não confundir visualização
+    const mobile = isMobile();
+    const jitterRange = mobile ? 0.15 : 0.2;
+    
+    // Retornar jitter entre -jitterRange e +jitterRange
+    return ((hash % 40) - 20) / 100 * jitterRange;
 }
 
 // =================== FUNÇÃO PARA CRIAR LEGENDAS HTML CUSTOMIZADAS ===================
@@ -880,7 +897,7 @@ function renderAltasHospital(hospitalId) {
     }, 50);
 }
 
-// Gráfico de Concessões - COM LEGENDAS HTML CUSTOMIZADAS
+// Gráfico de Concessões - COM LEGENDAS HTML E JITTER
 function renderConcessoesHospital(hospitalId, type = 'bar') {
     const canvas = document.getElementById(`graficoConcessoes${hospitalId}`);
     if (!canvas || typeof Chart === 'undefined') return;
@@ -945,14 +962,19 @@ function renderConcessoesHospital(hospitalId, type = 'bar') {
     const mobile = isMobile();
     const tamanhoBolinha = mobile ? 3 : 8;
     
-    const datasets = concessoesOrdenadas.map(([nome, dados]) => {
+    const datasets = concessoesOrdenadas.map(([nome, dados], datasetIndex) => {
         const cor = getCorExata(nome, 'concessao');
         
         if (type === 'scatter') {
             const scatterData = [];
             dados.forEach((valor, index) => {
                 if (valor > 0) {
-                    scatterData.push({ x: index, y: valor });
+                    // APLICAR JITTER para evitar sobreposição
+                    const jitter = getJitter(nome, datasetIndex);
+                    scatterData.push({ 
+                        x: index + jitter, // Posição inteira + jitter
+                        y: valor 
+                    });
                 }
             });
             return {
@@ -1011,8 +1033,9 @@ function renderConcessoesHospital(hospitalId, type = 'bar') {
                     color: corTexto,
                     font: { size: 12, weight: 600 },
                     callback: function(value) {
-                        if (Number.isInteger(value) && value >= 0 && value < categorias.length) {
-                            return categorias[value];
+                        const index = Math.round(value);
+                        if (index >= 0 && index < categorias.length && Math.abs(value - index) < 0.3) {
+                            return categorias[index];
                         }
                         return '';
                     }
@@ -1115,7 +1138,7 @@ function renderConcessoesHospital(hospitalId, type = 'bar') {
     }, 50);
 }
 
-// Gráfico de Linhas de Cuidado - COM LEGENDAS HTML CUSTOMIZADAS
+// Gráfico de Linhas de Cuidado - COM LEGENDAS HTML E JITTER
 function renderLinhasHospital(hospitalId, type = 'bar') {
     const canvas = document.getElementById(`graficoLinhas${hospitalId}`);
     if (!canvas || typeof Chart === 'undefined') return;
@@ -1180,14 +1203,19 @@ function renderLinhasHospital(hospitalId, type = 'bar') {
     const mobile = isMobile();
     const tamanhoBolinha = mobile ? 3 : 8;
     
-    const datasets = linhasOrdenadas.map(([nome, dados]) => {
+    const datasets = linhasOrdenadas.map(([nome, dados], datasetIndex) => {
         const cor = getCorExata(nome, 'linha');
         
         if (type === 'scatter') {
             const scatterData = [];
             dados.forEach((valor, index) => {
                 if (valor > 0) {
-                    scatterData.push({ x: index, y: valor });
+                    // APLICAR JITTER para evitar sobreposição
+                    const jitter = getJitter(nome, datasetIndex);
+                    scatterData.push({ 
+                        x: index + jitter, // Posição inteira + jitter
+                        y: valor 
+                    });
                 }
             });
             return {
@@ -1246,8 +1274,9 @@ function renderLinhasHospital(hospitalId, type = 'bar') {
                     color: corTexto,
                     font: { size: 12, weight: 600 },
                     callback: function(value) {
-                        if (Number.isInteger(value) && value >= 0 && value < categorias.length) {
-                            return categorias[value];
+                        const index = Math.round(value);
+                        if (index >= 0 && index < categorias.length && Math.abs(value - index) < 0.3) {
+                            return categorias[index];
                         }
                         return '';
                     }
@@ -1854,10 +1883,11 @@ function logError(message, error) {
     console.error(`❌ [DASHBOARD HOSPITALAR] ${message}`, error || '');
 }
 
-console.log('🎯 Dashboard Hospitalar VERSÃO FINAL COMPLETA:');
-console.log('✅ LEGENDAS HTML CUSTOMIZADAS: Verticais, fora do Chart.js');
-console.log('✅ CORES DINÂMICAS: Texto, fundo e grid atualizando com toggle');
-console.log('✅ SCATTER EXATO: Apenas posições inteiras (0,1,2,3,4)');
+console.log('🎯 Dashboard Hospitalar VERSÃO FINAL COMPLETA COM JITTER:');
+console.log('✅ LEGENDAS HTML: Verticais, fora do Chart.js, interativas');
+console.log('✅ CORES DINÂMICAS: Texto, fundo e grid com toggle claro/escuro');
+console.log('✅ SCATTER COM JITTER: Evita sobreposição de bolinhas');
+console.log('✅ POSIÇÕES INTEIRAS: Scatter apenas em 0,1,2,3,4 + jitter');
 console.log('✅ CORES PANTONE: 55+ cores preservadas');
-console.log('✅ INTERATIVIDADE: Click nas legendas para ocultar/mostrar');
-console.log('✅ RESPONSIVIDADE: Mobile preservada');
+console.log('✅ MOBILE RESPONSIVO: Jitter menor em telas pequenas');
+console.log('✅ DADOS REAIS: Zero mock data, apenas planilha Google');

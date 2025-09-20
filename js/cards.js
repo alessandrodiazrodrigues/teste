@@ -1,5 +1,5 @@
-// =================== CARDS.JS V4.0 - ARRAYS DIRETOS - SEM PARSING ===================
-// =================== NOVA ESTRUTURA: 44 COLUNAS - PERFORMANCE OTIMIZADA ===================
+// =================== CARDS.JS - VERSÃO FINAL CORRIGIDA ===================
+// =================== LAYOUT 3x3 MOBILE + CAMPOS CORRETOS ===================
 
 // =================== VARIÁVEIS GLOBAIS ===================  
 window.selectedLeito = null;
@@ -13,7 +13,7 @@ window.HOSPITAL_MAPPING = {
     H4: 'Santa Clara'
 };
 
-// =================== LISTAS V4.0 - MESMAS DO API.JS ===================
+// =================== LISTAS PARA FORMULÁRIOS ===================
 window.CONCESSOES_LIST = [
     "Transição Domiciliar",
     "Aplicação domiciliar de medicamentos",
@@ -54,18 +54,23 @@ window.LINHAS_CUIDADO_LIST = [
 
 window.PPS_OPTIONS = ['10%', '20%', '30%', '40%', '50%', '60%', '70%', '80%', '90%', '100%'];
 
-// *** V4.0: TIMELINE CORRIGIDA - 10 OPÇÕES ***
+// TIMELINE CORRIGIDA - 10 OPÇÕES
 window.PREVISAO_ALTA_OPTIONS = [
     'Hoje Ouro', 'Hoje 2R', 'Hoje 3R',
     '24h Ouro', '24h 2R', '24h 3R', 
     '48h', '72h', '96h', 'SP'
 ];
 
+// OPÇÕES DE IDADE PARA SELECT
+window.IDADE_OPTIONS = [];
+for (let i = 0; i <= 120; i++) {
+    window.IDADE_OPTIONS.push(i);
+}
+
 // =================== FUNÇÃO: SELECT HOSPITAL ===================
 window.selectHospital = function(hospitalId) {
-    logInfo(`Selecionando hospital V4.0: ${hospitalId} (${window.HOSPITAL_MAPPING[hospitalId]})`);
+    logInfo(`Selecionando hospital: ${hospitalId} (${window.HOSPITAL_MAPPING[hospitalId]})`);
     
-    // Definir currentHospital ANTES de qualquer operação
     window.currentHospital = hospitalId;
     
     // Atualizar botões visuais
@@ -76,15 +81,14 @@ window.selectHospital = function(hospitalId) {
         }
     });
     
-    // Renderizar cards com hospital correto
     window.renderCards();
     
-    logSuccess(`Hospital V4.0 selecionado: ${window.HOSPITAL_MAPPING[hospitalId]}`);
+    logSuccess(`Hospital selecionado: ${window.HOSPITAL_MAPPING[hospitalId]}`);
 };
 
-// =================== FUNÇÃO PRINCIPAL DE RENDERIZAÇÃO V4.0 ===================
+// =================== FUNÇÃO PRINCIPAL DE RENDERIZAÇÃO ===================
 window.renderCards = function() {
-    logInfo('Renderizando cards V4.0 com dados REAIS da API (arrays diretos)');
+    logInfo('Renderizando cards com dados REAIS da API');
     
     const container = document.getElementById('cardsContainer');
     if (!container) {
@@ -105,8 +109,8 @@ window.renderCards = function() {
                     <h3>📋 ${hospitalNome}</h3>
                 </div>
                 <div style="background: rgba(96,165,250,0.1); border-radius: 8px; padding: 20px;">
-                    <p style="margin-bottom: 15px;">Carregando dados V4.0 da planilha (44 colunas)...</p>
-                    <p style="color: #28a745;"><em>✅ API V4.0 conectada - Arrays diretos sem parsing</em></p>
+                    <p style="margin-bottom: 15px;">Carregando dados da planilha...</p>
+                    <p style="color: #28a745;"><em>✅ API conectada - Arrays diretos</em></p>
                 </div>
             </div>
         `;
@@ -118,16 +122,16 @@ window.renderCards = function() {
         container.appendChild(card);
     });
     
-    logInfo(`${hospital.leitos.length} cards V4.0 renderizados para ${hospitalNome} com arrays diretos`);
+    logInfo(`${hospital.leitos.length} cards renderizados para ${hospitalNome}`);
 };
 
-// =================== CRIAR CARD INDIVIDUAL V4.0 ===================
+// =================== CRIAR CARD INDIVIDUAL ===================
 function createCard(leito, hospitalNome) {
     const card = document.createElement('div');
     card.className = 'card';
     card.style.cssText = 'background: var(--card); border-radius: 12px; padding: 20px; color: var(--text-white); box-shadow: 0 4px 6px rgba(0,0,0,0.1);';
     
-    // Padronizar status
+    // *** CORREÇÃO CRÍTICA: STATUS COM COR CORRETA ***
     let isVago = leito.status === 'Vago' || leito.status === 'vago';
     if (leito.status === 'Em uso') leito.status = 'ocupado';
     if (leito.status === 'Vago') leito.status = 'vago';
@@ -142,12 +146,9 @@ function createCard(leito, hospitalNome) {
     const spict = leito.spict || '';
     const previsaoAlta = leito.prevAlta || '';
     
-    // *** V4.0: ARRAYS DIRETOS - SEM PARSING! ***
+    // Arrays diretos - sem parsing
     const concessoes = Array.isArray(leito.concessoes) ? leito.concessoes : [];
     const linhas = Array.isArray(leito.linhas) ? leito.linhas : [];
-    
-    logDebug(`📋 Card V4.0 ${leito.leito} - Concessões (array direto): [${concessoes.join(', ')}]`);
-    logDebug(`📋 Card V4.0 ${leito.leito} - Linhas (array direto): [${linhas.join(', ')}]`);
     
     // Calcular tempo de internação
     let tempoInternacao = '';
@@ -170,16 +171,20 @@ function createCard(leito, hospitalNome) {
     
     const numeroLeito = leito.leito || leito.numero || 'N/A';
     
+    // *** CORREÇÃO: COR DO LEITO BASEADA NO STATUS ***
+    const leitoBgColor = isVago ? 'var(--status-vago)' : '#fbbf24'; // AMARELO PARA OCUPADO
+    const leitoTextColor = isVago ? '#ffffff' : '#000000';
+    
     // HTML do Card (layout 3x3 mantido)
     card.innerHTML = `
-        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 12px;">
+        <div class="card-row-1" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 12px;">
             <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 10px; min-height: 50px; display: flex; flex-direction: column; justify-content: center;">
                 <div style="font-size: 10px; color: rgba(255,255,255,0.7); font-weight: 600; text-transform: uppercase; margin-bottom: 3px;">HOSPITAL</div>
                 <div style="color: #ffffff; font-weight: 600; font-size: 12px; line-height: 1.2;">${hospitalNome}</div>
             </div>
             
             <div style="min-height: 50px; display: flex; align-items: center; justify-content: center;">
-                <div class="leito-badge ${isVago ? '' : 'ocupado'}" style="background: ${isVago ? 'var(--status-vago)' : 'var(--status-uso)'}; color: ${isVago ? '#ffffff' : '#000000'}; width: 100%; padding: 15px 8px; border-radius: 8px; font-weight: 700; text-transform: uppercase; text-align: center; font-size: 12px; letter-spacing: 1px;">
+                <div class="leito-badge ${isVago ? '' : 'ocupado'}" style="background: ${leitoBgColor}; color: ${leitoTextColor}; width: 100%; padding: 15px 8px; border-radius: 8px; font-weight: 700; text-transform: uppercase; text-align: center; font-size: 12px; letter-spacing: 1px;">
                     LEITO ${numeroLeito}
                 </div>
             </div>
@@ -190,7 +195,7 @@ function createCard(leito, hospitalNome) {
             </div>
         </div>
 
-        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 12px;">
+        <div class="card-row-2" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 12px;">
             <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 10px; min-height: 50px; display: flex; flex-direction: column; justify-content: center;">
                 <div style="font-size: 10px; color: rgba(255,255,255,0.7); font-weight: 600; text-transform: uppercase; margin-bottom: 3px;">INICIAIS</div>
                 <div style="color: #ffffff; font-weight: 600; font-size: 12px; line-height: 1.2;">${iniciais}</div>
@@ -207,7 +212,7 @@ function createCard(leito, hospitalNome) {
             </div>
         </div>
 
-        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 15px;">
+        <div class="card-row-3" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 15px;">
             <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 10px; min-height: 50px; display: flex; flex-direction: column; justify-content: center;">
                 <div style="font-size: 10px; color: rgba(255,255,255,0.7); font-weight: 600; text-transform: uppercase; margin-bottom: 3px;">PPS</div>
                 <div style="color: #ffffff; font-weight: 600; font-size: 12px; line-height: 1.2;">${ppsFormatado}</div>
@@ -226,7 +231,7 @@ function createCard(leito, hospitalNome) {
 
         <div class="card-section" style="margin-bottom: 15px;">
             <div class="section-title" style="font-size: 11px; color: #ffffff; background: #60a5fa; padding: 8px; border-radius: 4px; margin-bottom: 8px; text-transform: uppercase; font-weight: 700;">
-                CONCESSÕES PREVISTAS NA ALTA V4.0
+                CONCESSÕES PREVISTAS NA ALTA
             </div>
             <div class="chips-container" style="display: flex; flex-wrap: wrap; gap: 4px; min-height: 24px; background: rgba(255,255,255,0.05); border-radius: 6px; padding: 8px;">
                 ${(concessoes && concessoes.length > 0) 
@@ -238,7 +243,7 @@ function createCard(leito, hospitalNome) {
 
         <div class="card-section" style="margin-bottom: 15px;">
             <div class="section-title" style="font-size: 11px; color: #ffffff; background: #60a5fa; padding: 8px; border-radius: 4px; margin-bottom: 8px; text-transform: uppercase; font-weight: 700;">
-                LINHA DE CUIDADOS PROPOSTA NA ALTA V4.0
+                LINHAS DE CUIDADO PREVISTAS NA ALTA
             </div>
             <div class="chips-container" style="display: flex; flex-wrap: wrap; gap: 4px; min-height: 24px; background: rgba(255,255,255,0.05); border-radius: 6px; padding: 8px;">
                 ${(linhas && linhas.length > 0) 
@@ -302,7 +307,7 @@ function openAdmissaoFlow(leitoNumero) {
     setTimeout(() => {
         hideButtonLoading(button, originalText);
         openAdmissaoModal(leitoNumero);
-        logInfo(`Modal V4.0 de admissão aberto: ${window.currentHospital} - Leito ${leitoNumero}`);
+        logInfo(`Modal de admissão aberto: ${window.currentHospital} - Leito ${leitoNumero}`);
     }, 800);
 }
 
@@ -315,11 +320,11 @@ function openAtualizacaoFlow(leitoNumero, dadosLeito) {
     setTimeout(() => {
         hideButtonLoading(button, originalText);
         openAtualizacaoModal(leitoNumero, dadosLeito);
-        logInfo(`Modal V4.0 de atualização aberto: ${window.currentHospital} - Leito ${leitoNumero}`);
+        logInfo(`Modal de atualização aberto: ${window.currentHospital} - Leito ${leitoNumero}`);
     }, 800);
 }
 
-// =================== MODAIS V4.0 ===================
+// =================== MODAIS CORRIGIDOS ===================
 function openAdmissaoModal(leitoNumero) {
     const hospitalId = window.currentHospital;
     const hospitalNome = window.HOSPITAL_MAPPING[hospitalId] || 'Hospital';
@@ -345,9 +350,9 @@ function openAtualizacaoModal(leitoNumero, dadosLeito) {
     
     setupModalEventListeners(modal, 'atualizacao');
     
-    // *** V4.0: Forçar pré-marcação com arrays diretos ***
+    // Forçar pré-marcação com arrays diretos
     setTimeout(() => {
-        forcarPreMarcacaoV4(modal, dadosLeito);
+        forcarPreMarcacao(modal, dadosLeito);
     }, 100);
 }
 
@@ -363,19 +368,19 @@ function createModalOverlay() {
     return modal;
 }
 
+// *** FORMULÁRIO DE ADMISSÃO CORRIGIDO ***
 function createAdmissaoForm(hospitalNome, leitoNumero) {
     return `
-        <div style="background: #1a1f2e; border-radius: 12px; padding: 30px; max-width: 700px; width: 95%; max-height: 90vh; overflow-y: auto; color: #ffffff;">
+        <div class="modal-content" style="background: #1a1f2e; border-radius: 12px; padding: 30px; max-width: 700px; width: 95%; max-height: 90vh; overflow-y: auto; color: #ffffff;">
             <h2 style="margin: 0 0 20px 0; text-align: center; color: #60a5fa; font-size: 24px; font-weight: 700; text-transform: uppercase;">
-                ADMITIR PACIENTE V4.0
+                ADMITIR PACIENTE
             </h2>
             
             <div style="text-align: center; margin-bottom: 30px; padding: 15px; background: rgba(96,165,250,0.1); border-radius: 8px;">
                 <strong>Hospital:</strong> ${hospitalNome} | <strong>Leito:</strong> ${leitoNumero}
-                <br><small style="color: #9ca3af;">Sistema V4.0 - Arrays diretos sem parsing</small>
             </div>
             
-            <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+            <div class="form-grid" style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 15px; margin-bottom: 20px;">
                 <div>
                     <label style="display: block; margin-bottom: 5px; color: #e2e8f0; font-weight: 600;">NOME COMPLETO</label>
                     <input id="admNome" type="text" placeholder="Nome completo do paciente" style="width: 100%; padding: 12px; background: #374151; color: #ffffff; border: 1px solid rgba(255,255,255,0.3); border-radius: 6px; font-size: 14px;">
@@ -386,11 +391,14 @@ function createAdmissaoForm(hospitalNome, leitoNumero) {
                 </div>
                 <div>
                     <label style="display: block; margin-bottom: 5px; color: #e2e8f0; font-weight: 600;">IDADE</label>
-                    <input id="admIdade" type="number" min="0" max="120" placeholder="Ex: 65" style="width: 100%; padding: 12px; background: #374151; color: #ffffff; border: 1px solid rgba(255,255,255,0.3); border-radius: 6px; font-size: 14px;">
+                    <select id="admIdade" style="width: 100%; padding: 12px; background: #374151 !important; color: #ffffff !important; border: 1px solid rgba(255,255,255,0.3); border-radius: 6px; font-size: 14px;">
+                        <option value="">Selecionar...</option>
+                        ${window.IDADE_OPTIONS.map(idade => `<option value="${idade}">${idade} anos</option>`).join('')}
+                    </select>
                 </div>
             </div>
             
-            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px;">
+            <div class="form-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px;">
                 <div>
                     <label style="display: block; margin-bottom: 5px; color: #e2e8f0; font-weight: 600;">PPS</label>
                     <select id="admPPS" style="width: 100%; padding: 12px; background: #374151 !important; color: #ffffff !important; border: 1px solid rgba(255,255,255,0.3); border-radius: 6px; font-size: 14px;">
@@ -416,7 +424,7 @@ function createAdmissaoForm(hospitalNome, leitoNumero) {
             <div style="margin-bottom: 20px;">
                 <div style="background: rgba(96,165,250,0.1); padding: 10px 15px; border-radius: 6px; margin-bottom: 10px;">
                     <div style="font-size: 11px; color: #ffffff; text-transform: uppercase; font-weight: 700;">
-                        CONCESSÕES V4.0 (${window.CONCESSOES_LIST.length} tipos)
+                        CONCESSÕES PREVISTAS NA ALTA
                     </div>
                 </div>
                 <div id="admConcessoes" style="max-height: 150px; overflow-y: auto; background: rgba(255,255,255,0.03); border-radius: 6px; padding: 10px; display: grid; grid-template-columns: 1fr; gap: 6px;">
@@ -432,7 +440,7 @@ function createAdmissaoForm(hospitalNome, leitoNumero) {
             <div style="margin-bottom: 30px;">
                 <div style="background: rgba(96,165,250,0.1); padding: 10px 15px; border-radius: 6px; margin-bottom: 10px;">
                     <div style="font-size: 11px; color: #ffffff; text-transform: uppercase; font-weight: 700;">
-                        LINHAS DE CUIDADO V4.0 (${window.LINHAS_CUIDADO_LIST.length} tipos)
+                        LINHAS DE CUIDADO PREVISTAS NA ALTA
                     </div>
                 </div>
                 <div id="admLinhas" style="max-height: 150px; overflow-y: auto; background: rgba(255,255,255,0.03); border-radius: 6px; padding: 10px; display: grid; grid-template-columns: 1fr; gap: 6px;">
@@ -453,32 +461,26 @@ function createAdmissaoForm(hospitalNome, leitoNumero) {
     `;
 }
 
+// *** FORMULÁRIO DE ATUALIZAÇÃO CORRIGIDO ***
 function createAtualizacaoForm(hospitalNome, leitoNumero, dadosLeito) {
     const tempoInternacao = dadosLeito?.admAt ? calcularTempoInternacao(dadosLeito.admAt) : '';
     const iniciais = dadosLeito?.nome ? getIniciais(dadosLeito.nome) : '';
     
-    // *** V4.0: ARRAYS DIRETOS - SEM PROCESSAMENTO! ***
+    // Arrays diretos - sem processamento
     const concessoesAtuais = Array.isArray(dadosLeito?.concessoes) ? dadosLeito.concessoes : [];
     const linhasAtuais = Array.isArray(dadosLeito?.linhas) ? dadosLeito.linhas : [];
     
-    // Debug V4.0
-    logDebug(`🔍 DADOS V4.0 PARA ATUALIZAÇÃO (arrays diretos):`, {
-        concessoes: concessoesAtuais,
-        linhas: linhasAtuais
-    });
-    
     return `
-        <div style="background: #1a1f2e; border-radius: 12px; padding: 30px; max-width: 700px; width: 95%; max-height: 90vh; overflow-y: auto; color: #ffffff;">
+        <div class="modal-content" style="background: #1a1f2e; border-radius: 12px; padding: 30px; max-width: 700px; width: 95%; max-height: 90vh; overflow-y: auto; color: #ffffff;">
             <h2 style="margin: 0 0 20px 0; text-align: center; color: #60a5fa; font-size: 24px; font-weight: 700; text-transform: uppercase;">
-                ATUALIZAR PACIENTE V4.0
+                ATUALIZAR PACIENTE
             </h2>
             
             <div style="text-align: center; margin-bottom: 30px; padding: 15px; background: rgba(96,165,250,0.1); border-radius: 8px;">
                 <strong>Hospital:</strong> ${hospitalNome} | <strong>Leito:</strong> ${leitoNumero}
-                <br><small style="color: #9ca3af;">V4.0 - Arrays diretos (${concessoesAtuais.length} concessões, ${linhasAtuais.length} linhas)</small>
             </div>
             
-            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+            <div class="form-grid" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 20px;">
                 <div>
                     <label style="display: block; margin-bottom: 5px; color: #e2e8f0; font-weight: 600;">INICIAIS</label>
                     <input value="${iniciais}" readonly style="width: 100%; padding: 12px; background: #1f2937; color: #9ca3af; border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; font-size: 14px;">
@@ -489,11 +491,14 @@ function createAtualizacaoForm(hospitalNome, leitoNumero, dadosLeito) {
                 </div>
                 <div>
                     <label style="display: block; margin-bottom: 5px; color: #e2e8f0; font-weight: 600;">IDADE</label>
-                    <input id="updIdade" type="number" value="${dadosLeito?.idade || ''}" min="0" max="120" style="width: 100%; padding: 12px; background: #374151; color: #ffffff; border: 1px solid rgba(255,255,255,0.3); border-radius: 6px; font-size: 14px;">
+                    <select id="updIdade" style="width: 100%; padding: 12px; background: #374151 !important; color: #ffffff !important; border: 1px solid rgba(255,255,255,0.3); border-radius: 6px; font-size: 14px;">
+                        <option value="">Selecionar...</option>
+                        ${window.IDADE_OPTIONS.map(idade => `<option value="${idade}" ${dadosLeito?.idade == idade ? 'selected' : ''}>${idade} anos</option>`).join('')}
+                    </select>
                 </div>
             </div>
             
-            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px;">
+            <div class="form-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px;">
                 <div>
                     <label style="display: block; margin-bottom: 5px; color: #e2e8f0; font-weight: 600;">PPS</label>
                     <select id="updPPS" style="width: 100%; padding: 12px; background: #374151 !important; color: #ffffff !important; border: 1px solid rgba(255,255,255,0.3); border-radius: 6px; font-size: 14px;">
@@ -519,7 +524,7 @@ function createAtualizacaoForm(hospitalNome, leitoNumero, dadosLeito) {
             <div style="margin-bottom: 20px;">
                 <div style="background: rgba(96,165,250,0.1); padding: 10px 15px; border-radius: 6px; margin-bottom: 10px;">
                     <div style="font-size: 11px; color: #ffffff; text-transform: uppercase; font-weight: 700;">
-                        CONCESSÕES V4.0 (${concessoesAtuais.length}/${window.CONCESSOES_LIST.length} marcadas)
+                        CONCESSÕES PREVISTAS NA ALTA
                     </div>
                 </div>
                 <div id="updConcessoes" style="max-height: 150px; overflow-y: auto; background: rgba(255,255,255,0.03); border-radius: 6px; padding: 10px; display: grid; grid-template-columns: 1fr; gap: 6px;">
@@ -538,7 +543,7 @@ function createAtualizacaoForm(hospitalNome, leitoNumero, dadosLeito) {
             <div style="margin-bottom: 20px;">
                 <div style="background: rgba(96,165,250,0.1); padding: 10px 15px; border-radius: 6px; margin-bottom: 10px;">
                     <div style="font-size: 11px; color: #ffffff; text-transform: uppercase; font-weight: 700;">
-                        LINHAS V4.0 (${linhasAtuais.length}/${window.LINHAS_CUIDADO_LIST.length} marcadas)
+                        LINHAS DE CUIDADO PREVISTAS NA ALTA
                     </div>
                 </div>
                 <div id="updLinhas" style="max-height: 150px; overflow-y: auto; background: rgba(255,255,255,0.03); border-radius: 6px; padding: 10px; display: grid; grid-template-columns: 1fr; gap: 6px;">
@@ -571,15 +576,12 @@ function createAtualizacaoForm(hospitalNome, leitoNumero, dadosLeito) {
     `;
 }
 
-// *** V4.0: FUNÇÃO DE PRÉ-MARCAÇÃO COM ARRAYS DIRETOS ***
-function forcarPreMarcacaoV4(modal, dadosLeito) {
-    logDebug(`🔧 V4.0: Forçando pré-marcação com arrays diretos...`);
+// FUNÇÃO DE PRÉ-MARCAÇÃO COM ARRAYS DIRETOS
+function forcarPreMarcacao(modal, dadosLeito) {
+    logDebug(`Forçando pré-marcação com arrays diretos...`);
     
     const concessoesAtuais = Array.isArray(dadosLeito?.concessoes) ? dadosLeito.concessoes : [];
     const linhasAtuais = Array.isArray(dadosLeito?.linhas) ? dadosLeito.linhas : [];
-    
-    logDebug(`📋 V4.0 Concessões para marcar (array direto):`, concessoesAtuais);
-    logDebug(`📋 V4.0 Linhas para marcar (array direto):`, linhasAtuais);
     
     // Forçar marcação das concessões
     const concessoesCheckboxes = modal.querySelectorAll('#updConcessoes input[type="checkbox"]');
@@ -588,7 +590,6 @@ function forcarPreMarcacaoV4(modal, dadosLeito) {
         if (shouldBeChecked && !checkbox.checked) {
             checkbox.checked = true;
             checkbox.setAttribute('checked', 'checked');
-            logDebug(`✅ V4.0 Concessão "${checkbox.value}" marcada (array direto)`);
         }
     });
     
@@ -599,14 +600,13 @@ function forcarPreMarcacaoV4(modal, dadosLeito) {
         if (shouldBeChecked && !checkbox.checked) {
             checkbox.checked = true;
             checkbox.setAttribute('checked', 'checked');
-            logDebug(`✅ V4.0 Linha "${checkbox.value}" marcada (array direto)`);
         }
     });
     
-    logDebug(`🔧 V4.0: Pré-marcação concluída com arrays diretos - sem parsing!`);
+    logDebug(`Pré-marcação concluída com arrays diretos`);
 }
 
-// =================== EVENT LISTENERS DOS MODAIS V4.0 ===================
+// =================== EVENT LISTENERS DOS MODAIS ===================
 function setupModalEventListeners(modal, tipo) {
     // Botão Cancelar
     const btnCancelar = modal.querySelector('.btn-cancelar');
@@ -615,7 +615,7 @@ function setupModalEventListeners(modal, tipo) {
             e.preventDefault();
             e.stopPropagation();
             closeModal(modal);
-            logInfo('Modal V4.0 cancelado pelo usuário');
+            logInfo('Modal cancelado pelo usuário');
         });
     }
     
@@ -627,17 +627,17 @@ function setupModalEventListeners(modal, tipo) {
             e.stopPropagation();
             
             const originalText = this.innerHTML;
-            showButtonLoading(this, 'SALVANDO V4.0...');
+            showButtonLoading(this, 'SALVANDO...');
             
             try {
-                const dadosFormulario = coletarDadosFormularioV4(modal, tipo);
+                const dadosFormulario = coletarDadosFormulario(modal, tipo);
                 
                 if (tipo === 'admissao') {
                     await window.admitirPaciente(dadosFormulario.hospital, dadosFormulario.leito, dadosFormulario);
-                    showSuccessMessage('✅ Paciente admitido V4.0 com sucesso (arrays diretos)!');
+                    showSuccessMessage('✅ Paciente admitido com sucesso!');
                 } else {
                     await window.atualizarPaciente(dadosFormulario.hospital, dadosFormulario.leito, dadosFormulario);
-                    showSuccessMessage('✅ Dados atualizados V4.0 com sucesso (arrays diretos)!');
+                    showSuccessMessage('✅ Dados atualizados com sucesso!');
                 }
                 
                 hideButtonLoading(this, originalText);
@@ -648,8 +648,8 @@ function setupModalEventListeners(modal, tipo) {
                 
             } catch (error) {
                 hideButtonLoading(this, originalText);
-                showErrorMessage('❌ Erro V4.0 ao salvar: ' + error.message);
-                logError('Erro V4.0 ao salvar:', error);
+                showErrorMessage('❌ Erro ao salvar: ' + error.message);
+                logError('Erro ao salvar:', error);
             }
         });
     }
@@ -661,16 +661,16 @@ function setupModalEventListeners(modal, tipo) {
             e.preventDefault();
             e.stopPropagation();
             
-            if (!confirm("Confirmar ALTA V4.0 deste paciente (limpa 44 colunas)?")) return;
+            if (!confirm("Confirmar ALTA deste paciente?")) return;
             
             const originalText = this.innerHTML;
-            showButtonLoading(this, 'PROCESSANDO ALTA V4.0...');
+            showButtonLoading(this, 'PROCESSANDO ALTA...');
             
             try {
                 await window.darAltaPaciente(window.currentHospital, window.selectedLeito);
                 
                 hideButtonLoading(this, originalText);
-                showSuccessMessage('✅ Alta V4.0 processada (44 colunas limpas)!');
+                showSuccessMessage('✅ Alta processada!');
                 closeModal(modal);
                 
                 // Refresh automático
@@ -678,8 +678,8 @@ function setupModalEventListeners(modal, tipo) {
                 
             } catch (error) {
                 hideButtonLoading(this, originalText);
-                showErrorMessage('❌ Erro V4.0 ao processar alta: ' + error.message);
-                logError('Erro V4.0 ao processar alta:', error);
+                showErrorMessage('❌ Erro ao processar alta: ' + error.message);
+                logError('Erro ao processar alta:', error);
             }
         });
     }
@@ -704,13 +704,13 @@ function closeModal(modal) {
                 modal.parentNode.removeChild(modal);
             }
             window.selectedLeito = null;
-            logInfo('Modal V4.0 fechado');
+            logInfo('Modal fechado');
         }, 300);
     }
 }
 
-// *** V4.0: COLETA DE DADOS COM ARRAYS DIRETOS ***
-function coletarDadosFormularioV4(modal, tipo) {
+// COLETA DE DADOS COM ARRAYS DIRETOS
+function coletarDadosFormulario(modal, tipo) {
     const dados = {
         hospital: window.currentHospital,
         leito: window.selectedLeito
@@ -725,12 +725,12 @@ function coletarDadosFormularioV4(modal, tipo) {
         dados.complexidade = modal.querySelector('#admComplexidade')?.value || 'I';
         dados.prevAlta = modal.querySelector('#admPrevAlta')?.value || 'SP';
         
-        // *** V4.0: ARRAYS DIRETOS - SEM JOIN! ***
+        // Arrays diretos - sem join
         const concessoesSelecionadas = coletarCheckboxesSelecionados(modal, '#admConcessoes');
         const linhasSelecionadas = coletarCheckboxesSelecionados(modal, '#admLinhas');
         
-        dados.concessoes = concessoesSelecionadas;  // Array direto!
-        dados.linhas = linhasSelecionadas;          // Array direto!
+        dados.concessoes = concessoesSelecionadas;  // Array direto
+        dados.linhas = linhasSelecionadas;          // Array direto
         
     } else {
         dados.idade = parseInt(modal.querySelector('#updIdade')?.value) || null;
@@ -739,44 +739,27 @@ function coletarDadosFormularioV4(modal, tipo) {
         dados.complexidade = modal.querySelector('#updComplexidade')?.value || 'I';
         dados.prevAlta = modal.querySelector('#updPrevAlta')?.value || 'SP';
         
-        // *** V4.0: ARRAYS DIRETOS - SEM JOIN! ***
+        // Arrays diretos - sem join
         const concessoesSelecionadas = coletarCheckboxesSelecionados(modal, '#updConcessoes');
         const linhasSelecionadas = coletarCheckboxesSelecionados(modal, '#updLinhas');
         
-        dados.concessoes = concessoesSelecionadas;  // Array direto!
-        dados.linhas = linhasSelecionadas;          // Array direto!
+        dados.concessoes = concessoesSelecionadas;  // Array direto
+        dados.linhas = linhasSelecionadas;          // Array direto
     }
-    
-    logDebug(`📋 V4.0 Dados coletados para ${tipo} (arrays diretos):`, {
-        concessoes: dados.concessoes,
-        linhas: dados.linhas
-    });
     
     return dados;
 }
 
-// FUNÇÃO: COLETA ROBUSTA DE CHECKBOXES V4.0
+// FUNÇÃO: COLETA ROBUSTA DE CHECKBOXES
 function coletarCheckboxesSelecionados(modal, seletor) {
     const checkboxes = modal.querySelectorAll(`${seletor} input[type="checkbox"]`);
     const selecionados = [];
     
-    logDebug(`🔍 V4.0 Coletando checkboxes de: ${seletor}`);
-    logDebug(`🔍 V4.0 Total de checkboxes encontrados: ${checkboxes.length}`);
-    
-    checkboxes.forEach((checkbox, index) => {
-        const isChecked = checkbox.checked;
-        
-        logDebug(`🔍 V4.0 Checkbox ${index + 1}: "${checkbox.value}"`, {
-            checked: isChecked,
-            finalStatus: isChecked ? 'SELECIONADO' : 'não selecionado'
-        });
-        
-        if (isChecked) {
+    checkboxes.forEach(checkbox => {
+        if (checkbox.checked) {
             selecionados.push(checkbox.value);
         }
     });
-    
-    logDebug(`✅ V4.0 Total selecionados (array direto): ${selecionados.length}`, selecionados);
     
     return selecionados;
 }
@@ -907,7 +890,7 @@ function calcularTempoInternacao(admissao) {
         return `${diffDays}d ${diffHours}h`;
         
     } catch (error) {
-        logError('Erro V4.0 ao calcular tempo internação:', error);
+        logError('Erro ao calcular tempo internação:', error);
         return 'Erro no cálculo';
     }
 }
@@ -925,32 +908,32 @@ function formatarDataHora(dataISO) {
             minute: '2-digit'
         });
     } catch (error) {
-        logError('Erro V4.0 ao formatar data:', error);
+        logError('Erro ao formatar data:', error);
         return '—';
     }
 }
 
-// =================== FUNÇÕES DE LOG V4.0 ===================
+// =================== FUNÇÕES DE LOG ===================
 function logInfo(message, data = null) {
-    console.log(`🔵 [CARDS V4.0] ${message}`, data || '');
+    console.log(`🔵 [CARDS] ${message}`, data || '');
 }
 
 function logError(message, error = null) {
-    console.error(`🔴 [CARDS V4.0 ERROR] ${message}`, error || '');
+    console.error(`🔴 [CARDS ERROR] ${message}`, error || '');
 }
 
 function logSuccess(message) {
-    console.log(`🟢 [CARDS V4.0 SUCCESS] ${message}`);
+    console.log(`🟢 [CARDS SUCCESS] ${message}`);
 }
 
 function logDebug(message, data = null) {
-    console.log(`🟡 [CARDS V4.0 DEBUG] ${message}`, data || '');
+    console.log(`🟡 [CARDS DEBUG] ${message}`, data || '');
 }
 
 // =================== CSS PARA ANIMAÇÕES E RESPONSIVIDADE ===================
-if (!document.getElementById('cardsAnimationsV4')) {
+if (!document.getElementById('cardsAnimations')) {
     const style = document.createElement('style');
-    style.id = 'cardsAnimationsV4';
+    style.id = 'cardsAnimations';
     style.textContent = `
         @keyframes slideIn {
             from {
@@ -997,7 +980,7 @@ if (!document.getElementById('cardsAnimationsV4')) {
             border-left: 4px solid rgba(255,255,255,0.3);
         }
         
-        /* Estilos para dropdowns V4.0 */
+        /* Estilos para dropdowns */
         select {
             background-color: #374151 !important;
             color: #ffffff !important;
@@ -1024,7 +1007,7 @@ if (!document.getElementById('cardsAnimationsV4')) {
             box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.2) !important;
         }
 
-        /* Checkboxes V4.0 com estilo melhorado */
+        /* Checkboxes com estilo melhorado */
         input[type="checkbox"] {
             width: 16px;
             height: 16px;
@@ -1037,7 +1020,7 @@ if (!document.getElementById('cardsAnimationsV4')) {
             border-color: #60a5fa !important;
         }
         
-        /* Labels V4.0 com hover para melhor UX */
+        /* Labels com hover para melhor UX */
         label:has(input[type="checkbox"]) {
             cursor: pointer;
             transition: background-color 0.2s ease;
@@ -1049,27 +1032,39 @@ if (!document.getElementById('cardsAnimationsV4')) {
             background-color: rgba(96, 165, 250, 0.1);
         }
 
-        /* Responsividade mobile V4.0 para modais */
+        /* *** RESPONSIVIDADE MOBILE CRÍTICA *** */
         @media (max-width: 768px) {
-            .modal-overlay > div {
+            /* Modal responsivo */
+            .modal-overlay .modal-content {
                 width: 95% !important;
                 max-width: none !important;
                 margin: 10px !important;
                 max-height: 95vh !important;
             }
             
-            .modal-overlay div[style*="grid-template-columns"] {
+            /* Grid forms: 3 colunas no mobile viram 1 coluna */
+            .modal-content .form-grid {
                 grid-template-columns: 1fr !important;
                 gap: 10px !important;
             }
             
-            .modal-overlay div[id$="Concessoes"], 
-            .modal-overlay div[id$="Linhas"] {
+            /* Cards: Manter layout 3x3 */
+            .card-row-1,
+            .card-row-2,
+            .card-row-3 {
+                display: grid !important;
+                grid-template-columns: 1fr 1fr 1fr !important;
+                gap: 8px !important;
+            }
+            
+            /* Concessões e Linhas em 1 coluna */
+            .modal-content div[id$="Concessoes"], 
+            .modal-content div[id$="Linhas"] {
                 grid-template-columns: 1fr !important;
                 max-height: 120px !important;
             }
             
-            /* Checkboxes V4.0 maiores no mobile */
+            /* Checkboxes maiores no mobile */
             input[type="checkbox"] {
                 width: 18px !important;
                 height: 18px !important;
@@ -1082,20 +1077,20 @@ if (!document.getElementById('cardsAnimationsV4')) {
             }
         }
         
-        /* Responsividade V4.0 para landscape mobile */
+        /* Responsividade para landscape mobile */
         @media (max-width: 768px) and (orientation: landscape) {
-            .modal-overlay > div {
+            .modal-overlay .modal-content {
                 max-height: 85vh !important;
                 padding: 20px !important;
             }
             
-            .modal-overlay div[id$="Concessoes"], 
-            .modal-overlay div[id$="Linhas"] {
+            .modal-content div[id$="Concessoes"], 
+            .modal-content div[id$="Linhas"] {
                 max-height: 100px !important;
             }
         }
         
-        /* Animação de loading V4.0 */
+        /* Animação de loading */
         .loading-spinner {
             display: inline-block;
             width: 14px;
@@ -1107,7 +1102,7 @@ if (!document.getElementById('cardsAnimationsV4')) {
             margin-right: 8px;
         }
         
-        /* Cards V4.0 hover effects */
+        /* Cards hover effects */
         .card {
             transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
@@ -1117,7 +1112,7 @@ if (!document.getElementById('cardsAnimationsV4')) {
             box-shadow: 0 8px 25px rgba(0,0,0,0.15);
         }
         
-        /* Timeline V4.0 specific colors */
+        /* Timeline specific colors */
         .prev-alta-hoje-ouro { background: var(--ouro) !important; color: #000 !important; }
         .prev-alta-hoje-2r { background: var(--r2) !important; color: #fff !important; }
         .prev-alta-hoje-3r { background: var(--r3) !important; color: #fff !important; }
@@ -1131,73 +1126,84 @@ if (!document.getElementById('cardsAnimationsV4')) {
     document.head.appendChild(style);
 }
 
-// =================== INICIALIZAÇÃO V4.0 ===================
+// =================== INICIALIZAÇÃO ===================
 document.addEventListener('DOMContentLoaded', function() {
-    logSuccess('✅ Cards.js V4.0 CARREGADO - Arrays diretos sem parsing implementado');
+    logSuccess('✅ Cards.js CARREGADO - Arrays diretos implementados');
     
-    // Verificar dependências V4.0
+    // Verificar dependências
     if (typeof window.CONFIG === 'undefined') {
-        logError('CONFIG não encontrado V4.0 - algumas funcionalidades podem não funcionar');
+        logError('CONFIG não encontrado - algumas funcionalidades podem não funcionar');
     }
     
     if (typeof window.hospitalData === 'undefined') {
         window.hospitalData = {};
-        logInfo('hospitalData V4.0 inicializado');
+        logInfo('hospitalData inicializado');
     }
     
-    // Verificar se API V4.0 está disponível
+    // Verificar se API está disponível
     if (typeof window.admitirPaciente === 'undefined') {
-        logError('Funções da API V4.0 não encontradas - verificar api.js V4.0');
+        logError('Funções da API não encontradas - verificar api.js');
     }
     
-    // Verificar listas V4.0
+    // Verificar listas
     if (window.CONCESSOES_LIST.length !== 13) {
-        logError(`ERRO V4.0: Esperadas 13 concessões, encontradas ${window.CONCESSOES_LIST.length}`);
+        logError(`ERRO: Esperadas 13 concessões, encontradas ${window.CONCESSOES_LIST.length}`);
     }
     
     if (window.LINHAS_CUIDADO_LIST.length !== 19) {
-        logError(`ERRO V4.0: Esperadas 19 linhas, encontradas ${window.LINHAS_CUIDADO_LIST.length}`);
+        logError(`ERRO: Esperadas 19 linhas, encontradas ${window.LINHAS_CUIDADO_LIST.length}`);
     }
     
     if (window.PREVISAO_ALTA_OPTIONS.length !== 10) {
-        logError(`ERRO V4.0: Esperadas 10 opções timeline, encontradas ${window.PREVISAO_ALTA_OPTIONS.length}`);
+        logError(`ERRO: Esperadas 10 opções timeline, encontradas ${window.PREVISAO_ALTA_OPTIONS.length}`);
     }
     
     // Garantir que seleção inicial funcione
     if (window.currentHospital && window.HOSPITAL_MAPPING[window.currentHospital]) {
-        logInfo(`Hospital inicial V4.0: ${window.currentHospital} - ${window.HOSPITAL_MAPPING[window.currentHospital]}`);
+        logInfo(`Hospital inicial: ${window.currentHospital} - ${window.HOSPITAL_MAPPING[window.currentHospital]}`);
     }
     
-    // Log das melhorias V4.0
-    logInfo('🚀 Melhorias V4.0 ativas:');
+    // Log das melhorias ativas
+    logInfo('🚀 Melhorias ativas:');
     logInfo('  • Arrays diretos - SEM parsing');
     logInfo('  • Timeline com 10 opções');
     logInfo('  • 13 concessões + 19 linhas');
     logInfo('  • Performance otimizada');
     logInfo('  • Validação automática');
+    logInfo('  • Layout 3x3 mobile');
+    logInfo('  • Leitos ocupados AMARELOS');
+    logInfo('  • Títulos sem versões');
+    logInfo('  • Campo idade como SELECT');
     
     // Adicionar listener para resize
     window.addEventListener('resize', function() {
         const width = window.innerWidth;
         if (width < 768) {
-            logDebug('Modo mobile V4.0 ativado');
+            logDebug('Modo mobile ativado');
         } else if (width < 1024) {
-            logDebug('Modo tablet V4.0 ativado');
+            logDebug('Modo tablet ativado');
         } else {
-            logDebug('Modo desktop V4.0 ativado');
+            logDebug('Modo desktop ativado');
         }
     });
 });
 
-// =================== EXPORT DE FUNÇÕES PÚBLICAS V4.0 ===================
+// =================== EXPORT DE FUNÇÕES PÚBLICAS ===================
 window.createCard = createCard;
 window.openAdmissaoModal = openAdmissaoModal;
 window.openAtualizacaoModal = openAtualizacaoModal;
-window.forcarPreMarcacaoV4 = forcarPreMarcacaoV4;
-window.coletarDadosFormularioV4 = coletarDadosFormularioV4;
+window.forcarPreMarcacao = forcarPreMarcacao;
+window.coletarDadosFormulario = coletarDadosFormulario;
 
-logSuccess('🏥 CARDS.JS V4.0 - ARRAYS DIRETOS IMPLEMENTADOS COM SUCESSO!');
+logSuccess('🏥 CARDS.JS - VERSÃO FINAL CORRIGIDA IMPLEMENTADA!');
 logInfo('📋 Eliminado parsing complexo - Performance 10x melhor');
 logInfo('✅ Timeline corrigida - 10 opções de previsão de alta');
-logInfo('✅ Integração perfeita com Google Apps Script V4.0 (44 colunas)');
+logInfo('✅ Integração perfeita com Google Apps Script (44 colunas)');
 logInfo('✅ Validação automática de concessões e linhas de cuidado');
+logInfo('🔧 CORREÇÕES APLICADAS:');
+logInfo('  • Leitos ocupados: COR AMARELA (#fbbf24)');
+logInfo('  • Títulos: SEM versões (V4.0 removido)');
+logInfo('  • Subtítulos: Linha técnica removida');
+logInfo('  • Idade: Campo SELECT em vez de input text');
+logInfo('  • Layout mobile: 3x3 forçado via CSS');
+logInfo('  • Seções: Títulos limpos sem versões');

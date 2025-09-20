@@ -124,7 +124,7 @@ window.renderDashboardExecutivo = function() {
             
             <!-- HEADER COM BOTÃO CLARO/ESCURO -->
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; padding: 20px; background: rgba(255, 255, 255, 0.05); border-radius: 12px; border-left: 4px solid #22c55e;">
-                <h2 style="margin: 0; color: #22c55e; font-size: 24px; font-weight: 700;">Rede Hospitalar Externa</h2>
+                <h2 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 700;">Rede Hospitalar Externa</h2>
                 <div style="display: flex; align-items: center; gap: 15px;">
                     <button id="toggleFundoBtnExec" class="toggle-fundo-btn" style="padding: 8px 16px; background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 8px; color: #e2e8f0; font-size: 14px; cursor: pointer; transition: all 0.3s ease; display: flex; align-items: center; gap: 8px;">
                         <span id="toggleIconExec">🌙</span>

@@ -446,6 +446,41 @@ function renderAltasHospital(hospitalId) {
     
     const hospital = window.hospitalData[hospitalId];
     if (!hospital || !hospital.leitos) return;
+
+    // DEBUG: Investigar estrutura dos dados
+console.log('=== INVESTIGANDO DADOS DO HOSPITAL ===');
+console.log('Hospital ID:', hospitalId);
+console.log('Dados completos:', hospital);
+
+if (hospital && hospital.leitos && hospital.leitos.length > 0) {
+    console.log('Primeiro leito como exemplo:');
+    console.log('Estrutura:', hospital.leitos[0]);
+    
+    // Ver todos os campos disponíveis
+    console.log('Campos do leito:', Object.keys(hospital.leitos[0]));
+    
+    // Procurar especificamente por previsões de alta
+    hospital.leitos.forEach((leito, index) => {
+        // Buscar em todos os campos possíveis
+        const camposPossiveis = [
+            leito.PrevAlta,
+            leito.prevAlta,
+            leito['Previsão de alta'],
+            leito.previsaoAlta,
+            leito['PrevAlta'],
+            leito.paciente?.prevAlta,
+            leito.paciente?.PrevAlta,
+            leito.paciente?.['Previsão de alta']
+        ];
+        
+        const prevEncontrada = camposPossiveis.find(p => p !== undefined);
+        
+        if (prevEncontrada) {
+            console.log(`Leito ${index}: Previsão = "${prevEncontrada}", Status = "${leito.status || leito.Status}"`);
+        }
+    });
+}
+console.log('=== FIM DA INVESTIGAÇÃO ===');
     
     const chartKey = `altas${hospitalId}`;
     if (window.chartInstances && window.chartInstances[chartKey]) {
@@ -585,6 +620,8 @@ function renderAltasHospital(hospitalId) {
         plugins: [backgroundPlugin]
     });
 }
+
+
 
 // Gráfico de Concessões
 function renderConcessoesHospital(hospitalId, type = 'bar') {

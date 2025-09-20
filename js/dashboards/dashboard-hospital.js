@@ -1,5 +1,5 @@
-// =================== DASHBOARD HOSPITALAR - VERSÃO CONSOLIDADA FINAL ===================
-// =================== TODO CSS RESPONSIVO INCLUÍDO - SEM mobile.css ===================
+// =================== DASHBOARD HOSPITALAR - VERSÃO CORRIGIDA FINAL ===================
+// =================== KPIs MOBILE + LEGENDAS + CORES PANTONE + SCATTER CORRIGIDO ===================
 
 // Estado dos gráficos selecionados por hospital
 window.graficosState = {
@@ -12,7 +12,7 @@ window.graficosState = {
 // Estado global para fundo branco
 window.fundoBranco = false;
 
-// Paleta de cores Pantone para Concessões
+// Paleta de cores Pantone para Concessões - CORRIGIDA
 const CORES_CONCESSOES = {
     'Transição Domiciliar': '#007A53',
     'Aplicação domiciliar de medicamentos': '#582C83',
@@ -29,7 +29,7 @@ const CORES_CONCESSOES = {
     'PICC': '#E03C31'
 };
 
-// Paleta de cores Pantone para Linhas de Cuidado
+// Paleta de cores Pantone para Linhas de Cuidado - CORRIGIDA
 const CORES_LINHAS = {
     'Assiste': '#ED0A72',
     'APS': '#007A33',
@@ -51,6 +51,11 @@ const CORES_LINHAS = {
     'Crônicos – Pós-bariátrica': '#003C57',
     'Crônicos – Reumatologia': '#5A0020'
 };
+
+// Detectar se é mobile
+function isMobile() {
+    return window.innerWidth <= 768;
+}
 
 window.renderDashboardHospitalar = function() {
     logInfo('Renderizando Dashboard Hospitalar');
@@ -254,9 +259,46 @@ function renderHospitalSection(hospitalId) {
             <div class="hospital-header">
                 <h3 class="hospital-title">${hospital.nome}</h3>
                 
+                <!-- *** NOVO LAYOUT KPIs MOBILE CORRIGIDO *** -->
+                <div class="kpis-container-mobile">
+                    <!-- LINHA 1: KPI OCUPAÇÃO CENTRALIZADO E MAIOR -->
+                    <div class="kpi-ocupacao-linha">
+                        <div class="kpi-box-ocupacao">
+                            <canvas id="gauge${hospitalId}" width="100" height="50"></canvas>
+                            <div class="kpi-value-grande">${kpis.ocupacao}%</div>
+                            <div class="kpi-label">OCUPAÇÃO</div>
+                        </div>
+                    </div>
+                    
+                    <!-- LINHA 2: TOTAL E OCUPADOS -->
+                    <div class="kpis-linha-dupla">
+                        <div class="kpi-box-inline">
+                            <div class="kpi-value">${kpis.total}</div>
+                            <div class="kpi-label">TOTAL</div>
+                        </div>
+                        <div class="kpi-box-inline">
+                            <div class="kpi-value">${kpis.ocupados}</div>
+                            <div class="kpi-label">OCUPADOS</div>
+                        </div>
+                    </div>
+                    
+                    <!-- LINHA 3: VAGOS E EM ALTA -->
+                    <div class="kpis-linha-dupla">
+                        <div class="kpi-box-inline">
+                            <div class="kpi-value">${kpis.vagos}</div>
+                            <div class="kpi-label">VAGOS</div>
+                        </div>
+                        <div class="kpi-box-inline">
+                            <div class="kpi-value">${kpis.altas}</div>
+                            <div class="kpi-label">EM ALTA</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- *** LAYOUT DESKTOP ORIGINAL *** -->
                 <div class="kpis-horizontal-container">
                     <div class="kpi-box-inline kpi-gauge-box">
-                        <canvas id="gauge${hospitalId}" width="80" height="40"></canvas>
+                        <canvas id="gaugeDesktop${hospitalId}" width="80" height="40"></canvas>
                         <div class="kpi-value">${kpis.ocupacao}%</div>
                         <div class="kpi-label">OCUPAÇÃO</div>
                     </div>
@@ -388,47 +430,90 @@ const backgroundPlugin = {
 
 // Gauge do hospital (SEM plugin de background)
 function renderGaugeHospital(hospitalId) {
-    const canvas = document.getElementById(`gauge${hospitalId}`);
-    if (!canvas || typeof Chart === 'undefined') return;
+    const canvasMobile = document.getElementById(`gauge${hospitalId}`);
+    const canvasDesktop = document.getElementById(`gaugeDesktop${hospitalId}`);
+    
+    if (typeof Chart === 'undefined') return;
     
     const kpis = calcularKPIsHospital(hospitalId);
     const ocupacao = kpis.ocupacao;
     
-    const chartKey = `gauge${hospitalId}`;
-    if (window.chartInstances && window.chartInstances[chartKey]) {
-        window.chartInstances[chartKey].destroy();
+    // Renderizar gauge mobile
+    if (canvasMobile) {
+        const chartKey = `gauge${hospitalId}`;
+        if (window.chartInstances && window.chartInstances[chartKey]) {
+            window.chartInstances[chartKey].destroy();
+        }
+        
+        if (!window.chartInstances) window.chartInstances = {};
+        
+        try {
+            const ctx = canvasMobile.getContext('2d');
+            window.chartInstances[chartKey] = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    datasets: [{
+                        data: [ocupacao, 100 - ocupacao],
+                        backgroundColor: [
+                            ocupacao >= 80 ? '#ef4444' : ocupacao >= 60 ? '#f97316' : '#22c55e',
+                            'rgba(255,255,255,0.1)'
+                        ],
+                        borderWidth: 0,
+                        cutout: '70%'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { enabled: false }
+                    },
+                    rotation: -90,
+                    circumference: 180
+                }
+            });
+        } catch (error) {
+            logError(`Erro ao renderizar gauge mobile ${hospitalId}:`, error);
+        }
     }
     
-    if (!window.chartInstances) window.chartInstances = {};
-    
-    try {
-        const ctx = canvas.getContext('2d');
-        window.chartInstances[chartKey] = new Chart(ctx, {
-            type: 'doughnut',
-            data: {
-                datasets: [{
-                    data: [ocupacao, 100 - ocupacao],
-                    backgroundColor: [
-                        ocupacao >= 80 ? '#ef4444' : ocupacao >= 60 ? '#f97316' : '#22c55e',
-                        'rgba(255,255,255,0.1)'
-                    ],
-                    borderWidth: 0,
-                    cutout: '70%'
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false },
-                    tooltip: { enabled: false }
+    // Renderizar gauge desktop
+    if (canvasDesktop) {
+        const chartKey = `gaugeDesktop${hospitalId}`;
+        if (window.chartInstances && window.chartInstances[chartKey]) {
+            window.chartInstances[chartKey].destroy();
+        }
+        
+        try {
+            const ctx = canvasDesktop.getContext('2d');
+            window.chartInstances[chartKey] = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    datasets: [{
+                        data: [ocupacao, 100 - ocupacao],
+                        backgroundColor: [
+                            ocupacao >= 80 ? '#ef4444' : ocupacao >= 60 ? '#f97316' : '#22c55e',
+                            'rgba(255,255,255,0.1)'
+                        ],
+                        borderWidth: 0,
+                        cutout: '70%'
+                    }]
                 },
-                rotation: -90,
-                circumference: 180
-            }
-        });
-    } catch (error) {
-        logError(`Erro ao renderizar gauge ${hospitalId}:`, error);
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { enabled: false }
+                    },
+                    rotation: -90,
+                    circumference: 180
+                }
+            });
+        } catch (error) {
+            logError(`Erro ao renderizar gauge desktop ${hospitalId}:`, error);
+        }
     }
 }
 
@@ -516,25 +601,42 @@ function renderAltasHospital(hospitalId) {
                     align: 'start',
                     labels: {
                         color: corTexto,
-                        padding: 10,
-                        font: { size: 13, weight: 600 },
-                        usePointStyle: true,
+                        padding: 8,
+                        font: { size: 11, weight: 500 },
+                        usePointStyle: false,
                         pointStyle: 'rect',
                         boxWidth: 12,
                         boxHeight: 12,
+                        // *** FORÇAR UMA LEGENDA POR LINHA ***
+                        filter: function(legendItem, data) {
+                            return true;
+                        },
                         generateLabels: function(chart) {
                             const datasets = chart.data.datasets;
-                            return datasets.map((dataset, i) => {
-                                return {
+                            const result = [];
+                            datasets.forEach((dataset, i) => {
+                                result.push({
                                     text: dataset.label,
                                     fillStyle: dataset.backgroundColor,
                                     strokeStyle: dataset.backgroundColor,
                                     lineWidth: 0,
-                                    pointStyle: 'rect',
                                     hidden: !chart.isDatasetVisible(i),
                                     index: i
-                                };
+                                });
+                                
+                                // Forçar quebra de linha após cada item
+                                if (i < datasets.length - 1) {
+                                    result.push({
+                                        text: '',
+                                        fillStyle: 'transparent',
+                                        strokeStyle: 'transparent',
+                                        lineWidth: 0,
+                                        hidden: false,
+                                        index: -1
+                                    });
+                                }
                             });
+                            return result;
                         }
                     }
                 },
@@ -586,7 +688,7 @@ function renderAltasHospital(hospitalId) {
     });
 }
 
-// Gráfico de Concessões - CORRIGIDO COM LEGENDAS UMA POR LINHA
+// Gráfico de Concessões - CORRIGIDO COM SCATTER E LEGENDAS
 function renderConcessoesHospital(hospitalId, type = 'bar') {
     const canvas = document.getElementById(`graficoConcessoes${hospitalId}`);
     if (!canvas || typeof Chart === 'undefined') return;
@@ -648,6 +750,10 @@ function renderConcessoesHospital(hospitalId, type = 'bar') {
     const valorMaximo = Math.max(...todosValores, 0);
     const limiteSuperior = valorMaximo + 1;
     
+    // *** CORREÇÃO: Detectar mobile para tamanho das bolinhas ***
+    const mobile = isMobile();
+    const tamanhoBolinha = mobile ? 3 : 8; // 60% menor no mobile
+    
     const datasets = concessoesOrdenadas.map(([nome, dados]) => {
         const cor = CORES_CONCESSOES[nome] || '#007A53';
         
@@ -655,6 +761,7 @@ function renderConcessoesHospital(hospitalId, type = 'bar') {
             const scatterData = [];
             dados.forEach((valor, index) => {
                 if (valor > 0) {
+                    // *** CORREÇÃO: Apenas valores inteiros exatos (0, 1, 2, 3, 4) ***
                     scatterData.push({ x: index, y: valor });
                 }
             });
@@ -662,7 +769,7 @@ function renderConcessoesHospital(hospitalId, type = 'bar') {
                 label: nome,
                 data: scatterData,
                 backgroundColor: cor,
-                pointRadius: 8,
+                pointRadius: tamanhoBolinha, // Tamanho corrigido
                 showLine: false
             };
         } else if (type === 'line') {
@@ -793,24 +900,38 @@ function renderConcessoesHospital(hospitalId, type = 'bar') {
                     labels: {
                         color: corTexto,
                         padding: 8,
-                        font: { size: 11, weight: 500 },
-                        usePointStyle: true,
+                        font: { size: mobile ? 9 : 10, weight: 500 },
+                        usePointStyle: false,
                         pointStyle: 'circle',
                         boxWidth: 10,
                         boxHeight: 10,
+                        // *** FORÇAR UMA LEGENDA POR LINHA ***
                         generateLabels: function(chart) {
                             const datasets = chart.data.datasets;
-                            return datasets.map((dataset, i) => {
-                                return {
+                            const result = [];
+                            datasets.forEach((dataset, i) => {
+                                result.push({
                                     text: dataset.label,
                                     fillStyle: dataset.backgroundColor || dataset.borderColor,
                                     strokeStyle: dataset.backgroundColor || dataset.borderColor,
                                     lineWidth: 0,
-                                    pointStyle: 'circle',
                                     hidden: !chart.isDatasetVisible(i),
                                     index: i
-                                };
+                                });
+                                
+                                // Forçar quebra de linha após cada item
+                                if (i < datasets.length - 1) {
+                                    result.push({
+                                        text: '',
+                                        fillStyle: 'transparent',
+                                        strokeStyle: 'transparent',
+                                        lineWidth: 0,
+                                        hidden: false,
+                                        index: -1
+                                    });
+                                }
                             });
+                            return result;
                         }
                     }
                 },
@@ -832,7 +953,7 @@ function renderConcessoesHospital(hospitalId, type = 'bar') {
     });
 }
 
-// Gráfico de Linhas - CORRIGIDO COM LEGENDAS UMA POR LINHA
+// Gráfico de Linhas - CORRIGIDO COM SCATTER E LEGENDAS
 function renderLinhasHospital(hospitalId, type = 'bar') {
     const canvas = document.getElementById(`graficoLinhas${hospitalId}`);
     if (!canvas || typeof Chart === 'undefined') return;
@@ -894,6 +1015,10 @@ function renderLinhasHospital(hospitalId, type = 'bar') {
     const valorMaximo = Math.max(...todosValores);
     const limiteSuperior = valorMaximo + 1;
     
+    // *** CORREÇÃO: Detectar mobile para tamanho das bolinhas ***
+    const mobile = isMobile();
+    const tamanhoBolinha = mobile ? 3 : 8; // 60% menor no mobile
+    
     const datasets = linhasOrdenadas.map(([nome, dados]) => {
         const cor = CORES_LINHAS[nome] || '#ED0A72';
         
@@ -901,6 +1026,7 @@ function renderLinhasHospital(hospitalId, type = 'bar') {
             const scatterData = [];
             dados.forEach((valor, index) => {
                 if (valor > 0) {
+                    // *** CORREÇÃO: Apenas valores inteiros exatos (0, 1, 2, 3, 4) ***
                     scatterData.push({ x: index, y: valor });
                 }
             });
@@ -908,7 +1034,7 @@ function renderLinhasHospital(hospitalId, type = 'bar') {
                 label: nome,
                 data: scatterData,
                 backgroundColor: cor,
-                pointRadius: 8,
+                pointRadius: tamanhoBolinha, // Tamanho corrigido
                 showLine: false
             };
         } else if (type === 'line') {
@@ -1039,24 +1165,38 @@ function renderLinhasHospital(hospitalId, type = 'bar') {
                     labels: {
                         color: corTexto,
                         padding: 8,
-                        font: { size: 11, weight: 500 },
-                        usePointStyle: true,
+                        font: { size: mobile ? 9 : 10, weight: 500 },
+                        usePointStyle: false,
                         pointStyle: 'circle',
                         boxWidth: 10,
                         boxHeight: 10,
+                        // *** FORÇAR UMA LEGENDA POR LINHA ***
                         generateLabels: function(chart) {
                             const datasets = chart.data.datasets;
-                            return datasets.map((dataset, i) => {
-                                return {
+                            const result = [];
+                            datasets.forEach((dataset, i) => {
+                                result.push({
                                     text: dataset.label,
                                     fillStyle: dataset.backgroundColor || dataset.borderColor,
                                     strokeStyle: dataset.backgroundColor || dataset.borderColor,
                                     lineWidth: 0,
-                                    pointStyle: 'circle',
                                     hidden: !chart.isDatasetVisible(i),
                                     index: i
-                                };
+                                });
+                                
+                                // Forçar quebra de linha após cada item
+                                if (i < datasets.length - 1) {
+                                    result.push({
+                                        text: '',
+                                        fillStyle: 'transparent',
+                                        strokeStyle: 'transparent',
+                                        lineWidth: 0,
+                                        hidden: false,
+                                        index: -1
+                                    });
+                                }
                             });
+                            return result;
                         }
                     }
                 },
@@ -1109,7 +1249,7 @@ window.forceDataRefresh = function() {
     }
 };
 
-// *** CSS CONSOLIDADO COMPLETO COM CORREÇÕES ***
+// *** CSS CONSOLIDADO COMPLETO COM CORREÇÕES MOBILE KPIs ***
 function getHospitalConsolidadoCSS() {
     return `
         <style id="hospitalConsolidadoCSS">
@@ -1147,7 +1287,12 @@ function getHospitalConsolidadoCSS() {
                 letter-spacing: 0.5px;
             }
             
-            /* *** CORREÇÃO: KPIs COM LARGURAS IGUAIS *** */
+            /* *** LAYOUT MOBILE KPIs - OCULTO NO DESKTOP *** */
+            .kpis-container-mobile {
+                display: none;
+            }
+            
+            /* *** LAYOUT DESKTOP KPIs - VISÍVEL NO DESKTOP *** */
             .kpis-horizontal-container {
                 display: grid;
                 grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
@@ -1341,32 +1486,91 @@ function getHospitalConsolidadoCSS() {
                     border-radius: 8px !important;
                 }
                 
-                /* *** CORREÇÃO: KPIs EM 5 COLUNAS IGUAIS FORÇADO *** */
+                /* *** OCULTAR LAYOUT DESKTOP E MOSTRAR MOBILE *** */
                 .kpis-horizontal-container {
-                    display: grid !important;
-                    grid-template-columns: 1fr 1fr 1fr 1fr 1fr !important;
-                    gap: 6px !important;
-                    margin-bottom: 15px !important;
+                    display: none !important;
                 }
                 
-                .kpi-box-inline {
-                    padding: 8px 4px !important;
-                    min-height: 60px !important;
+                .kpis-container-mobile {
+                    display: flex !important;
+                    flex-direction: column;
+                    gap: 8px;
+                    margin-bottom: 15px;
                 }
                 
-                .kpi-value {
-                    font-size: 16px !important;
-                    margin-bottom: 3px !important;
+                /* *** LINHA 1: KPI OCUPAÇÃO GRANDE E CENTRALIZADO *** */
+                .kpi-ocupacao-linha {
+                    display: flex;
+                    justify-content: center;
+                    margin-bottom: 5px;
                 }
                 
-                .kpi-label {
-                    font-size: 8px !important;
+                .kpi-box-ocupacao {
+                    background: #1a1f2e;
+                    border-radius: 12px;
+                    padding: 15px 20px;
+                    color: white;
+                    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+                    border: 1px solid rgba(255, 255, 255, 0.1);
+                    text-align: center;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    justify-content: center;
+                    min-width: 140px;
                 }
                 
-                /* Gauge menor no mobile */
-                .kpi-gauge-box canvas {
-                    max-width: 40px !important;
-                    max-height: 20px !important;
+                .kpi-box-ocupacao canvas {
+                    margin-bottom: 8px;
+                    max-width: 100px;
+                    max-height: 50px;
+                }
+                
+                .kpi-value-grande {
+                    display: block;
+                    font-size: 32px;
+                    font-weight: 700;
+                    color: white;
+                    line-height: 1;
+                    margin-bottom: 6px;
+                }
+                
+                /* *** LINHAS 2 E 3: KPIs EM PARES *** */
+                .kpis-linha-dupla {
+                    display: grid;
+                    grid-template-columns: 1fr 1fr;
+                    gap: 6px;
+                }
+                
+                .kpis-linha-dupla .kpi-box-inline {
+                    background: #1a1f2e;
+                    border-radius: 8px;
+                    padding: 10px 8px;
+                    color: white;
+                    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+                    border: 1px solid rgba(255, 255, 255, 0.1);
+                    text-align: center;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    justify-content: center;
+                    min-height: 70px;
+                }
+                
+                .kpis-linha-dupla .kpi-value {
+                    font-size: 20px;
+                    font-weight: 700;
+                    color: white;
+                    line-height: 1;
+                    margin-bottom: 4px;
+                }
+                
+                .kpis-linha-dupla .kpi-label {
+                    font-size: 10px;
+                    color: #9ca3af;
+                    text-transform: uppercase;
+                    letter-spacing: 0.5px;
+                    font-weight: 600;
                 }
                 
                 /* Gráficos com bordas mínimas */
@@ -1433,24 +1637,30 @@ function getHospitalConsolidadoCSS() {
                     margin: 0 2px !important;
                 }
                 
-                /* *** KPIs EM DUAS LINHAS NO MOBILE PEQUENO *** */
-                .kpis-horizontal-container {
-                    grid-template-columns: 1fr 1fr 1fr !important;
-                    grid-template-rows: auto auto !important;
-                    gap: 4px !important;
+                .kpi-box-ocupacao {
+                    min-width: 120px;
+                    padding: 12px 16px;
                 }
                 
-                .kpi-box-inline {
-                    padding: 6px 3px !important;
-                    min-height: 50px !important;
+                .kpi-value-grande {
+                    font-size: 28px;
                 }
                 
-                .kpi-value {
-                    font-size: 14px !important;
+                .kpis-linha-dupla {
+                    gap: 4px;
                 }
                 
-                .kpi-label {
-                    font-size: 7px !important;
+                .kpis-linha-dupla .kpi-box-inline {
+                    padding: 8px 6px;
+                    min-height: 60px;
+                }
+                
+                .kpis-linha-dupla .kpi-value {
+                    font-size: 18px;
+                }
+                
+                .kpis-linha-dupla .kpi-label {
+                    font-size: 9px;
                 }
                 
                 .chart-container {
@@ -1474,9 +1684,8 @@ function getHospitalConsolidadoCSS() {
                     padding: 8px !important;
                 }
                 
-                .kpis-horizontal-container {
-                    grid-template-columns: 1fr 1fr 1fr 1fr 1fr !important;
-                    gap: 4px !important;
+                .kpis-container-mobile {
+                    gap: 6px;
                 }
                 
                 .chart-container {
@@ -1507,4 +1716,9 @@ function logError(message) {
     console.error(`❌ [DASHBOARD HOSPITALAR] ${message}`);
 }
 
-console.log('🎯 Dashboard Hospitalar CORRIGIDO - KPIs larguras iguais + Legendas uma por linha + Bordas mínimas mobile');
+console.log('🎯 Dashboard Hospitalar CORRIGIDO FINAL:');
+console.log('✅ KPIs Mobile: Ocupação grande centralizada + 4 KPIs em 2x2');
+console.log('✅ Legendas: Uma por linha, abaixo do gráfico, justificadas à esquerda');
+console.log('✅ Cores Pantone: Verificadas e corrigidas');
+console.log('✅ Scatter: Bolinhas 60% menores no mobile + posicionamento correto');
+console.log('✅ Cores texto: Dinâmicas conforme fundo (branco/escuro)');

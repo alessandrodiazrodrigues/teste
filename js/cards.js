@@ -1,5 +1,5 @@
-// =================== CARDS.JS - VERSÃO FINAL CORRIGIDA ===================
-// =================== LAYOUT 3x3 MOBILE + CAMPOS CORRETOS ===================
+// =================== CARDS.JS - VERSÃO CONSOLIDADA FINAL ===================
+// =================== TODO CSS RESPONSIVO INCLUÍDO - SEM mobile.css ===================
 
 // =================== VARIÁVEIS GLOBAIS ===================  
 window.selectedLeito = null;
@@ -131,16 +131,20 @@ function createCard(leito, hospitalNome) {
     card.className = 'card';
     card.style.cssText = 'background: var(--card); border-radius: 12px; padding: 20px; color: var(--text-white); box-shadow: 0 4px 6px rgba(0,0,0,0.1);';
     
-    // *** CORREÇÃO CRÍTICA: STATUS E CORES CORRETAS ***
-    let isVago = leito.status === 'Vago' || leito.status === 'vago';
+    // *** CORREÇÃO FINAL: STATUS E CORES HARDCODED ***
+    let isVago = false;
+    let leitoBgColor = '#22c55e'; // VERDE PADRÃO
+    let leitoTextColor = '#000000';
     
     // Normalizar status
     if (leito.status === 'Em uso' || leito.status === 'ocupado' || leito.status === 'Ocupado') {
-        leito.status = 'ocupado';
         isVago = false;
+        leitoBgColor = '#fbbf24'; // AMARELO PARA OCUPADO
+        leitoTextColor = '#000000';
     } else if (leito.status === 'Vago' || leito.status === 'vago') {
-        leito.status = 'vago';
         isVago = true;
+        leitoBgColor = '#22c55e'; // VERDE PARA VAGO
+        leitoTextColor = '#000000';
     }
     
     // Dados do paciente
@@ -176,10 +180,6 @@ function createCard(leito, hospitalNome) {
                           (spict === 'nao_elegivel' ? 'Não elegível' : '—');
     
     const numeroLeito = leito.leito || leito.numero || 'N/A';
-    
-    // *** CORREÇÃO FINAL: CORES BASEADAS NO STATUS ***
-    const leitoBgColor = isVago ? '#22c55e' : '#fbbf24'; // VERDE VAGO, AMARELO OCUPADO
-    const leitoTextColor = '#000000'; // TEXTO PRETO SEMPRE
     
     // HTML do Card (layout 3x3 mantido)
     card.innerHTML = `
@@ -386,7 +386,7 @@ function createAdmissaoForm(hospitalNome, leitoNumero) {
                 <strong>Hospital:</strong> ${hospitalNome} | <strong>Leito:</strong> ${leitoNumero}
             </div>
             
-            <div class="form-grid" style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+            <div class="form-grid-mobile" style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 15px; margin-bottom: 20px;">
                 <div>
                     <label style="display: block; margin-bottom: 5px; color: #e2e8f0; font-weight: 600;">NOME COMPLETO</label>
                     <input id="admNome" type="text" placeholder="Nome completo do paciente" style="width: 100%; padding: 12px; background: #374151; color: #ffffff; border: 1px solid rgba(255,255,255,0.3); border-radius: 6px; font-size: 14px;">
@@ -404,7 +404,7 @@ function createAdmissaoForm(hospitalNome, leitoNumero) {
                 </div>
             </div>
             
-            <div class="form-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px;">
+            <div class="form-grid-mobile" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px;">
                 <div>
                     <label style="display: block; margin-bottom: 5px; color: #e2e8f0; font-weight: 600;">PPS</label>
                     <select id="admPPS" style="width: 100%; padding: 12px; background: #374151 !important; color: #ffffff !important; border: 1px solid rgba(255,255,255,0.3); border-radius: 6px; font-size: 14px;">
@@ -486,7 +486,7 @@ function createAtualizacaoForm(hospitalNome, leitoNumero, dadosLeito) {
                 <strong>Hospital:</strong> ${hospitalNome} | <strong>Leito:</strong> ${leitoNumero}
             </div>
             
-            <div class="form-grid" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+            <div class="form-grid-mobile" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 20px;">
                 <div>
                     <label style="display: block; margin-bottom: 5px; color: #e2e8f0; font-weight: 600;">INICIAIS</label>
                     <input value="${iniciais}" readonly style="width: 100%; padding: 12px; background: #1f2937; color: #9ca3af; border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; font-size: 14px;">
@@ -504,7 +504,7 @@ function createAtualizacaoForm(hospitalNome, leitoNumero, dadosLeito) {
                 </div>
             </div>
             
-            <div class="form-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px;">
+            <div class="form-grid-mobile" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px;">
                 <div>
                     <label style="display: block; margin-bottom: 5px; color: #e2e8f0; font-weight: 600;">PPS</label>
                     <select id="updPPS" style="width: 100%; padding: 12px; background: #374151 !important; color: #ffffff !important; border: 1px solid rgba(255,255,255,0.3); border-radius: 6px; font-size: 14px;">
@@ -936,11 +936,12 @@ function logDebug(message, data = null) {
     console.log(`🟡 [CARDS DEBUG] ${message}`, data || '');
 }
 
-// =================== CSS PARA ANIMAÇÕES E RESPONSIVIDADE ===================
-if (!document.getElementById('cardsAnimations')) {
+// =================== CSS CONSOLIDADO COMPLETO ===================
+if (!document.getElementById('cardsConsolidadoCSS')) {
     const style = document.createElement('style');
-    style.id = 'cardsAnimations';
+    style.id = 'cardsConsolidadoCSS';
     style.textContent = `
+        /* =================== ANIMAÇÕES BÁSICAS =================== */
         @keyframes slideIn {
             from {
                 transform: translateX(100%);
@@ -967,6 +968,7 @@ if (!document.getElementById('cardsAnimations')) {
             100% { transform: rotate(360deg); }
         }
         
+        /* =================== DESKTOP STYLES =================== */
         .btn-action {
             transition: all 0.2s ease;
         }
@@ -1038,29 +1040,150 @@ if (!document.getElementById('cardsAnimations')) {
             background-color: rgba(96, 165, 250, 0.1);
         }
 
-        /* *** RESPONSIVIDADE MOBILE CRÍTICA *** */
+        /* Cards hover effects */
+        .card {
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        
+        /* =================== TABLET STYLES (768px - 1024px) =================== */
+        @media (max-width: 1024px) and (min-width: 769px) {
+            .cards-grid {
+                grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+                gap: 18px;
+            }
+            
+            .hospital-selector {
+                flex-wrap: wrap;
+                gap: 12px;
+            }
+            
+            .hospital-btn {
+                flex: 1;
+                min-width: 180px;
+            }
+        }
+
+        /* =================== MOBILE STYLES (≤768px) =================== */
         @media (max-width: 768px) {
-            /* Modal responsivo */
+            /* Header responsivo */
+            header {
+                flex-direction: column;
+                gap: 10px;
+                padding: 10px;
+            }
+            
+            header h1 {
+                font-size: 18px;
+            }
+            
+            .header-right {
+                width: 100%;
+                justify-content: space-between;
+            }
+            
+            #timer,
+            #updateTimer {
+                font-size: 12px;
+            }
+            
+            /* Cards em coluna única no mobile */
+            .cards-grid {
+                grid-template-columns: 1fr !important;
+                gap: 15px !important;
+            }
+            
+            /* *** FORÇAR LAYOUT 3x3 DOS CARDS EM MOBILE *** */
+            .card-row-1,
+            .card-row-2, 
+            .card-row-3 {
+                display: grid !important;
+                grid-template-columns: 1fr 1fr 1fr !important;
+                gap: 8px !important;
+                margin-bottom: 12px !important;
+            }
+            
+            /* GARANTIR LARGURA IGUAL PARA TODOS OS BOXES */
+            .card-row-1 > div,
+            .card-row-2 > div,
+            .card-row-3 > div {
+                background: rgba(255,255,255,0.05) !important;
+                border: 1px solid rgba(255,255,255,0.1) !important;
+                border-radius: 8px !important;
+                padding: 8px 4px !important;
+                min-height: 45px !important;
+                display: flex !important;
+                flex-direction: column !important;
+                justify-content: center !important;
+            }
+            
+            /* *** CORREÇÃO CRÍTICA: CORES DO LEITO NO MOBILE *** */
+            .leito-badge {
+                background: #22c55e !important; /* Verde para vago */
+                color: #000000 !important;
+            }
+            
+            .leito-badge.ocupado {
+                background: #fbbf24 !important; /* Amarelo para ocupado */
+                color: #000000 !important;
+            }
+            
+            /* Previsão de alta mantém cor especial */
+            .card-row-3 > div:last-child {
+                background: #8FD3F4 !important;
+                color: #000000 !important;
+            }
+            
+            /* Maior espaçamento entre elementos tocáveis */
+            .card-actions {
+                gap: 12px !important;
+            }
+            
+            .hospital-selector {
+                gap: 12px !important;
+                flex-direction: column;
+                padding: 15px;
+            }
+            
+            .hospital-btn {
+                width: 100%;
+                min-width: auto;
+                flex: none;
+                padding: 12px 16px;
+                font-size: 14px;
+            }
+            
+            /* *** MODAL RESPONSIVO COM 3 COLUNAS FORÇADO *** */
             .modal-overlay .modal-content {
                 width: 95% !important;
                 max-width: none !important;
                 margin: 10px !important;
                 max-height: 95vh !important;
+                padding: 20px !important;
             }
             
-            /* Grid forms: 3 colunas no mobile viram 1 coluna */
-            .modal-content .form-grid {
-                grid-template-columns: 1fr !important;
-                gap: 10px !important;
-            }
-            
-            /* Cards: Manter layout 3x3 */
-            .card-row-1,
-            .card-row-2,
-            .card-row-3 {
+            /* *** CORREÇÃO: FORM GRID EM 3 COLUNAS NO MOBILE *** */
+            .form-grid-mobile {
                 display: grid !important;
                 grid-template-columns: 1fr 1fr 1fr !important;
                 gap: 8px !important;
+            }
+            
+            /* Inputs e selects menores para caber em 3 colunas */
+            .form-grid-mobile input,
+            .form-grid-mobile select {
+                padding: 8px 6px !important;
+                font-size: 12px !important;
+            }
+            
+            /* Labels menores */
+            .form-grid-mobile label {
+                font-size: 10px !important;
+                margin-bottom: 3px !important;
             }
             
             /* Concessões e Linhas em 1 coluna */
@@ -1079,15 +1202,129 @@ if (!document.getElementById('cardsAnimations')) {
             
             label:has(input[type="checkbox"]) {
                 padding: 8px !important;
-                font-size: 13px !important;
+                font-size: 12px !important;
+            }
+            
+            /* Seções dos cards mais compactas */
+            .card-section {
+                margin-bottom: 12px !important;
+            }
+            
+            .card-section .section-title {
+                font-size: 10px !important;
+                padding: 6px 8px !important;
+                margin-bottom: 6px !important;
+            }
+            
+            .card-section .chips-container {
+                padding: 6px !important;
+                min-height: 20px !important;
+            }
+            
+            .card-section .chip {
+                font-size: 9px !important;
+                padding: 2px 6px !important;
+                margin: 1px !important;
+            }
+            
+            /* Botões de ação menores */
+            .btn-action {
+                padding: 8px 16px !important;
+                font-size: 11px !important;
+                width: 100% !important;
+                text-align: center !important;
+            }
+            
+            /* Botões dos modais */
+            .btn-cancelar,
+            .btn-salvar,
+            .btn-alta {
+                font-size: 11px !important;
+                padding: 10px 15px !important;
             }
         }
         
-        /* Responsividade para landscape mobile */
+        /* =================== MOBILE PEQUENO (≤480px) =================== */
+        @media (max-width: 480px) {
+            /* Cards com padding ainda menor */
+            .card {
+                padding: 12px !important;
+                margin-bottom: 10px !important;
+            }
+            
+            /* Layout 3x3 ainda mais compacto */
+            .card-row-1,
+            .card-row-2,
+            .card-row-3 {
+                gap: 6px !important;
+                margin-bottom: 8px !important;
+            }
+            
+            .card-row-1 > div,
+            .card-row-2 > div,
+            .card-row-3 > div {
+                padding: 6px 3px !important;
+                min-height: 40px !important;
+            }
+            
+            /* Labels e valores ainda menores */
+            .card-row-1 div[style*="font-size: 10px"],
+            .card-row-2 div[style*="font-size: 10px"],
+            .card-row-3 div[style*="font-size: 10px"] {
+                font-size: 8px !important;
+            }
+            
+            .card-row-1 div[style*="font-size: 12px"],
+            .card-row-2 div[style*="font-size: 12px"],
+            .card-row-3 div[style*="font-size: 12px"] {
+                font-size: 10px !important;
+            }
+            
+            /* Modal ainda mais compacto */
+            .modal-content {
+                padding: 15px !important;
+            }
+            
+            .form-grid-mobile {
+                gap: 6px !important;
+            }
+            
+            .form-grid-mobile input,
+            .form-grid-mobile select {
+                padding: 6px 4px !important;
+                font-size: 11px !important;
+            }
+            
+            .form-grid-mobile label {
+                font-size: 9px !important;
+            }
+        }
+        
+        /* =================== LANDSCAPE MOBILE =================== */
         @media (max-width: 768px) and (orientation: landscape) {
+            /* Header mais compacto em landscape */
+            header {
+                padding: 5px 10px;
+            }
+            
+            /* Cards em 2 colunas em landscape */
+            .cards-grid {
+                grid-template-columns: repeat(2, 1fr) !important;
+                gap: 12px !important;
+            }
+            
+            /* MANTER LAYOUT 3x3 MESMO EM LANDSCAPE */
+            .card-row-1,
+            .card-row-2,
+            .card-row-3 {
+                grid-template-columns: 1fr 1fr 1fr !important;
+                gap: 6px !important;
+            }
+            
+            /* Modal em landscape */
             .modal-overlay .modal-content {
                 max-height: 85vh !important;
-                padding: 20px !important;
+                padding: 15px !important;
             }
             
             .modal-content div[id$="Concessoes"], 
@@ -1096,7 +1333,7 @@ if (!document.getElementById('cardsAnimations')) {
             }
         }
         
-        /* Animação de loading */
+        /* =================== LOADING E ANIMAÇÕES =================== */
         .loading-spinner {
             display: inline-block;
             width: 14px;
@@ -1108,25 +1345,16 @@ if (!document.getElementById('cardsAnimations')) {
             margin-right: 8px;
         }
         
-        /* Cards hover effects */
-        .card {
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-        }
-        
-        .card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
-        }
-        
-        /* Timeline specific colors */
-        .prev-alta-hoje-ouro { background: var(--ouro) !important; color: #000 !important; }
-        .prev-alta-hoje-2r { background: var(--r2) !important; color: #fff !important; }
-        .prev-alta-hoje-3r { background: var(--r3) !important; color: #fff !important; }
-        .prev-alta-24h-ouro { background: var(--ouro) !important; color: #000 !important; opacity: 0.8; }
-        .prev-alta-24h-2r { background: var(--r2) !important; color: #fff !important; opacity: 0.8; }
-        .prev-alta-24h-3r { background: var(--r3) !important; color: #fff !important; opacity: 0.8; }
-        .prev-alta-48h { background: #f59e0b !important; color: #fff !important; }
-        .prev-alta-72h { background: #d97706 !important; color: #fff !important; }
+        /* =================== TIMELINE COLORS =================== */
+        .prev-alta-hoje-ouro { background: #fbbf24 !important; color: #000 !important; }
+        .prev-alta-hoje-2r { background: #3b82f6 !important; color: #fff !important; }
+        .prev-alta-hoje-3r { background: #8b5cf6 !important; color: #fff !important; }
+        .prev-alta-24h-ouro { background: #fbbf24 !important; color: #000 !important; opacity: 0.8; }
+        .prev-alta-24h-2r { background: #3b82f6 !important; color: #fff !important; opacity: 0.8; }
+        .prev-alta-24h-3r { background: #8b5cf6 !important; color: #fff !important; opacity: 0.8; }
+        .prev-alta-48h { background: #10b981 !important; color: #fff !important; }
+        .prev-alta-72h { background: #f59e0b !important; color: #fff !important; }
+        .prev-alta-96h { background: #ef4444 !important; color: #fff !important; }
         .prev-alta-sp { background: #6b7280 !important; color: #fff !important; }
     `;
     document.head.appendChild(style);
@@ -1134,7 +1362,7 @@ if (!document.getElementById('cardsAnimations')) {
 
 // =================== INICIALIZAÇÃO ===================
 document.addEventListener('DOMContentLoaded', function() {
-    logSuccess('✅ Cards.js CARREGADO - Arrays diretos implementados');
+    logSuccess('✅ Cards.js CONSOLIDADO CARREGADO - Todo CSS responsivo incluído');
     
     // Verificar dependências
     if (typeof window.CONFIG === 'undefined') {
@@ -1176,17 +1404,20 @@ document.addEventListener('DOMContentLoaded', function() {
     logInfo('  • 13 concessões + 19 linhas');
     logInfo('  • Performance otimizada');
     logInfo('  • Validação automática');
-    logInfo('  • Layout 3x3 mobile');
-    logInfo('  • Leitos ocupados AMARELOS');
-    logInfo('  • Títulos sem versões');
+    logInfo('  • Layout 3x3 mobile FORÇADO');
+    logInfo('  • Leitos: VERDE=vago, AMARELO=ocupado');
+    logInfo('  • Modais 3 colunas no mobile');
     logInfo('  • Campo idade como SELECT');
+    logInfo('  • CSS CONSOLIDADO - sem mobile.css');
     
     // Adicionar listener para resize
     window.addEventListener('resize', function() {
         const width = window.innerWidth;
-        if (width < 768) {
+        if (width <= 480) {
+            logDebug('Modo mobile pequeno ativado');
+        } else if (width <= 768) {
             logDebug('Modo mobile ativado');
-        } else if (width < 1024) {
+        } else if (width <= 1024) {
             logDebug('Modo tablet ativado');
         } else {
             logDebug('Modo desktop ativado');
@@ -1201,15 +1432,10 @@ window.openAtualizacaoModal = openAtualizacaoModal;
 window.forcarPreMarcacao = forcarPreMarcacao;
 window.coletarDadosFormulario = coletarDadosFormulario;
 
-logSuccess('🏥 CARDS.JS - VERSÃO FINAL CORRIGIDA IMPLEMENTADA!');
-logInfo('📋 Eliminado parsing complexo - Performance 10x melhor');
-logInfo('✅ Timeline corrigida - 10 opções de previsão de alta');
-logInfo('✅ Integração perfeita com Google Apps Script (44 colunas)');
-logInfo('✅ Validação automática de concessões e linhas de cuidado');
-logInfo('🔧 CORREÇÕES APLICADAS:');
-logInfo('  • Leitos ocupados: COR AMARELA (#fbbf24)');
-logInfo('  • Títulos: SEM versões (V4.0 removido)');
-logInfo('  • Subtítulos: Linha técnica removida');
-logInfo('  • Idade: Campo SELECT em vez de input text');
-logInfo('  • Layout mobile: 3x3 forçado via CSS');
-logInfo('  • Seções: Títulos limpos sem versões');
+logSuccess('🏥 CARDS.JS CONSOLIDADO - VERSÃO FINAL IMPLEMENTADA!');
+logInfo('📋 Todo CSS responsivo consolidado neste arquivo');
+logInfo('✅ Eliminada dependência do mobile.css');
+logInfo('✅ Cores hardcoded: Verde=vago, Amarelo=ocupado');
+logInfo('✅ Layout 3x3 forçado no mobile');
+logInfo('✅ Modais responsivos com 3 colunas');
+logInfo('✅ Performance otimizada com CSS inline');

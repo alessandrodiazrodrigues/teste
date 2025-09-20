@@ -1,5 +1,5 @@
 // =================== DASHBOARD HOSPITALAR - VERSÃO FINAL CORRIGIDA ===================
-// =================== SCATTER EXATO + CORES PANTONE + LEGENDAS VERTICAIS CORRIGIDAS ===================
+// =================== LEGENDAS HTML + CORES DINÂMICAS + SCATTER EXATO ===================
 
 // Estado dos gráficos selecionados por hospital
 window.graficosState = {
@@ -122,43 +122,151 @@ function isMobile() {
     return window.innerWidth <= 768;
 }
 
-// Plugin customizado para forçar legendas verticais
-const verticalLegendPlugin = {
-    id: 'verticalLegend',
-    afterInit: (chart) => {
-        // Injetar CSS para forçar legendas verticais
-        if (!document.getElementById('verticalLegendCSS')) {
-            const style = document.createElement('style');
-            style.id = 'verticalLegendCSS';
-            style.innerHTML = `
-                .chartjs-legend {
-                    display: flex !important;
-                    flex-direction: column !important;
-                    align-items: flex-start !important;
-                    gap: 4px !important;
-                }
-                .chartjs-legend li {
-                    display: flex !important;
-                    align-items: center !important;
-                    margin: 0 !important;
-                    padding: 2px 0 !important;
-                    width: auto !important;
-                    cursor: pointer !important;
-                }
-                .chartjs-legend li span {
-                    margin-left: 8px !important;
-                }
-            `;
-            document.head.appendChild(style);
-        }
+// =================== FUNÇÃO PARA CRIAR LEGENDAS HTML CUSTOMIZADAS ===================
+window.createCustomLegendOutside = function(chartId, datasets) {
+    const canvas = document.getElementById(chartId);
+    if (!canvas) return;
+    
+    // Procurar o container pai (.chart-container)
+    const chartContainer = canvas.closest('.chart-container');
+    if (!chartContainer) return;
+    
+    // Remover legenda antiga se existir
+    const existingLegend = chartContainer.parentNode.querySelector('.custom-legend-container');
+    if (existingLegend) existingLegend.remove();
+    
+    // Definir cores baseadas no estado do fundo
+    const corTexto = window.fundoBranco ? '#000000' : '#ffffff';
+    const fundoLegenda = window.fundoBranco ? '#f0f0f0' : '#1a1f2e';
+    
+    // Criar container da legenda FORA do chart-container
+    const legendContainer = document.createElement('div');
+    legendContainer.className = 'custom-legend-container';
+    legendContainer.style.cssText = `
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        padding: 10px 15px;
+        margin-top: 5px;
+        align-items: flex-start;
+        background: ${fundoLegenda};
+        border-radius: 8px;
+        border: 1px solid ${window.fundoBranco ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.1)'};
+    `;
+    
+    // Criar item para cada dataset
+    datasets.forEach((dataset, index) => {
+        const item = document.createElement('div');
+        item.style.cssText = `
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            padding: 2px 0;
+            opacity: ${dataset.hidden ? '0.4' : '1'};
+            transition: all 0.2s;
+        `;
         
-        // Adicionar classe ao container de legendas
-        if (chart.legend && chart.legend.legendHitBoxes) {
-            const legendEl = chart.legend.legendItems;
-            if (legendEl && legendEl.length > 0) {
-                chart.canvas.parentNode.classList.add('chart-with-vertical-legend');
+        // Quadrado colorido
+        const colorBox = document.createElement('span');
+        const bgColor = dataset.backgroundColor || dataset.borderColor || '#666';
+        colorBox.style.cssText = `
+            width: 12px;
+            height: 12px;
+            background-color: ${bgColor};
+            border-radius: 2px;
+            flex-shrink: 0;
+            display: inline-block;
+        `;
+        
+        // Label
+        const label = document.createElement('span');
+        label.textContent = dataset.label || `Dataset ${index + 1}`;
+        label.style.cssText = `
+            font-size: 11px;
+            color: ${corTexto};
+            font-weight: 500;
+            line-height: 1.2;
+        `;
+        
+        item.appendChild(colorBox);
+        item.appendChild(label);
+        
+        // Click para mostrar/ocultar
+        item.addEventListener('click', () => {
+            const chartKey = chartId.replace('grafico', '').replace('Altas', 'altas').replace('Concessoes', 'concessoes').replace('Linhas', 'linhas');
+            const chart = window.chartInstances[chartKey];
+            if (chart) {
+                const meta = chart.getDatasetMeta(index);
+                meta.hidden = !meta.hidden;
+                item.style.opacity = meta.hidden ? '0.4' : '1';
+                colorBox.style.opacity = meta.hidden ? '0.3' : '1';
+                chart.update();
             }
-        }
+        });
+        
+        // Hover effect
+        item.addEventListener('mouseenter', () => {
+            if (!dataset.hidden) {
+                item.style.transform = 'translateX(2px)';
+            }
+        });
+        
+        item.addEventListener('mouseleave', () => {
+            item.style.transform = 'translateX(0)';
+        });
+        
+        legendContainer.appendChild(item);
+    });
+    
+    // Adicionar DEPOIS do chart-container (não dentro)
+    chartContainer.parentNode.insertBefore(legendContainer, chartContainer.nextSibling);
+};
+
+// =================== FUNÇÃO PARA ATUALIZAR TODAS AS CORES ===================
+window.atualizarTodasAsCores = function() {
+    const corTexto = window.fundoBranco ? '#000000' : '#ffffff';
+    const corGrid = window.fundoBranco ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.1)';
+    const fundoLegenda = window.fundoBranco ? '#f0f0f0' : '#1a1f2e';
+    
+    // 1. Atualizar legendas customizadas
+    document.querySelectorAll('.custom-legend-container').forEach(container => {
+        container.style.backgroundColor = fundoLegenda;
+        container.style.background = fundoLegenda;
+        container.style.border = `1px solid ${window.fundoBranco ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.1)'}`;
+        
+        container.querySelectorAll('span').forEach((span, index) => {
+            if (index % 2 === 1) { // Apenas os labels de texto
+                span.style.color = corTexto;
+            }
+        });
+    });
+    
+    // 2. Atualizar eixos e grid dos gráficos
+    if (window.chartInstances) {
+        Object.values(window.chartInstances).forEach(chart => {
+            if (chart && chart.options && chart.options.scales) {
+                // Eixo X
+                if (chart.options.scales.x) {
+                    chart.options.scales.x.ticks.color = corTexto;
+                    chart.options.scales.x.grid.color = corGrid;
+                    if (chart.options.scales.x.title) {
+                        chart.options.scales.x.title.color = corTexto;
+                    }
+                }
+                
+                // Eixo Y
+                if (chart.options.scales.y) {
+                    chart.options.scales.y.ticks.color = corTexto;
+                    chart.options.scales.y.grid.color = corGrid;
+                    if (chart.options.scales.y.title) {
+                        chart.options.scales.y.title.color = corTexto;
+                    }
+                }
+                
+                chart.update('none');
+            }
+        });
     }
 };
 
@@ -271,7 +379,7 @@ window.renderDashboardHospitalar = function() {
         </style>
     `;
     
-    // Event listener para o botão único de toggle
+    // Event listener para o botão único de toggle - ATUALIZADO COM CORES COMPLETAS
     const toggleBtn = document.getElementById('toggleFundoBtn');
     if (toggleBtn) {
         toggleBtn.addEventListener('click', () => {
@@ -290,13 +398,26 @@ window.renderDashboardHospitalar = function() {
                 text.textContent = 'ESCURO';
             }
             
-            // Re-renderizar todos os gráficos (exceto gauge)
+            // ATUALIZAR TODAS AS CORES
+            window.atualizarTodasAsCores();
+            
+            // Re-renderizar todos os gráficos
             hospitaisComDados.forEach(hospitalId => {
-                // Gauge não muda com o fundo
                 renderAltasHospital(hospitalId);
                 renderConcessoesHospital(hospitalId, window.graficosState[hospitalId]?.concessoes || 'bar');
                 renderLinhasHospital(hospitalId, window.graficosState[hospitalId]?.linhas || 'bar');
             });
+            
+            // Recriar legendas com cores atualizadas
+            setTimeout(() => {
+                if (window.chartInstances) {
+                    Object.entries(window.chartInstances).forEach(([key, chart]) => {
+                        if (chart && chart.config && chart.canvas) {
+                            window.createCustomLegendOutside(chart.canvas.id, chart.config.data.datasets);
+                        }
+                    });
+                }
+            }, 100);
             
             logInfo(`Fundo alterado para: ${window.fundoBranco ? 'claro' : 'escuro'}`);
         });
@@ -622,7 +743,7 @@ function renderGaugeHospital(hospitalId) {
     }
 }
 
-// Gráfico de Altas - COM LEGENDAS VERTICAIS CORRIGIDAS
+// Gráfico de Altas - COM LEGENDAS HTML CUSTOMIZADAS
 function renderAltasHospital(hospitalId) {
     const canvas = document.getElementById(`graficoAltas${hospitalId}`);
     if (!canvas || typeof Chart === 'undefined') return;
@@ -677,23 +798,25 @@ function renderAltasHospital(hospitalId) {
     const valorMaximo = Math.max(...todosDados, 0);
     const limiteSuperior = valorMaximo + 1;
     
-    // CORREÇÃO: Cores dinâmicas baseadas no fundo
+    // Cores dinâmicas
     const corTexto = window.fundoBranco ? '#000000' : '#ffffff';
     const corGrid = window.fundoBranco ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.1)';
+    
+    const datasets = [
+        { label: 'Ouro', data: dados['Ouro'], backgroundColor: '#fbbf24', borderWidth: 0 },
+        { label: '2R', data: dados['2R'], backgroundColor: '#3b82f6', borderWidth: 0 },
+        { label: '3R', data: dados['3R'], backgroundColor: '#8b5cf6', borderWidth: 0 },
+        { label: '48H', data: dados['48H'], backgroundColor: '#10b981', borderWidth: 0 },
+        { label: '72H', data: dados['72H'], backgroundColor: '#f59e0b', borderWidth: 0 },
+        { label: '96H', data: dados['96H'], backgroundColor: '#ef4444', borderWidth: 0 }
+    ];
     
     const ctx = canvas.getContext('2d');
     window.chartInstances[chartKey] = new Chart(ctx, {
         type: 'bar',
         data: {
             labels: categorias,
-            datasets: [
-                { label: 'Ouro', data: dados['Ouro'], backgroundColor: '#fbbf24', borderWidth: 0 },
-                { label: '2R', data: dados['2R'], backgroundColor: '#3b82f6', borderWidth: 0 },
-                { label: '3R', data: dados['3R'], backgroundColor: '#8b5cf6', borderWidth: 0 },
-                { label: '48H', data: dados['48H'], backgroundColor: '#10b981', borderWidth: 0 },
-                { label: '72H', data: dados['72H'], backgroundColor: '#f59e0b', borderWidth: 0 },
-                { label: '96H', data: dados['96H'], backgroundColor: '#ef4444', borderWidth: 0 }
-            ]
+            datasets: datasets
         },
         options: {
             responsive: true,
@@ -702,34 +825,7 @@ function renderAltasHospital(hospitalId) {
             categoryPercentage: 0.8,
             plugins: {
                 legend: {
-                    display: true,
-                    position: 'bottom',
-                    align: 'start',
-                    labels: {
-                        color: corTexto, // COR DINÂMICA
-                        padding: 15,
-                        font: { size: 12, weight: 500 },
-                        usePointStyle: true,
-                        pointStyle: 'rect',
-                        boxWidth: 12,
-                        boxHeight: 12,
-                        // FORÇAR LAYOUT VERTICAL
-                        generateLabels: function(chart) {
-                            const datasets = chart.data.datasets;
-                            return datasets.map((dataset, i) => ({
-                                text: dataset.label,
-                                fillStyle: dataset.backgroundColor,
-                                strokeStyle: dataset.backgroundColor,
-                                lineWidth: 0,
-                                hidden: !chart.isDatasetVisible(i),
-                                index: i,
-                                // Forçar nova linha
-                                textAlign: 'left'
-                            }));
-                        }
-                    },
-                    // Configurar layout máximo de colunas = 1
-                    maxWidth: 200
+                    display: false // DESABILITAR LEGENDA NATIVA
                 },
                 tooltip: {
                     backgroundColor: 'rgba(26, 31, 46, 0.95)',
@@ -775,11 +871,16 @@ function renderAltasHospital(hospitalId) {
                 }
             }
         },
-        plugins: [backgroundPlugin, verticalLegendPlugin]
+        plugins: [backgroundPlugin]
     });
+    
+    // CRIAR LEGENDA HTML CUSTOMIZADA
+    setTimeout(() => {
+        window.createCustomLegendOutside(`graficoAltas${hospitalId}`, datasets);
+    }, 50);
 }
 
-// Gráfico de Concessões - SCATTER CORRIGIDO + LEGENDAS VERTICAIS
+// Gráfico de Concessões - COM LEGENDAS HTML CUSTOMIZADAS
 function renderConcessoesHospital(hospitalId, type = 'bar') {
     const canvas = document.getElementById(`graficoConcessoes${hospitalId}`);
     if (!canvas || typeof Chart === 'undefined') return;
@@ -841,7 +942,6 @@ function renderConcessoesHospital(hospitalId, type = 'bar') {
     const valorMaximo = Math.max(...todosValores, 0);
     const limiteSuperior = valorMaximo + 1;
     
-    // Detectar mobile para tamanho das bolinhas
     const mobile = isMobile();
     const tamanhoBolinha = mobile ? 3 : 8;
     
@@ -852,7 +952,6 @@ function renderConcessoesHospital(hospitalId, type = 'bar') {
             const scatterData = [];
             dados.forEach((valor, index) => {
                 if (valor > 0) {
-                    // CORREÇÃO: Usar índice inteiro direto
                     scatterData.push({ x: index, y: valor });
                 }
             });
@@ -895,13 +994,11 @@ function renderConcessoesHospital(hospitalId, type = 'bar') {
         }
     });
     
-    // CORREÇÃO: Cores dinâmicas
     const corTexto = window.fundoBranco ? '#000000' : '#ffffff';
     const corGrid = window.fundoBranco ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.1)';
     
     const ctx = canvas.getContext('2d');
     
-    // Configuração especial para scatter
     const scatterOptions = type === 'scatter' ? {
         scales: {
             x: {
@@ -914,7 +1011,6 @@ function renderConcessoesHospital(hospitalId, type = 'bar') {
                     color: corTexto,
                     font: { size: 12, weight: 600 },
                     callback: function(value) {
-                        // CORREÇÃO: Mostrar labels apenas para valores inteiros
                         if (Number.isInteger(value) && value >= 0 && value < categorias.length) {
                             return categorias[value];
                         }
@@ -994,32 +1090,7 @@ function renderConcessoesHospital(hospitalId, type = 'bar') {
             maintainAspectRatio: false,
             plugins: {
                 legend: {
-                    display: true,
-                    position: 'bottom',
-                    align: 'start',
-                    labels: {
-                        color: corTexto, // COR DINÂMICA
-                        padding: 12,
-                        font: { size: mobile ? 10 : 12, weight: 500 },
-                        usePointStyle: true,
-                        pointStyle: 'circle',
-                        boxWidth: 10,
-                        boxHeight: 10,
-                        // FORÇAR LAYOUT VERTICAL
-                        generateLabels: function(chart) {
-                            const datasets = chart.data.datasets;
-                            return datasets.map((dataset, i) => ({
-                                text: dataset.label,
-                                fillStyle: dataset.backgroundColor || dataset.borderColor,
-                                strokeStyle: dataset.backgroundColor || dataset.borderColor,
-                                lineWidth: 0,
-                                hidden: !chart.isDatasetVisible(i),
-                                index: i,
-                                textAlign: 'left'
-                            }));
-                        }
-                    },
-                    maxWidth: 300
+                    display: false // DESABILITAR LEGENDA NATIVA
                 },
                 tooltip: {
                     backgroundColor: 'rgba(26, 31, 46, 0.95)',
@@ -1035,11 +1106,16 @@ function renderConcessoesHospital(hospitalId, type = 'bar') {
             },
             ...scatterOptions
         },
-        plugins: [backgroundPlugin, verticalLegendPlugin]
+        plugins: [backgroundPlugin]
     });
+    
+    // CRIAR LEGENDA HTML CUSTOMIZADA
+    setTimeout(() => {
+        window.createCustomLegendOutside(`graficoConcessoes${hospitalId}`, datasets);
+    }, 50);
 }
 
-// Gráfico de Linhas de Cuidado - SCATTER CORRIGIDO + LEGENDAS VERTICAIS
+// Gráfico de Linhas de Cuidado - COM LEGENDAS HTML CUSTOMIZADAS
 function renderLinhasHospital(hospitalId, type = 'bar') {
     const canvas = document.getElementById(`graficoLinhas${hospitalId}`);
     if (!canvas || typeof Chart === 'undefined') return;
@@ -1101,7 +1177,6 @@ function renderLinhasHospital(hospitalId, type = 'bar') {
     const valorMaximo = Math.max(...todosValores);
     const limiteSuperior = valorMaximo + 1;
     
-    // Detectar mobile para tamanho das bolinhas
     const mobile = isMobile();
     const tamanhoBolinha = mobile ? 3 : 8;
     
@@ -1112,7 +1187,6 @@ function renderLinhasHospital(hospitalId, type = 'bar') {
             const scatterData = [];
             dados.forEach((valor, index) => {
                 if (valor > 0) {
-                    // CORREÇÃO: Usar índice inteiro direto
                     scatterData.push({ x: index, y: valor });
                 }
             });
@@ -1155,13 +1229,11 @@ function renderLinhasHospital(hospitalId, type = 'bar') {
         }
     });
     
-    // CORREÇÃO: Cores dinâmicas
     const corTexto = window.fundoBranco ? '#000000' : '#ffffff';
     const corGrid = window.fundoBranco ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.1)';
     
     const ctx = canvas.getContext('2d');
     
-    // Configuração especial para scatter
     const scatterOptions = type === 'scatter' ? {
         scales: {
             x: {
@@ -1174,7 +1246,6 @@ function renderLinhasHospital(hospitalId, type = 'bar') {
                     color: corTexto,
                     font: { size: 12, weight: 600 },
                     callback: function(value) {
-                        // CORREÇÃO: Mostrar labels apenas para valores inteiros
                         if (Number.isInteger(value) && value >= 0 && value < categorias.length) {
                             return categorias[value];
                         }
@@ -1254,32 +1325,7 @@ function renderLinhasHospital(hospitalId, type = 'bar') {
             maintainAspectRatio: false,
             plugins: {
                 legend: {
-                    display: true,
-                    position: 'bottom',
-                    align: 'start',
-                    labels: {
-                        color: corTexto, // COR DINÂMICA
-                        padding: 12,
-                        font: { size: mobile ? 10 : 12, weight: 500 },
-                        usePointStyle: true,
-                        pointStyle: 'circle',
-                        boxWidth: 10,
-                        boxHeight: 10,
-                        // FORÇAR LAYOUT VERTICAL
-                        generateLabels: function(chart) {
-                            const datasets = chart.data.datasets;
-                            return datasets.map((dataset, i) => ({
-                                text: dataset.label,
-                                fillStyle: dataset.backgroundColor || dataset.borderColor,
-                                strokeStyle: dataset.backgroundColor || dataset.borderColor,
-                                lineWidth: 0,
-                                hidden: !chart.isDatasetVisible(i),
-                                index: i,
-                                textAlign: 'left'
-                            }));
-                        }
-                    },
-                    maxWidth: 300
+                    display: false // DESABILITAR LEGENDA NATIVA
                 },
                 tooltip: {
                     backgroundColor: 'rgba(26, 31, 46, 0.95)',
@@ -1295,8 +1341,13 @@ function renderLinhasHospital(hospitalId, type = 'bar') {
             },
             ...scatterOptions
         },
-        plugins: [backgroundPlugin, verticalLegendPlugin]
+        plugins: [backgroundPlugin]
     });
+    
+    // CRIAR LEGENDA HTML CUSTOMIZADA
+    setTimeout(() => {
+        window.createCustomLegendOutside(`graficoLinhas${hospitalId}`, datasets);
+    }, 50);
 }
 
 // Função de força de atualização
@@ -1803,10 +1854,10 @@ function logError(message, error) {
     console.error(`❌ [DASHBOARD HOSPITALAR] ${message}`, error || '');
 }
 
-console.log('🎯 Dashboard Hospitalar VERSÃO FINAL CORRIGIDA:');
-console.log('✅ LEGENDAS VERTICAIS: Plugin customizado + CSS injection');
-console.log('✅ CORES DINÂMICAS: Branco no claro, preto no escuro');
+console.log('🎯 Dashboard Hospitalar VERSÃO FINAL COMPLETA:');
+console.log('✅ LEGENDAS HTML CUSTOMIZADAS: Verticais, fora do Chart.js');
+console.log('✅ CORES DINÂMICAS: Texto, fundo e grid atualizando com toggle');
 console.log('✅ SCATTER EXATO: Apenas posições inteiras (0,1,2,3,4)');
-console.log('✅ CORES PANTONE: Sistema rigoroso sem fallback genérico');
-console.log('✅ LAYOUT MOBILE: KPIs responsivos já implementados');
-console.log('✅ DADOS REAIS: Zero mock data, apenas planilha Google');
+console.log('✅ CORES PANTONE: 55+ cores preservadas');
+console.log('✅ INTERATIVIDADE: Click nas legendas para ocultar/mostrar');
+console.log('✅ RESPONSIVIDADE: Mobile preservada');

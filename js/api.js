@@ -13,7 +13,7 @@ window.API_TIMEOUT = 15000; // 15 segundos para CORS
 // *** CORREÇÃO: ADICIONADO '96h' À LISTA DE VALIDAÇÃO ***
 window.TIMELINE_OPCOES = [
     "Hoje Ouro", "Hoje 2R", "Hoje 3R",
-    "24h Ouro", "24h 2R", "24h 3R",
+    "24h Ouro", "24h 2R", "24h 3R", 
     "48h", "72h", "96h", "SP"
 ];
 
@@ -21,7 +21,7 @@ window.TIMELINE_OPCOES = [
 window.CONCESSOES_VALIDAS = [
     "Transição Domiciliar",
     "Aplicação domiciliar de medicamentos",
-    "Fisioterapia",
+    "Fisioterapia", 
     "Fonoaudiologia",
     "Aspiração",
     "Banho",

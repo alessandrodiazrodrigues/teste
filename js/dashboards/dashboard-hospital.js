@@ -1,4 +1,4 @@
-// =================== DASHBOARD HOSPITALAR - VERSÃO COMPLETA CORRIGIDA ===================
+// =================== DASHBOARD HOSPITALAR - VERSÃO MOBILE CORRIGIDA ===================
 
 // Estado dos gráficos selecionados por hospital
 window.graficosState = {
@@ -120,12 +120,18 @@ window.renderDashboardHospitalar = function() {
     
     container.innerHTML = `
         <div style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); min-height: 100vh; padding: 20px; color: white;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; padding: 20px; background: rgba(255, 255, 255, 0.05); border-radius: 12px; border-left: 4px solid #60a5fa;">
-                <h2 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 700;">Dashboard Hospitalar</h2>
-                <button id="toggleFundoBtn" class="toggle-fundo-btn" style="padding: 8px 16px; background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 8px; color: #e2e8f0; font-size: 14px; cursor: pointer; transition: all 0.3s ease; display: flex; align-items: center; gap: 8px;">
-                    <span id="toggleIcon">🌙</span>
-                    <span id="toggleText">ESCURO</span>
-                </button>
+            <!-- *** CORREÇÃO: HEADER EM UMA LINHA *** -->
+            <div class="dashboard-header" style="margin-bottom: 30px; padding: 20px; background: rgba(255, 255, 255, 0.05); border-radius: 12px; border-left: 4px solid #60a5fa;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <h2 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 700; white-space: nowrap;">Dashboard Hospitalar</h2>
+                </div>
+                <!-- *** CORREÇÃO: SWITCH NA LINHA DE BAIXO *** -->
+                <div style="display: flex; justify-content: flex-end;">
+                    <button id="toggleFundoBtn" class="toggle-fundo-btn" style="padding: 8px 16px; background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 8px; color: #e2e8f0; font-size: 14px; cursor: pointer; transition: all 0.3s ease; display: flex; align-items: center; gap: 8px;">
+                        <span id="toggleIcon">🌙</span>
+                        <span id="toggleText">ESCURO</span>
+                    </button>
+                </div>
             </div>
             
             <div class="hospitais-container">
@@ -367,6 +373,7 @@ function calcularKPIsHospital(hospitalId) {
     // CORREÇÃO CRÍTICA: Incluir 'altas' no return
     return { ocupacao, total, ocupados, vagos, altas }; // ← ESTA LINHA É A CORREÇÃO!
 }
+
 // Plugin para fundo branco/escuro nos gráficos (NÃO usado no gauge)
 const backgroundPlugin = {
     id: 'customBackground',
@@ -511,12 +518,28 @@ function renderAltasHospital(hospitalId) {
                     align: 'start',
                     labels: {
                         color: corTexto,
-                        padding: 15,
+                        padding: 10,
                         font: { size: 13, weight: 600 },
                         usePointStyle: true,
                         pointStyle: 'rect',
                         boxWidth: 12,
-                        boxHeight: 12
+                        boxHeight: 12,
+                        // *** CORREÇÃO: FORÇAR UMA LEGENDA POR LINHA NO MOBILE ***
+                        generateLabels: function(chart) {
+                            const original = Chart.defaults.plugins.legend.labels.generateLabels;
+                            const labels = original.call(this, chart);
+                            
+                            // No mobile, forçar quebra de linha
+                            if (window.innerWidth <= 768) {
+                                labels.forEach((label, index) => {
+                                    if (index > 0) {
+                                        label.text = '\n' + label.text;
+                                    }
+                                });
+                            }
+                            
+                            return labels;
+                        }
                     }
                 },
                 tooltip: {
@@ -772,16 +795,16 @@ function renderConcessoesHospital(hospitalId, type = 'bar') {
             plugins: {
                 legend: {
                     display: true,
-                    position: 'bottom',
+                    position: 'left',
                     align: 'start',
                     labels: {
                         color: corTexto,
-                        padding: 15,
-                        font: { size: 13, weight: 500 },
+                        padding: 8,
+                        font: { size: 11, weight: 500 },
                         usePointStyle: true,
                         pointStyle: 'circle',
-                        boxWidth: 12,
-                        boxHeight: 12
+                        boxWidth: 10,
+                        boxHeight: 10
                     }
                 },
                 tooltip: {
@@ -1007,16 +1030,16 @@ function renderLinhasHospital(hospitalId, type = 'bar') {
             plugins: {
                 legend: {
                     display: true,
-                    position: 'bottom',
+                    position: 'left',
                     align: 'start',
                     labels: {
                         color: corTexto,
-                        padding: 15,
-                        font: { size: 13, weight: 500 },
+                        padding: 8,
+                        font: { size: 11, weight: 500 },
                         usePointStyle: true,
                         pointStyle: 'circle',
-                        boxWidth: 12,
-                        boxHeight: 12
+                        boxWidth: 10,
+                        boxHeight: 10
                     }
                 },
                 tooltip: {
@@ -1068,7 +1091,7 @@ window.forceDataRefresh = function() {
     }
 };
 
-// CSS completo - REMOVIDAS TODAS AS MEDIA QUERIES MOBILE
+// *** CSS CORRIGIDO COM RESPONSIVIDADE MOBILE ***
 function getHospitalCSS() {
     return `
         <style id="hospitalCSS">
@@ -1246,6 +1269,145 @@ function getHospitalCSS() {
                 height: 100% !important;
                 max-height: 370px !important;
             }
+            
+            /* *** CORREÇÕES MOBILE ESPECÍFICAS *** */
+            @media (max-width: 768px) {
+                /* Header dashboard responsivo */
+                .dashboard-header {
+                    padding: 15px !important;
+                    margin-bottom: 20px !important;
+                }
+                
+                .dashboard-header h2 {
+                    font-size: 20px !important;
+                    margin-bottom: 0 !important;
+                }
+                
+                /* Container hospitais com menos espaçamento */
+                .hospitais-container {
+                    gap: 20px !important;
+                }
+                
+                /* Cards hospitalares com menos padding */
+                .hospital-card {
+                    padding: 15px !important;
+                    margin: 0 5px !important;
+                }
+                
+                /* KPIs em 2x2 + 1 no mobile */
+                .kpis-horizontal-container {
+                    grid-template-columns: 1fr 1fr !important;
+                    gap: 12px !important;
+                    margin-bottom: 20px !important;
+                }
+                
+                .kpi-box-inline {
+                    padding: 15px 10px !important;
+                    min-height: 80px !important;
+                }
+                
+                .kpi-value {
+                    font-size: 20px !important;
+                    margin-bottom: 4px !important;
+                }
+                
+                .kpi-label {
+                    font-size: 10px !important;
+                }
+                
+                /* Gauge menor no mobile */
+                .kpi-gauge-box canvas {
+                    max-width: 60px !important;
+                    max-height: 30px !important;
+                }
+                
+                /* Gráficos com bordas mínimas */
+                .grafico-item {
+                    padding: 10px !important;
+                    margin: 0 !important;
+                    border-radius: 8px !important;
+                }
+                
+                .chart-container {
+                    padding: 8px !important;
+                    height: 300px !important;
+                    background: rgba(0, 0, 0, 0.1) !important;
+                }
+                
+                .chart-container canvas {
+                    max-height: 284px !important;
+                }
+                
+                /* Header dos gráficos responsivo */
+                .chart-header {
+                    flex-direction: column !important;
+                    align-items: flex-start !important;
+                    gap: 8px !important;
+                    margin-bottom: 10px !important;
+                }
+                
+                .chart-header h4 {
+                    font-size: 14px !important;
+                    line-height: 1.2 !important;
+                }
+                
+                /* Controles dos gráficos menores */
+                .chart-controls {
+                    justify-content: flex-start !important;
+                    width: 100% !important;
+                }
+                
+                .chart-btn {
+                    padding: 4px 8px !important;
+                    font-size: 10px !important;
+                    border-radius: 3px !important;
+                }
+                
+                /* Títulos hospitalares menores */
+                .hospital-title {
+                    font-size: 16px !important;
+                    margin-bottom: 15px !important;
+                }
+                
+                /* Botão toggle menor */
+                .toggle-fundo-btn {
+                    padding: 6px 12px !important;
+                    font-size: 12px !important;
+                    gap: 6px !important;
+                }
+            }
+            
+            /* *** CORREÇÕES PARA TELAS MUITO PEQUENAS *** */
+            @media (max-width: 480px) {
+                .hospital-card {
+                    padding: 10px !important;
+                    margin: 0 2px !important;
+                }
+                
+                .kpis-horizontal-container {
+                    grid-template-columns: 1fr !important;
+                    gap: 8px !important;
+                }
+                
+                .kpi-box-inline {
+                    padding: 12px 8px !important;
+                    min-height: 60px !important;
+                }
+                
+                .chart-container {
+                    padding: 5px !important;
+                    height: 250px !important;
+                }
+                
+                .chart-header h4 {
+                    font-size: 12px !important;
+                }
+                
+                .chart-btn {
+                    padding: 3px 6px !important;
+                    font-size: 9px !important;
+                }
+            }
         </style>
     `;
 }
@@ -1271,4 +1433,4 @@ function logError(message) {
     console.error(`❌ [DASHBOARD HOSPITALAR] ${message}`);
 }
 
-console.log('Dashboard Hospitalar - Versão Limpa para Mobile - EM ALTA funcionando');
+console.log('Dashboard Hospitalar - Mobile Corrigido - Header uma linha + Switch embaixo + Bordas mínimas + Legendas à esquerda');

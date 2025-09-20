@@ -82,9 +82,10 @@ window.renderDashboardExecutivo = function() {
     if (!window.hospitalData || Object.keys(window.hospitalData).length === 0) {
         container.innerHTML = `
             <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 400px; text-align: center; color: white; background: linear-gradient(135deg, #1a1f2e 0%, #2d3748 100%); border-radius: 12px; margin: 20px; padding: 40px;">
-                <div style="width: 60px; height: 60px; border: 3px solid #22c55e; border-top-color: transparent; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px;"></div>
-                <h2 style="color: #22c55e; margin-bottom: 10px; font-size: 20px;">Carregando dados executivos</h2>
-                <p style="color: #9ca3af; font-size: 14px;">Consolidando informações da rede hospitalar</p>
+                <div style="width: 60px; height: 60px; border: 3px solid #ef4444; border-top-color: transparent; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px;"></div>
+                <h2 style="color: #ef4444; margin-bottom: 10px; font-size: 20px;">Dados não disponíveis</h2>
+                <p style="color: #9ca3af; font-size: 14px;">Aguardando sincronização com a planilha</p>
+                <button onclick="window.location.reload()" style="margin-top: 20px; padding: 12px 24px; background: #3b82f6; color: white; border: none; border-radius: 8px; cursor: pointer;">Recarregar</button>
                 <style>
                     @keyframes spin {
                         from { transform: rotate(0deg); }
@@ -93,15 +94,6 @@ window.renderDashboardExecutivo = function() {
                 </style>
             </div>
         `;
-        
-        setTimeout(() => {
-            if (window.hospitalData && Object.keys(window.hospitalData).length > 0) {
-                window.renderDashboardExecutivo();
-            } else {
-                criarDadosMockExecutivo();
-                setTimeout(() => window.renderDashboardExecutivo(), 500);
-            }
-        }, 2000);
         return;
     }
     
@@ -111,8 +103,20 @@ window.renderDashboardExecutivo = function() {
     });
     
     if (hospitaisComDados.length === 0) {
-        criarDadosMockExecutivo();
-        setTimeout(() => window.renderDashboardExecutivo(), 500);
+        container.innerHTML = `
+            <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 400px; text-align: center; color: white; background: linear-gradient(135deg, #1a1f2e 0%, #2d3748 100%); border-radius: 12px; margin: 20px; padding: 40px;">
+                <div style="width: 60px; height: 60px; border: 3px solid #f59e0b; border-top-color: transparent; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px;"></div>
+                <h2 style="color: #f59e0b; margin-bottom: 10px; font-size: 20px;">Nenhum hospital com dados</h2>
+                <p style="color: #9ca3af; font-size: 14px;">Verifique a conexão com a planilha</p>
+                <button onclick="window.location.reload()" style="margin-top: 20px; padding: 12px 24px; background: #3b82f6; color: white; border: none; border-radius: 8px; cursor: pointer;">Tentar novamente</button>
+                <style>
+                    @keyframes spin {
+                        from { transform: rotate(0deg); }
+                        to { transform: rotate(360deg); }
+                    }
+                </style>
+            </div>
+        `;
         return;
     }
     
@@ -450,7 +454,7 @@ function renderGaugeExecutivoHorizontal(ocupacao) {
     });
 }
 
-// Gráfico de Altas - APENAS BARRAS COM LEGENDAS EMBAIXO
+// Gráfico de Altas - APENAS BARRAS COM LEGENDAS EMBAIXO - DADOS REAIS
 function renderAltasExecutivo() {
     const canvas = document.getElementById('graficoAltasExecutivo');
     if (!canvas || typeof Chart === 'undefined') return;
@@ -467,69 +471,15 @@ function renderAltasExecutivo() {
     const corTexto = window.fundoBranco ? '#000000' : '#ffffff';
     const corGrid = window.fundoBranco ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.1)';
     
-    const datasets = [
-        {
-            label: 'Hoje Ouro',
-            data: [8, 0, 0, 0, 0],
-            backgroundColor: '#fbbf24',
-            borderWidth: 0
-        },
-        {
-            label: 'Hoje 2R',
-            data: [5, 0, 0, 0, 0],
-            backgroundColor: '#3b82f6',
-            borderWidth: 0
-        },
-        {
-            label: 'Hoje 3R',
-            data: [2, 0, 0, 0, 0],
-            backgroundColor: '#8b5cf6',
-            borderWidth: 0
-        },
-        {
-            label: '24h Ouro',
-            data: [0, 6, 0, 0, 0],
-            backgroundColor: '#fbbf24',
-            borderWidth: 0
-        },
-        {
-            label: '24h 2R',
-            data: [0, 4, 0, 0, 0],
-            backgroundColor: '#3b82f6',
-            borderWidth: 0
-        },
-        {
-            label: '24h 3R',
-            data: [0, 2, 0, 0, 0],
-            backgroundColor: '#8b5cf6',
-            borderWidth: 0
-        },
-        {
-            label: '48H',
-            data: [0, 0, 8, 0, 0],
-            backgroundColor: '#10b981',
-            borderWidth: 0
-        },
-        {
-            label: '72H',
-            data: [0, 0, 0, 5, 0],
-            backgroundColor: '#f59e0b',
-            borderWidth: 0
-        },
-        {
-            label: '96H',
-            data: [0, 0, 0, 0, 3],
-            backgroundColor: '#ef4444',
-            borderWidth: 0
-        }
-    ];
+    // CALCULAR DADOS REAIS DAS ALTAS
+    const dadosReais = calcularDadosAltasReais();
     
     const ctx = canvas.getContext('2d');
     window.chartInstances[chartKey] = new Chart(ctx, {
         type: 'bar',
         data: {
             labels: categorias,
-            datasets: datasets
+            datasets: dadosReais
         },
         options: {
             responsive: true,
@@ -595,7 +545,7 @@ function renderAltasExecutivo() {
     });
 }
 
-// Gráfico de Concessões - APENAS BARRAS COM LEGENDAS EMBAIXO
+// Gráfico de Concessões - APENAS BARRAS COM LEGENDAS EMBAIXO - DADOS REAIS
 function renderConcessoesExecutivo() {
     const canvas = document.getElementById('graficoConcessoesExecutivo');
     if (!canvas || typeof Chart === 'undefined') return;
@@ -614,40 +564,15 @@ function renderConcessoesExecutivo() {
     const corTexto = window.fundoBranco ? '#000000' : '#ffffff';
     const corGrid = window.fundoBranco ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.1)';
     
-    // Principais concessões
-    const concessoes = [
-        'Transição Domiciliar',
-        'Fisioterapia',
-        'Aplicação domiciliar de medicamentos',
-        'Oxigenoterapia',
-        'Curativos',
-        'Orientação Nutricional – com dispositivo'
-    ];
-    
-    // Criar labels para cada hospital em cada período
-    const labels = [];
-    const groupLabels = [];
-    categorias.forEach(cat => {
-        hospitais.forEach(() => {
-            labels.push('');
-            groupLabels.push(cat);
-        });
-    });
-    
-    // Criar datasets com dados simulados
-    const datasets = concessoes.map(concessao => ({
-        label: concessao,
-        data: labels.map(() => Math.floor(Math.random() * 5) + 1),
-        backgroundColor: CORES_CONCESSOES_EXEC[concessao],
-        borderWidth: 0
-    }));
+    // CALCULAR DADOS REAIS DAS CONCESSÕES
+    const dadosReais = calcularDadosConcessoesReais();
     
     const ctx = canvas.getContext('2d');
     window.chartInstances[chartKey] = new Chart(ctx, {
         type: 'bar',
         data: {
-            labels: labels,
-            datasets: datasets
+            labels: dadosReais.labels,
+            datasets: dadosReais.datasets
         },
         options: {
             responsive: true,
@@ -772,7 +697,7 @@ function renderConcessoesExecutivo() {
     });
 }
 
-// Gráfico de Linhas de Cuidado - APENAS BARRAS COM LEGENDAS EMBAIXO
+// Gráfico de Linhas de Cuidado - APENAS BARRAS COM LEGENDAS EMBAIXO - DADOS REAIS
 function renderLinhasExecutivo() {
     const canvas = document.getElementById('graficoLinhasExecutivo');
     if (!canvas || typeof Chart === 'undefined') return;
@@ -791,38 +716,15 @@ function renderLinhasExecutivo() {
     const corTexto = window.fundoBranco ? '#000000' : '#ffffff';
     const corGrid = window.fundoBranco ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.1)';
     
-    // Principais linhas
-    const linhas = [
-        'Assiste',
-        'APS',
-        'Cuidados Paliativos',
-        'Crônicos – Cardiologia',
-        'Oncologia',
-        'Vida Mais Leve Care'
-    ];
-    
-    // Criar labels vazios
-    const labels = [];
-    categorias.forEach(() => {
-        hospitais.forEach(() => {
-            labels.push('');
-        });
-    });
-    
-    // Criar datasets
-    const datasets = linhas.map(linha => ({
-        label: linha,
-        data: labels.map(() => Math.floor(Math.random() * 8) + 2),
-        backgroundColor: CORES_LINHAS_EXEC[linha],
-        borderWidth: 0
-    }));
+    // CALCULAR DADOS REAIS DAS LINHAS DE CUIDADO
+    const dadosReais = calcularDadosLinhasReais();
     
     const ctx = canvas.getContext('2d');
     window.chartInstances[chartKey] = new Chart(ctx, {
         type: 'bar',
         data: {
-            labels: labels,
-            datasets: datasets
+            labels: dadosReais.labels,
+            datasets: dadosReais.datasets
         },
         options: {
             responsive: true,
@@ -941,61 +843,229 @@ function renderLinhasExecutivo() {
     });
 }
 
-// Criar dados mock
-function criarDadosMockExecutivo() {
-    if (!window.CONFIG || !window.CONFIG.HOSPITAIS) {
-        window.CONFIG = {
-            HOSPITAIS: {
-                H1: { nome: 'Neomater' },
-                H2: { nome: 'Cruz Azul' },
-                H3: { nome: 'Santa Marcelina' },
-                H4: { nome: 'Santa Clara' }
-            }
-        };
+// CALCULAR DADOS REAIS DE ALTAS DOS HOSPITAIS
+function calcularDadosAltasReais() {
+    const hospitaisComDados = Object.keys(CONFIG.HOSPITAIS).filter(hospitalId => {
+        const hospital = window.hospitalData[hospitalId];
+        return hospital && hospital.leitos && hospital.leitos.length > 0;
+    });
+    
+    if (hospitaisComDados.length === 0) {
+        return [];
     }
     
-    window.hospitalData = {
-        H1: {
-            leitos: Array(20).fill(null).map(() => ({
-                status: Math.random() > 0.3 ? 'ocupado' : 'vago',
-                prevAlta: ['Hoje Ouro', '24h 2R', '48h', '72h', '96h'][Math.floor(Math.random() * 5)],
-                concessoes: 'Fisioterapia|Transição Domiciliar',
-                linhas: 'Assiste|APS',
-                tph: Math.random() * 5 + 1,
-                pps: Math.floor(Math.random() * 30) + 70
-            }))
-        },
-        H2: {
-            leitos: Array(15).fill(null).map(() => ({
-                status: Math.random() > 0.4 ? 'ocupado' : 'vago',
-                prevAlta: ['Hoje 3R', '24h Ouro', '48h', '72h'][Math.floor(Math.random() * 4)],
-                concessoes: 'Oxigenoterapia|Curativos',
-                linhas: 'Cuidados Paliativos|Oncologia',
-                tph: Math.random() * 4 + 1,
-                pps: Math.floor(Math.random() * 30) + 70
-            }))
-        },
-        H3: {
-            leitos: Array(18).fill(null).map(() => ({
-                status: Math.random() > 0.35 ? 'ocupado' : 'vago',
-                prevAlta: ['Hoje 2R', '24h 3R', '96h'][Math.floor(Math.random() * 3)],
-                concessoes: 'Aplicação domiciliar de medicamentos',
-                linhas: 'Crônicos – Cardiologia',
-                tph: Math.random() * 3 + 2,
-                pps: Math.floor(Math.random() * 30) + 70
-            }))
-        },
-        H4: {
-            leitos: Array(12).fill(null).map(() => ({
-                status: Math.random() > 0.5 ? 'ocupado' : 'vago',
-                prevAlta: ['Hoje Ouro', '48h', '72h'][Math.floor(Math.random() * 3)],
-                concessoes: 'Orientação Nutricional – com dispositivo',
-                linhas: 'Vida Mais Leve Care|Pediatria',
-                tph: Math.random() * 6,
-                pps: Math.floor(Math.random() * 30) + 70
-            }))
-        }
+    const datasets = [];
+    const categorias = ['HOJE', '24H', '48H', '72H', '96H'];
+    
+    // Contar altas reais por categoria
+    const contadores = {
+        'Hoje Ouro': [0, 0, 0, 0, 0],
+        'Hoje 2R': [0, 0, 0, 0, 0],  
+        'Hoje 3R': [0, 0, 0, 0, 0],
+        '24h Ouro': [0, 0, 0, 0, 0],
+        '24h 2R': [0, 0, 0, 0, 0],
+        '24h 3R': [0, 0, 0, 0, 0],
+        '48H': [0, 0, 0, 0, 0],
+        '72H': [0, 0, 0, 0, 0],
+        '96H': [0, 0, 0, 0, 0]
     };
+    
+    hospitaisComDados.forEach(hospitalId => {
+        const hospital = window.hospitalData[hospitalId];
+        if (!hospital || !hospital.leitos) return;
+        
+        hospital.leitos.forEach(leito => {
+            if (leito.status !== 'ocupado' && leito.status !== 'Em uso') return;
+            
+            const prevAlta = leito.prevAlta || (leito.paciente && leito.paciente.prevAlta);
+            if (!prevAlta) return;
+            
+            // Mapear previsões de alta para contadores
+            if (prevAlta.includes('Hoje Ouro')) {
+                contadores['Hoje Ouro'][0]++;
+            } else if (prevAlta.includes('Hoje 2R')) {
+                contadores['Hoje 2R'][0]++;
+            } else if (prevAlta.includes('Hoje 3R')) {
+                contadores['Hoje 3R'][0]++;
+            } else if (prevAlta.includes('24h Ouro') || prevAlta.includes('24 Ouro')) {
+                contadores['24h Ouro'][1]++;
+            } else if (prevAlta.includes('24h 2R') || prevAlta.includes('24 2R')) {
+                contadores['24h 2R'][1]++;
+            } else if (prevAlta.includes('24h 3R') || prevAlta.includes('24 3R')) {
+                contadores['24h 3R'][1]++;
+            } else if (prevAlta.includes('48')) {
+                contadores['48H'][2]++;
+            } else if (prevAlta.includes('72')) {
+                contadores['72H'][3]++;
+            } else if (prevAlta.includes('96')) {
+                contadores['96H'][4]++;
+            }
+        });
+    });
+    
+    // Criar datasets apenas para categorias com dados
+    Object.keys(contadores).forEach(categoria => {
+        const dados = contadores[categoria];
+        const total = dados.reduce((a, b) => a + b, 0);
+        
+        if (total > 0) {
+            let cor = '#6b7280'; // cor padrão
+            
+            if (categoria.includes('Ouro')) cor = '#fbbf24';
+            else if (categoria.includes('2R')) cor = '#3b82f6';
+            else if (categoria.includes('3R')) cor = '#8b5cf6';
+            else if (categoria === '48H') cor = '#10b981';
+            else if (categoria === '72H') cor = '#f59e0b';
+            else if (categoria === '96H') cor = '#ef4444';
+            
+            datasets.push({
+                label: categoria,
+                data: dados,
+                backgroundColor: cor,
+                borderWidth: 0
+            });
+        }
+    });
+    
+    return datasets;
+}
+
+// CALCULAR DADOS REAIS DE CONCESSÕES DOS HOSPITAIS
+function calcularDadosConcessoesReais() {
+    const hospitaisComDados = Object.keys(CONFIG.HOSPITAIS).filter(hospitalId => {
+        const hospital = window.hospitalData[hospitalId];
+        return hospital && hospital.leitos && hospital.leitos.length > 0;
+    });
+    
+    if (hospitaisComDados.length === 0) {
+        return { labels: [], datasets: [] };
+    }
+    
+    const categorias = ['HOJE', '24H', '48H', '72H', '96H'];
+    const hospitais = ['H1', 'H2', 'H3', 'H4'];
+    
+    // Criar labels para cada hospital em cada período
+    const labels = [];
+    categorias.forEach(() => {
+        hospitais.forEach(() => {
+            labels.push('');
+        });
+    });
+    
+    // Contar concessões reais
+    const concessoesCount = {};
+    
+    hospitaisComDados.forEach(hospitalId => {
+        const hospital = window.hospitalData[hospitalId];
+        if (!hospital || !hospital.leitos) return;
+        
+        hospital.leitos.forEach(leito => {
+            if (leito.status !== 'ocupado' && leito.status !== 'Em uso') return;
+            
+            const concessoes = leito.concessoes || '';
+            const concessoesList = typeof concessoes === 'string' ? 
+                concessoes.split('|').filter(c => c.trim()) : 
+                (Array.isArray(concessoes) ? concessoes : []);
+            
+            concessoesList.forEach(concessao => {
+                const concessaoLimpa = concessao.trim();
+                if (concessaoLimpa && CORES_CONCESSOES_EXEC[concessaoLimpa]) {
+                    if (!concessoesCount[concessaoLimpa]) {
+                        concessoesCount[concessaoLimpa] = Array(labels.length).fill(0);
+                    }
+                    // Simples distribuição por hospital (pode ser melhorada)
+                    const hospitalIndex = hospitais.indexOf(hospitalId);
+                    if (hospitalIndex >= 0) {
+                        categorias.forEach((cat, catIndex) => {
+                            const labelIndex = catIndex * 4 + hospitalIndex;
+                            if (labelIndex < labels.length) {
+                                concessoesCount[concessaoLimpa][labelIndex]++;
+                            }
+                        });
+                    }
+                }
+            });
+        });
+    });
+    
+    // Criar datasets
+    const datasets = Object.keys(concessoesCount).map(concessao => ({
+        label: concessao,
+        data: concessoesCount[concessao],
+        backgroundColor: CORES_CONCESSOES_EXEC[concessao],
+        borderWidth: 0
+    }));
+    
+    return { labels, datasets };
+}
+
+// CALCULAR DADOS REAIS DE LINHAS DE CUIDADO DOS HOSPITAIS  
+function calcularDadosLinhasReais() {
+    const hospitaisComDados = Object.keys(CONFIG.HOSPITAIS).filter(hospitalId => {
+        const hospital = window.hospitalData[hospitalId];
+        return hospital && hospital.leitos && hospital.leitos.length > 0;
+    });
+    
+    if (hospitaisComDados.length === 0) {
+        return { labels: [], datasets: [] };
+    }
+    
+    const categorias = ['HOJE', '24H', '48H', '72H', '96H'];
+    const hospitais = ['H1', 'H2', 'H3', 'H4'];
+    
+    // Criar labels
+    const labels = [];
+    categorias.forEach(() => {
+        hospitais.forEach(() => {
+            labels.push('');
+        });
+    });
+    
+    // Contar linhas reais
+    const linhasCount = {};
+    
+    hospitaisComDados.forEach(hospitalId => {
+        const hospital = window.hospitalData[hospitalId];
+        if (!hospital || !hospital.leitos) return;
+        
+        hospital.leitos.forEach(leito => {
+            if (leito.status !== 'ocupado' && leito.status !== 'Em uso') return;
+            
+            const linhas = leito.linhas || '';
+            const linhasList = typeof linhas === 'string' ? 
+                linhas.split('|').filter(l => l.trim()) : 
+                (Array.isArray(linhas) ? linhas : []);
+            
+            linhasList.forEach(linha => {
+                const linhaLimpa = linha.trim();
+                if (linhaLimpa && CORES_LINHAS_EXEC[linhaLimpa]) {
+                    if (!linhasCount[linhaLimpa]) {
+                        linhasCount[linhaLimpa] = Array(labels.length).fill(0);
+                    }
+                    // Distribuição por hospital
+                    const hospitalIndex = hospitais.indexOf(hospitalId);
+                    if (hospitalIndex >= 0) {
+                        categorias.forEach((cat, catIndex) => {
+                            const labelIndex = catIndex * 4 + hospitalIndex;
+                            if (labelIndex < labels.length) {
+                                linhasCount[linhaLimpa][labelIndex]++;
+                            }
+                        });
+                    }
+                }
+            });
+        });
+    });
+    
+    // Criar datasets
+    const datasets = Object.keys(linhasCount).map(linha => ({
+        label: linha,
+        data: linhasCount[linha],
+        backgroundColor: CORES_LINHAS_EXEC[linha],
+        borderWidth: 0
+    }));
+    
+    return { labels, datasets };
 }
 
 // CSS CORRIGIDO COM RESPONSIVIDADE MOBILE ESPECIFICA - 2x4 KPIS

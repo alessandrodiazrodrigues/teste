@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Archipelago Dashboard</title>
     
-    <!-- CSS Modular - ORDEM CORRETA -->
     <link rel="stylesheet" href="css/variables.css">
     <link rel="stylesheet" href="css/layout.css">
     <link rel="stylesheet" href="css/cards.css">
@@ -13,13 +12,11 @@
     <link rel="stylesheet" href="css/dashboards.css">
     <link rel="stylesheet" href="css/mobile.css">
     
-    <!-- Bibliotecas Externas -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 </head>
 <body>
-    <!-- Modal de Autenticação -->
     <div id="authModal" class="modal-auth">
         <div class="auth-container">
             <h1>Archipelago Dashboard</h1>
@@ -30,7 +27,6 @@
         </div>
     </div>
 
-    <!-- Header -->
     <header id="mainHeader" class="header hidden">
         <div class="header-left">
             <span class="hamburger" onclick="toggleMenu()">☰</span>
@@ -42,7 +38,6 @@
         </div>
     </header>
 
-    <!-- Menu Lateral - SEM EMOJIS + NOME CORRIGIDO -->
     <aside id="sideMenu" class="side-menu">
         <div class="menu-header">
             <h2>Menu</h2>
@@ -75,50 +70,40 @@
         </div>
     </aside>
 
-    <!-- Overlay do Menu -->
     <div class="menu-overlay" id="menuOverlay" onclick="toggleMenu()"></div>
 
-    <!-- Main Content -->
     <main id="mainContent" class="main-content hidden">
-        <!-- Seção de Leitos -->
         <section id="leitosView" class="section-leitos">
             <div class="leitos-header">
                 <h2>Gestão de Leitos Hospitalares</h2>
                 
-<!-- *** PRIMEIRA BARRA: SÓ BOTÕES DOS HOSPITAIS *** -->
-<div class="hospital-selector" id="hospitalSelector">
-    <button class="hospital-btn active" data-hospital="H1" onclick="selectHospital('H1')">Neomater</button>
-    <button class="hospital-btn" data-hospital="H2" onclick="selectHospital('H2')">Cruz Azul</button>
-    <button class="hospital-btn" data-hospital="H3" onclick="selectHospital('H3')">Santa Marcelina</button>
-    <button class="hospital-btn" data-hospital="H4" onclick="selectHospital('H4')">Santa Clara</button>
-</div>
+                <div class="hospital-selector" id="hospitalSelector">
+                    <button class="hospital-btn active" data-hospital="H1" onclick="selectHospital('H1')">Neomater</button>
+                    <button class="hospital-btn" data-hospital="H2" onclick="selectHospital('H2')">Cruz Azul</button>
+                    <button class="hospital-btn" data-hospital="H3" onclick="selectHospital('H3')">Santa Marcelina</button>
+                    <button class="hospital-btn" data-hospital="H4" onclick="selectHospital('H4')">Santa Clara</button>
+                </div>
                 
                 
-                <!-- *** FILTROS REMOVIDOS COMPLETAMENTE *** -->
-                <!-- Filtros desnecessários foram removidos conforme solicitado -->
-            </div>
+                </div>
             <div id="cardsContainer" class="cards-grid"></div>
         </section>
 
-        <!-- Dashboard Hospitalar -->
         <section id="dash1" class="hidden">
             <div id="dashHospitalarContent"></div>
         </section>
 
-        <!-- Dashboard Executivo -->
         <section id="dash2" class="hidden">
             <div id="dashExecutivoContent"></div>
         </section>
     </main>
 
-    <!-- Footer -->
     <footer id="mainFooter" class="footer hidden">
         <p>Sistema em versão BETA - não pode ser usado como única fonte de referência</p>
         <p>Para decisões críticas, consulte sempre fontes adicionais e profissionais qualificados</p>
         <p><strong>Desenvolvido por: Alessandro Rodrigues - Versão V3.0 - Setembro/2025</strong></p>
     </footer>
 
-    <!-- Modal de Paciente -->
     <div id="patientModal" class="modal hidden">
         <div class="modal-content">
             <div class="modal-header">
@@ -127,8 +112,7 @@
             </div>
             <div class="modal-body">
                 <form id="patientForm">
-                    <!-- Formulário será renderizado dinamicamente -->
-                </form>
+                    </form>
             </div>
             <div class="modal-footer">
                 <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
@@ -138,13 +122,11 @@
         </div>
     </div>
 
-    <!-- JavaScript Modular - ORDEM CORRETA + API INTEGRADA -->
     <script src="js/app.js"></script>
     <script src="js/api.js"></script>
     <script src="js/dashboards/charts-config.js"></script>
     <script src="js/cards.js"></script>
     <script src="js/charts.js"></script>
-    <script src="js/dashboard.js"></script>
     <script src="js/dashboards/dashboard-hospital.js"></script>
     <script src="js/dashboards/dashboard-executive.js"></script>
     <script src="js/qrcode.js"></script>

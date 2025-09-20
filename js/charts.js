@@ -713,7 +713,46 @@ function renderAltasHospital(hospitalId) {
             categoryPercentage: 0.8,
             plugins: {
                 legend: {
-                    display: false // Desabilitar legenda nativa
+                    display: true,
+                    position: 'bottom',
+                    align: 'start',
+                    labels: {
+                        color: corTexto,
+                        padding: 15,
+                        font: { size: 13, weight: 600 },
+                        usePointStyle: true,
+                        pointStyle: 'rect',
+                        boxWidth: 12,
+                        boxHeight: 12,
+                        // *** FORÇAR UMA LEGENDA POR LINHA COM QUEBRA MANUAL ***
+                        generateLabels: function(chart) {
+                            const datasets = chart.data.datasets;
+                            const labels = [];
+                            
+                            datasets.forEach((dataset, i) => {
+                                if (chart.isDatasetVisible(i)) {
+                                    labels.push({
+                                        text: dataset.label,
+                                        fillStyle: dataset.backgroundColor,
+                                        strokeStyle: dataset.backgroundColor,
+                                        lineWidth: 0,
+                                        pointStyle: 'rect',
+                                        hidden: false,
+                                        index: i
+                                    });
+                                }
+                            });
+                            
+                            return labels;
+                        }
+                    },
+                    onClick: function(e, legendItem, legend) {
+                        const index = legendItem.index;
+                        const chart = legend.chart;
+                        const meta = chart.getDatasetMeta(index);
+                        meta.hidden = meta.hidden === null ? !chart.data.datasets[index].hidden : null;
+                        chart.update();
+                    }
                 },
                 tooltip: {
                     backgroundColor: 'rgba(26, 31, 46, 0.95)',
@@ -760,11 +799,11 @@ function renderAltasHospital(hospitalId) {
             },
             layout: {
                 padding: {
-                    bottom: 140 // Espaço para legendas customizadas
+                    bottom: 20 // Espaço reduzido para legendas nativas
                 }
             }
         },
-        plugins: [backgroundPlugin, customLegendPlugin]
+        plugins: [backgroundPlugin] // Remover customLegendPlugin
     });
 }
 
@@ -974,7 +1013,39 @@ function renderConcessoesHospital(hospitalId, type = 'bar') {
             maintainAspectRatio: false,
             plugins: {
                 legend: {
-                    display: false // Desabilitar legenda nativa
+                    display: true,
+                    position: 'bottom',
+                    align: 'start',
+                    labels: {
+                        color: corTexto,
+                        padding: 12,
+                        font: { size: mobile ? 9 : 10, weight: 500 },
+                        usePointStyle: false,
+                        pointStyle: 'circle',
+                        boxWidth: 10,
+                        boxHeight: 10,
+                        // *** FORÇAR UMA LEGENDA POR LINHA ***
+                        generateLabels: function(chart) {
+                            const datasets = chart.data.datasets;
+                            const labels = [];
+                            
+                            datasets.forEach((dataset, i) => {
+                                if (chart.isDatasetVisible(i)) {
+                                    labels.push({
+                                        text: dataset.label,
+                                        fillStyle: dataset.backgroundColor || dataset.borderColor,
+                                        strokeStyle: dataset.backgroundColor || dataset.borderColor,
+                                        lineWidth: 0,
+                                        pointStyle: 'circle',
+                                        hidden: false,
+                                        index: i
+                                    });
+                                }
+                            });
+                            
+                            return labels;
+                        }
+                    }
                 },
                 tooltip: {
                     backgroundColor: 'rgba(26, 31, 46, 0.95)',
@@ -990,12 +1061,12 @@ function renderConcessoesHospital(hospitalId, type = 'bar') {
             },
             layout: {
                 padding: {
-                    bottom: datasets.length * 20 + 20 // Espaço dinâmico para legendas
+                    bottom: datasets.length * 15 + 10 // Espaço dinâmico para legendas
                 }
             },
             ...scatterOptions
         },
-        plugins: [backgroundPlugin, customLegendPlugin]
+        plugins: [backgroundPlugin] // Remover customLegendPlugin
     });
 }
 
@@ -1066,7 +1137,7 @@ function renderLinhasHospital(hospitalId, type = 'bar') {
     const tamanhoBolinha = mobile ? 3 : 8; // 60% menor no mobile
     
     const datasets = linhasOrdenadas.map(([nome, dados]) => {
-        const cor = CORES_LINHAS[nome] || '#ED0A72';
+        const cor = getItemColor(nome); // Usar função inteligente
         
         if (type === 'scatter') {
             const scatterData = [];
@@ -1221,12 +1292,12 @@ function renderLinhasHospital(hospitalId, type = 'bar') {
             },
             layout: {
                 padding: {
-                    bottom: datasets.length * 20 + 20 // Espaço dinâmico para legendas
+                    bottom: datasets.length * 15 + 10 // Espaço dinâmico para legendas
                 }
             },
             ...scatterOptions
         },
-        plugins: [backgroundPlugin, customLegendPlugin]
+        plugins: [backgroundPlugin] // Remover customLegendPlugin
     });
 }
 

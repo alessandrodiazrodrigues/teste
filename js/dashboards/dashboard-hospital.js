@@ -524,19 +524,17 @@ function renderAltasHospital(hospitalId) {
                         pointStyle: 'rect',
                         boxWidth: 12,
                         boxHeight: 12,
-                        // *** CORREÇÃO: FORÇAR UMA LEGENDA POR LINHA NO MOBILE ***
+                        // *** CORREÇÃO: FORÇAR UMA LEGENDA POR LINHA ***
                         generateLabels: function(chart) {
                             const original = Chart.defaults.plugins.legend.labels.generateLabels;
                             const labels = original.call(this, chart);
                             
-                            // No mobile, forçar quebra de linha
-                            if (window.innerWidth <= 768) {
-                                labels.forEach((label, index) => {
-                                    if (index > 0) {
-                                        label.text = '\n' + label.text;
-                                    }
-                                });
-                            }
+                            // Forçar quebra de linha entre legendas
+                            labels.forEach((label, index) => {
+                                if (index > 0) {
+                                    label.text = '\n' + label.text;
+                                }
+                            });
                             
                             return labels;
                         }
@@ -795,7 +793,7 @@ function renderConcessoesHospital(hospitalId, type = 'bar') {
             plugins: {
                 legend: {
                     display: true,
-                    position: 'left',
+                    position: 'bottom',
                     align: 'start',
                     labels: {
                         color: corTexto,
@@ -804,7 +802,20 @@ function renderConcessoesHospital(hospitalId, type = 'bar') {
                         usePointStyle: true,
                         pointStyle: 'circle',
                         boxWidth: 10,
-                        boxHeight: 10
+                        boxHeight: 10,
+                        // *** CORREÇÃO: UMA LEGENDA POR LINHA ***
+                        generateLabels: function(chart) {
+                            const original = Chart.defaults.plugins.legend.labels.generateLabels;
+                            const labels = original.call(this, chart);
+                            
+                            labels.forEach((label, index) => {
+                                if (index > 0) {
+                                    label.text = '\n' + label.text;
+                                }
+                            });
+                            
+                            return labels;
+                        }
                     }
                 },
                 tooltip: {
@@ -1030,7 +1041,7 @@ function renderLinhasHospital(hospitalId, type = 'bar') {
             plugins: {
                 legend: {
                     display: true,
-                    position: 'left',
+                    position: 'bottom',
                     align: 'start',
                     labels: {
                         color: corTexto,
@@ -1039,7 +1050,20 @@ function renderLinhasHospital(hospitalId, type = 'bar') {
                         usePointStyle: true,
                         pointStyle: 'circle',
                         boxWidth: 10,
-                        boxHeight: 10
+                        boxHeight: 10,
+                        // *** CORREÇÃO: UMA LEGENDA POR LINHA ***
+                        generateLabels: function(chart) {
+                            const original = Chart.defaults.plugins.legend.labels.generateLabels;
+                            const labels = original.call(this, chart);
+                            
+                            labels.forEach((label, index) => {
+                                if (index > 0) {
+                                    label.text = '\n' + label.text;
+                                }
+                            });
+                            
+                            return labels;
+                        }
                     }
                 },
                 tooltip: {
@@ -1130,7 +1154,7 @@ function getHospitalCSS() {
             
             .kpis-horizontal-container {
                 display: grid;
-                grid-template-columns: repeat(5, 1fr);
+                grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
                 gap: 16px;
                 margin-bottom: 30px;
                 padding: 0;
@@ -1294,16 +1318,17 @@ function getHospitalCSS() {
                     margin: 0 5px !important;
                 }
                 
-                /* KPIs em 2x2 + 1 no mobile */
+                /* *** CORREÇÃO: KPIs EM 5 COLUNAS IGUAIS NO MOBILE *** */
                 .kpis-horizontal-container {
-                    grid-template-columns: 1fr 1fr !important;
-                    gap: 12px !important;
+                    display: grid !important;
+                    grid-template-columns: 1fr 1fr 1fr 1fr 1fr !important;
+                    gap: 8px !important;
                     margin-bottom: 20px !important;
                 }
                 
                 .kpi-box-inline {
-                    padding: 15px 10px !important;
-                    min-height: 80px !important;
+                    padding: 12px 8px !important;
+                    min-height: 70px !important;
                 }
                 
                 .kpi-value {

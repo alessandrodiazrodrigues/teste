@@ -333,6 +333,7 @@ function renderHospitalSection(hospitalId) {
 }
 
 // Calcular KPIs de um hospital
+// VERSÃO CORRIGIDA
 function calcularKPIsHospital(hospitalId) {
     const hospital = window.hospitalData[hospitalId];
     if (!hospital || !hospital.leitos) {
@@ -364,13 +365,19 @@ function calcularKPIsHospital(hospitalId) {
     const ocupados = ocupadosEnf + ocupadosApt + ocupadosUti;
     const vagos = total - ocupados;
     
-    const TIMELINE_ALTA = ['Hoje Ouro', 'Hoje 2R', 'Hoje 3R', '24h Ouro', '24h 2R', '24h 3R'];
-    const altas = hospital.leitos.filter(l => 
-        l.status === 'ocupado' && 
-        l.paciente && 
-        l.paciente.prevAlta && 
-        TIMELINE_ALTA.includes(l.paciente.prevAlta)
-    ).length;
+    // CORREÇÃO: Contar altas incluindo 96h
+    const TIMELINE_ALTA = ['Hoje Ouro', 'Hoje 2R', 'Hoje 3R', '24h Ouro', '24h 2R', '24h 3R', '48h', '72h', '96h'];
+    let altas = 0;
+    
+    hospital.leitos.forEach(leito => {
+        if (leito.status === 'ocupado' && leito.paciente) {
+            // Verificar campo correto da previsão de alta
+            const prevAlta = leito.paciente?.prevAlta || leito.prevAlta || leito['Previsão de alta'];
+            if (prevAlta && TIMELINE_ALTA.includes(prevAlta)) {
+                altas++;
+            }
+        }
+    });
     
     const ocupacao = total > 0 ? Math.round((ocupados / total) * 100) : 0;
     
@@ -462,23 +469,39 @@ function renderAltasHospital(hospitalId) {
         '96H': [0, 0, 0, 0, 0]
     };
     
-    hospital.leitos.forEach(leito => {
-        if (leito.status === 'ocupado' && leito.paciente && leito.paciente.prevAlta) {
-            let index = -1;
-            let tipo = '';
+hospital.leitos.forEach(leito => {
+        if (leito.status === 'ocupado' && leito.paciente) {
+            // Tentar pegar a previsão de alta de diferentes formas possíveis
+            const prevAlta = leito.paciente.prevAlta || 
+                           leito.paciente['Previsão de alta'] || 
+                           leito.paciente.previsaoAlta ||
+                           leito.prevAlta ||
+                           leito['Previsão de alta'];
             
-            if (leito.paciente.prevAlta === 'Hoje Ouro') { index = 0; tipo = 'Ouro'; }
-            else if (leito.paciente.prevAlta === 'Hoje 2R') { index = 0; tipo = '2R'; }
-            else if (leito.paciente.prevAlta === 'Hoje 3R') { index = 0; tipo = '3R'; }
-            else if (leito.paciente.prevAlta === '24h Ouro') { index = 1; tipo = 'Ouro'; }
-            else if (leito.paciente.prevAlta === '24h 2R') { index = 1; tipo = '2R'; }
-            else if (leito.paciente.prevAlta === '24h 3R') { index = 1; tipo = '3R'; }
-            else if (leito.paciente.prevAlta === '48h') { index = 2; tipo = '48H'; }
-            else if (leito.paciente.prevAlta === '72h') { index = 3; tipo = '72H'; }
-            else if (leito.paciente.prevAlta === '96h') { index = 4; tipo = '96H'; }
-            
-            if (index >= 0 && tipo && dados[tipo]) {
-                dados[tipo][index]++;
+            // Debug para ver o que está vindo
+            if (prevAlta) {
+                console.log('Previsão encontrada:', prevAlta);
+                
+                let index = -1;
+                let tipo = '';
+                
+                // Normalizar o valor (remover espaços, converter para padrão)
+                const prevAltaNorm = prevAlta.trim();
+                
+                if (prevAltaNorm === 'Hoje Ouro') { index = 0; tipo = 'Ouro'; }
+                else if (prevAltaNorm === 'Hoje 2R') { index = 0; tipo = '2R'; }
+                else if (prevAltaNorm === 'Hoje 3R') { index = 0; tipo = '3R'; }
+                else if (prevAltaNorm === '24h Ouro') { index = 1; tipo = 'Ouro'; }
+                else if (prevAltaNorm === '24h 2R') { index = 1; tipo = '2R'; }
+                else if (prevAltaNorm === '24h 3R') { index = 1; tipo = '3R'; }
+                else if (prevAltaNorm === '48h' || prevAltaNorm === '48H') { index = 2; tipo = '48H'; }
+                else if (prevAltaNorm === '72h' || prevAltaNorm === '72H') { index = 3; tipo = '72H'; }
+                else if (prevAltaNorm === '96h' || prevAltaNorm === '96H') { index = 4; tipo = '96H'; }
+                
+                if (index >= 0 && tipo && dados[tipo]) {
+                    dados[tipo][index]++;
+                    console.log(`Adicionado: ${prevAltaNorm} -> index: ${index}, tipo: ${tipo}`);
+                }
             }
         }
     });
@@ -571,7 +594,6 @@ function renderAltasHospital(hospitalId) {
         plugins: [backgroundPlugin]
     });
 }
-
 // Gráfico de Concessões
 function renderConcessoesHospital(hospitalId, type = 'bar') {
     const canvas = document.getElementById(`graficoConcessoes${hospitalId}`);

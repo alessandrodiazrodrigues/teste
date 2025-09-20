@@ -325,31 +325,9 @@ function renderHospitalSection(hospitalId) {
     `;
 }
 
-// Calcular KPIs de um hospital - VERSÃO CORRIGIDA E SIMPLIFICADA
+// Calcular KPIs de um hospital - VERSÃO SIMPLIFICADA E CORRIGIDA
 function calcularKPIsHospital(hospitalId) {
     const hospital = window.hospitalData[hospitalId];
-    
-    // DEBUG: Ver estrutura exata
-    console.log(`=== DEBUG KPI ${hospitalId} ===`);
-    console.log('Hospital data:', hospital);
-    
-    if (hospital && hospital.leitos && hospital.leitos.length > 0) {
-        console.log('Primeiro leito completo:', hospital.leitos[0]);
-        console.log('Campos disponíveis:', Object.keys(hospital.leitos[0]));
-        
-        // Contar manualmente
-        let contadorAltas = 0;
-        hospital.leitos.forEach((leito, idx) => {
-            if (leito.status === 'ocupado' && leito.prevAlta) {
-                contadorAltas++;
-                console.log(`Leito ${idx}: status="${leito.status}", prevAlta="${leito.prevAlta}" - CONTADO`);
-            }
-        });
-        console.log(`Total de altas contadas: ${contadorAltas}`);
-    }
-    console.log(`=== FIM DEBUG ===`);
-    
-    // Resto do código original
     if (!hospital || !hospital.leitos) {
         return { ocupacao: 0, total: 0, ocupados: 0, vagos: 0, altas: 0 };
     }
@@ -359,8 +337,11 @@ function calcularKPIsHospital(hospitalId) {
     let altas = 0;
     
     hospital.leitos.forEach(leito => {
+        // Verificar se está ocupado
         if (leito.status === 'ocupado') {
             ocupados++;
+            
+            // Contar altas - buscar prevAlta diretamente no leito
             if (leito.prevAlta) {
                 altas++;
             }
@@ -371,7 +352,6 @@ function calcularKPIsHospital(hospitalId) {
     const ocupacao = total > 0 ? Math.round((ocupados / total) * 100) : 0;
     
     return { ocupacao, total, ocupados, vagos, altas };
-}
 }
 
 // Plugin para fundo branco/escuro nos gráficos (NÃO usado no gauge)
@@ -432,7 +412,7 @@ function renderGaugeHospital(hospitalId) {
     }
 }
 
-// Gráfico de Altas - CORRIGIDO PARA V4.0 COM 96h (sem SP nos gráficos)
+// Gráfico de Altas
 function renderAltasHospital(hospitalId) {
     const canvas = document.getElementById(`graficoAltas${hospitalId}`);
     if (!canvas || typeof Chart === 'undefined') return;
@@ -461,30 +441,24 @@ function renderAltasHospital(hospitalId) {
     
     hospital.leitos.forEach(leito => {
         const isOcupado = leito.status === 'ocupado' || leito.status === 'Em uso';
-        if (isOcupado) {
-            // V4.0: Buscar direto do leito
-            const prevAlta = leito.prevAlta;
+        if (isOcupado && leito.prevAlta) {
+            let index = -1;
+            let tipo = '';
             
-            if (prevAlta) {
-                let index = -1;
-                let tipo = '';
-                
-                const prevAltaNorm = prevAlta.trim();
-                
-                if (prevAltaNorm === 'Hoje Ouro') { index = 0; tipo = 'Ouro'; }
-                else if (prevAltaNorm === 'Hoje 2R') { index = 0; tipo = '2R'; }
-                else if (prevAltaNorm === 'Hoje 3R') { index = 0; tipo = '3R'; }
-                else if (prevAltaNorm === '24h Ouro') { index = 1; tipo = 'Ouro'; }
-                else if (prevAltaNorm === '24h 2R') { index = 1; tipo = '2R'; }
-                else if (prevAltaNorm === '24h 3R') { index = 1; tipo = '3R'; }
-                else if (prevAltaNorm === '48h') { index = 2; tipo = '48H'; }
-                else if (prevAltaNorm === '72h') { index = 3; tipo = '72H'; }
-                else if (prevAltaNorm === '96h') { index = 4; tipo = '96H'; }
-                // SP é ignorado no gráfico
-                
-                if (index >= 0 && tipo && dados[tipo]) {
-                    dados[tipo][index]++;
-                }
+            const prevAltaNorm = leito.prevAlta.trim();
+            
+            if (prevAltaNorm === 'Hoje Ouro') { index = 0; tipo = 'Ouro'; }
+            else if (prevAltaNorm === 'Hoje 2R') { index = 0; tipo = '2R'; }
+            else if (prevAltaNorm === 'Hoje 3R') { index = 0; tipo = '3R'; }
+            else if (prevAltaNorm === '24h Ouro') { index = 1; tipo = 'Ouro'; }
+            else if (prevAltaNorm === '24h 2R') { index = 1; tipo = '2R'; }
+            else if (prevAltaNorm === '24h 3R') { index = 1; tipo = '3R'; }
+            else if (prevAltaNorm === '48h') { index = 2; tipo = '48H'; }
+            else if (prevAltaNorm === '72h') { index = 3; tipo = '72H'; }
+            else if (prevAltaNorm === '96h') { index = 4; tipo = '96H'; }
+            
+            if (index >= 0 && tipo && dados[tipo]) {
+                dados[tipo][index]++;
             }
         }
     });
@@ -599,7 +573,6 @@ function renderConcessoesHospital(hospitalId, type = 'bar') {
     
     hospital.leitos.forEach(leito => {
         if (leito.status === 'ocupado' || leito.status === 'Em uso') {
-            // V4.0: Concessões vêm como array direto
             const concessoesList = leito.concessoes || [];
             const prevAlta = leito.prevAlta;
             
@@ -610,7 +583,6 @@ function renderConcessoesHospital(hospitalId, type = 'bar') {
                 else if (prevAlta === '48h') timelineIndex = 2;
                 else if (prevAlta === '72h') timelineIndex = 3;
                 else if (prevAlta === '96h') timelineIndex = 4;
-                // SP não aparece nos gráficos
                 
                 if (timelineIndex >= 0) {
                     concessoesList.forEach(concessao => {
@@ -829,7 +801,6 @@ function renderLinhasHospital(hospitalId, type = 'bar') {
     
     hospital.leitos.forEach(leito => {
         if (leito.status === 'ocupado' || leito.status === 'Em uso') {
-            // V4.0: Linhas vêm como array direto
             const linhasList = leito.linhas || [];
             const prevAlta = leito.prevAlta;
             
@@ -840,7 +811,6 @@ function renderLinhasHospital(hospitalId, type = 'bar') {
                 else if (prevAlta === '48h') timelineIndex = 2;
                 else if (prevAlta === '72h') timelineIndex = 3;
                 else if (prevAlta === '96h') timelineIndex = 4;
-                // SP não aparece nos gráficos
                 
                 if (timelineIndex >= 0) {
                     linhasList.forEach(linha => {
@@ -1282,4 +1252,17 @@ function getHospitalCSS() {
     `;
 }
 
-console.log('Dashboard Hospitalar - Versão V4.0 Corrigida com 96h e SP');
+// Sistema de logs
+function logInfo(message) {
+    console.log(`🔷 [DASHBOARD HOSPITALAR] ${message}`);
+}
+
+function logSuccess(message) {
+    console.log(`✅ [DASHBOARD HOSPITALAR] ${message}`);
+}
+
+function logError(message, error) {
+    console.error(`❌ [DASHBOARD HOSPITALAR] ${message}`, error || '');
+}
+
+console.log('Dashboard Hospitalar - Versão Corrigida V4.0');

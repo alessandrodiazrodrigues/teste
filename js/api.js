@@ -350,4 +350,247 @@ window.loadHospitalData = async function() {
     }
 };
 
-// ... (o restante do arquivo api.js pode permanecer o mesmo) ...
+// =================== FUNÇÕES DE SALVAMENTO V4.0 ===================
+
+window.admitirPaciente = async function(hospital, leito, dadosPaciente) {
+    try {
+        logAPI(`Admitindo paciente V4.0 no ${hospital}-${leito} NA PLANILHA REAL (44 colunas)`);
+        
+        const concessoesValidas = validarConcessoes(dadosPaciente.concessoes || []);
+        const linhasValidas = validarLinhas(dadosPaciente.linhas || []);
+        const timelineValida = validarTimeline(dadosPaciente.prevAlta || 'SP');
+        
+        const payload = {
+            hospital: hospital,
+            leito: Number(leito),
+            nome: dadosPaciente.nome || '',
+            matricula: dadosPaciente.matricula || '',
+            idade: dadosPaciente.idade || null,
+            pps: dadosPaciente.pps || null,
+            spict: dadosPaciente.spict || '',
+            complexidade: dadosPaciente.complexidade || 'I',
+            prevAlta: timelineValida,
+            linhas: linhasValidas,
+            concessoes: concessoesValidas
+        };
+        
+        logAPI('Payload V4.0 validado:', {
+            concessoes: payload.concessoes.length,
+            linhas: payload.linhas.length,
+            timeline: payload.prevAlta
+        });
+        
+        const result = await apiRequest('admitir', payload, 'POST');
+        
+        logAPISuccess(`✅ Paciente admitido V4.0 na planilha!`);
+        return result;
+        
+    } catch (error) {
+        logAPIError('Erro ao admitir paciente V4.0:', error.message);
+        throw error;
+    }
+};
+
+window.atualizarPaciente = async function(hospital, leito, dadosAtualizados) {
+    try {
+        logAPI(`Atualizando paciente V4.0 ${hospital}-${leito} NA PLANILHA REAL (44 colunas)`);
+        
+        const concessoesValidas = validarConcessoes(dadosAtualizados.concessoes || []);
+        const linhasValidas = validarLinhas(dadosAtualizados.linhas || []);
+        const timelineValida = dadosAtualizados.prevAlta ? validarTimeline(dadosAtualizados.prevAlta) : '';
+        
+        const payload = {
+            hospital: hospital,
+            leito: Number(leito),
+            idade: dadosAtualizados.idade || null,
+            pps: dadosAtualizados.pps || null,
+            spict: dadosAtualizados.spict || '',
+            complexidade: dadosAtualizados.complexidade || '',
+            prevAlta: timelineValida,
+            linhas: linhasValidas,
+            concessoes: concessoesValidas
+        };
+        
+        logAPI('Payload V4.0 atualização validado:', {
+            concessoes: payload.concessoes.length,
+            linhas: payload.linhas.length,
+            timeline: payload.prevAlta
+        });
+        
+        const result = await apiRequest('atualizar', payload, 'POST');
+        
+        logAPISuccess(`✅ Paciente V4.0 atualizado na planilha!`);
+        return result;
+        
+    } catch (error) {
+        logAPIError('Erro ao atualizar paciente V4.0:', error.message);
+        throw error;
+    }
+};
+
+window.darAltaPaciente = async function(hospital, leito) {
+    try {
+        logAPI(`Dando alta V4.0 ao paciente ${hospital}-${leito} NA PLANILHA REAL (44 colunas)`);
+        
+        const payload = {
+            hospital: hospital,
+            leito: Number(leito)
+        };
+        
+        const result = await apiRequest('daralta', payload, 'POST');
+        
+        logAPISuccess('✅ Alta V4.0 processada na planilha!');
+        return result;
+        
+    } catch (error) {
+        logAPIError('Erro ao processar alta V4.0:', error.message);
+        throw error;
+    }
+};
+
+// =================== REFRESH APÓS AÇÕES V4.0 ===================
+window.refreshAfterAction = async function() {
+    try {
+        logAPI('🔄 Recarregando dados V4.0 da planilha após ação...');
+        
+        const container = document.getElementById('cardsContainer');
+        if (container) {
+            container.innerHTML = `<div class="card" style="grid-column: 1 / -1; text-align: center; padding: 40px; background: #1a1f2e; border-radius: 12px;"><div style="color: #60a5fa;">🔄 Sincronizando V4.0 com a planilha...</div></div>`;
+        }
+        
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        await window.loadHospitalData();
+        
+        setTimeout(() => {
+            if (window.renderCards) {
+                window.renderCards();
+                logAPISuccess('✅ Interface V4.0 atualizada com dados da planilha');
+            }
+        }, 500);
+        
+    } catch (error) {
+        logAPIError('Erro ao refresh V4.0:', error.message);
+        
+        setTimeout(() => {
+            if (window.renderCards) {
+                window.renderCards();
+            }
+        }, 1000);
+    }
+};
+
+// =================== FUNÇÕES DE TESTE E MONITORAMENTO V4.0 ===================
+
+window.testAPI = async function() {
+    try {
+        logAPI('🔍 Testando conectividade V4.0...');
+        
+        const result = await apiRequest('test', {}, 'GET');
+        
+        if (result) {
+            logAPISuccess('✅ API V4.0 funcionando!', result);
+            return { status: 'ok', data: result };
+        } else {
+            throw new Error('API V4.0 não retornou dados de teste válidos');
+        }
+        
+    } catch (error) {
+        logAPIError('❌ Erro na conectividade V4.0:', error.message);
+        return { status: 'error', message: error.message };
+    }
+};
+
+window.monitorAPI = function() {
+    if (window.apiMonitorInterval) {
+        clearInterval(window.apiMonitorInterval);
+    }
+    
+    window.apiMonitorInterval = setInterval(async () => {
+        try {
+            const timeSinceLastCall = Date.now() - window.lastAPICall;
+            
+            if (timeSinceLastCall > 240000) {
+                logAPI('🔄 Refresh automático V4.0 dos dados...');
+                await window.loadHospitalData();
+                
+                if (window.currentView === 'leitos' && window.renderCards) {
+                    setTimeout(() => window.renderCards(), 1000);
+                }
+            }
+        } catch (error) {
+            logAPIError('Erro no monitoramento automático V4.0:', error.message);
+        }
+    }, 60000);
+    
+    logAPI('🔍 Monitoramento automático V4.0 da API ativado');
+};
+
+// =================== COMPATIBILIDADE COM VERSÕES ANTERIORES ===================
+
+window.fetchHospitalData = async function(hospital) {
+    logAPI(`Buscando dados V4.0 do hospital: ${hospital}`);
+    
+    await window.loadHospitalData();
+    
+    if (window.hospitalData[hospital] && window.hospitalData[hospital].leitos) {
+        return window.hospitalData[hospital].leitos;
+    }
+    
+    return [];
+};
+
+window.loadAllHospitalsData = window.loadHospitalData;
+
+window.fetchLeitoData = async function(hospital, leito) {
+    try {
+        const data = await apiRequest('one', { hospital: hospital, leito: leito }, 'GET');
+        return data;
+    } catch (error) {
+        logAPIError(`Erro ao buscar leito V4.0 ${hospital}-${leito}:`, error.message);
+        return null;
+    }
+};
+
+// =================== FUNÇÕES DE CORES V4.0 ===================
+window.loadColors = async function() {
+    try {
+        const colors = await apiRequest('getcolors', {}, 'GET');
+        if (colors && typeof colors === 'object') {
+            Object.entries(colors).forEach(([property, value]) => {
+                if (property.startsWith('--') || property.startsWith('-')) {
+                    document.documentElement.style.setProperty(property, value);
+                }
+            });
+            logAPISuccess('✅ Cores V4.0 carregadas da planilha');
+            return colors;
+        }
+    } catch (error) {
+        logAPIError('Erro ao carregar cores V4.0:', error.message);
+    }
+    return null;
+};
+
+window.saveColors = async function(colors) {
+    try {
+        const result = await apiRequest('savecolors', { colors: colors }, 'POST');
+        logAPISuccess('✅ Cores V4.0 salvas na planilha');
+        return result;
+    } catch (error) {
+        logAPIError('Erro ao salvar cores V4.0:', error.message);
+        throw error;
+    }
+};
+
+// =================== INICIALIZAÇÃO V4.0 ===================
+window.addEventListener('load', () => {
+    logAPI('API.js V4.0 carregado - URL da API V4.0 configurada');
+    
+    setTimeout(() => {
+        if (window.monitorAPI) {
+            window.monitorAPI();
+        }
+    }, 10000);
+});
+
+logAPISuccess('✅ API.js V4.0 100% FUNCIONAL - Nova estrutura 44 colunas sem parsing ativa');

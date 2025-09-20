@@ -1,4 +1,4 @@
-// =================== DASHBOARD EXECUTIVO - REDE HOSPITALAR EXTERNA (VERSÃO FINAL) ===================
+// =================== DASHBOARD EXECUTIVO - VERSÃO MOBILE CORRIGIDA ===================
 
 // Estado global para fundo branco (compartilhado com dashboard hospitalar)
 if (typeof window.fundoBranco === 'undefined') {
@@ -122,16 +122,21 @@ window.renderDashboardExecutivo = function() {
     container.innerHTML = `
         <div style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); min-height: 100vh; padding: 20px; color: white;">
             
-            <!-- HEADER COM BOTÃO CLARO/ESCURO -->
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; padding: 20px; background: rgba(255, 255, 255, 0.05); border-radius: 12px; border-left: 4px solid #22c55e;">
-                <h2 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 700;">Rede Hospitalar Externa</h2>
-                <button id="toggleFundoBtnExec" class="toggle-fundo-btn" style="padding: 8px 16px; background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 8px; color: #e2e8f0; font-size: 14px; cursor: pointer; transition: all 0.3s ease; display: flex; align-items: center; gap: 8px;">
-                    <span id="toggleIconExec">🌙</span>
-                    <span id="toggleTextExec">ESCURO</span>
-                </button>
+            <!-- *** CORREÇÃO: HEADER EM UMA LINHA *** -->
+            <div class="dashboard-header-exec" style="margin-bottom: 30px; padding: 20px; background: rgba(255, 255, 255, 0.05); border-radius: 12px; border-left: 4px solid #22c55e;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <h2 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 700; white-space: nowrap;">Rede Hospitalar Externa</h2>
+                </div>
+                <!-- *** CORREÇÃO: SWITCH NA LINHA DE BAIXO *** -->
+                <div style="display: flex; justify-content: flex-end;">
+                    <button id="toggleFundoBtnExec" class="toggle-fundo-btn" style="padding: 8px 16px; background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 8px; color: #e2e8f0; font-size: 14px; cursor: pointer; transition: all 0.3s ease; display: flex; align-items: center; gap: 8px;">
+                        <span id="toggleIconExec">🌙</span>
+                        <span id="toggleTextExec">ESCURO</span>
+                    </button>
+                </div>
             </div>
             
-            <!-- KPIS GRID -->
+            <!-- *** CORREÇÃO: KPIS GRID 2x4 *** -->
             <div class="executive-kpis-grid">
                 <div class="kpi-gauge-principal">
                     <h3 style="color: #9ca3af; font-size: 14px; margin-bottom: 15px; text-align: center;">Ocupação Geral</h3>
@@ -533,14 +538,16 @@ function renderAltasExecutivo() {
             plugins: {
                 legend: {
                     display: true,
-                    position: 'bottom',
+                    position: 'left',
                     align: 'start',
                     labels: {
                         color: corTexto,
-                        padding: 15,
-                        font: { size: 12 },
+                        padding: 8,
+                        font: { size: 11 },
                         usePointStyle: true,
-                        pointStyle: 'rect'
+                        pointStyle: 'rect',
+                        boxWidth: 10,
+                        boxHeight: 10
                     }
                 }
             },
@@ -636,15 +643,16 @@ function renderConcessoesExecutivo() {
             plugins: {
                 legend: {
                     display: true,
-                    position: 'bottom',
+                    position: 'left',
                     align: 'start',
                     labels: {
                         color: corTexto,
-                        padding: 15,
-                        font: { size: 11 },
+                        padding: 8,
+                        font: { size: 10 },
                         usePointStyle: true,
                         pointStyle: 'rect',
-                        boxWidth: 10
+                        boxWidth: 8,
+                        boxHeight: 8
                     }
                 }
             },
@@ -797,15 +805,16 @@ function renderLinhasExecutivo() {
             plugins: {
                 legend: {
                     display: true,
-                    position: 'bottom',
+                    position: 'left',
                     align: 'start',
                     labels: {
                         color: corTexto,
-                        padding: 15,
-                        font: { size: 11 },
+                        padding: 8,
+                        font: { size: 10 },
                         usePointStyle: true,
                         pointStyle: 'rect',
-                        boxWidth: 10
+                        boxWidth: 8,
+                        boxHeight: 8
                     }
                 }
             },
@@ -951,7 +960,7 @@ function criarDadosMockExecutivo() {
     };
 }
 
-// CSS completo - REMOVIDAS TODAS AS MEDIA QUERIES MOBILE  
+// *** CSS CORRIGIDO COM RESPONSIVIDADE MOBILE ***  
 function getExecutiveCSS() {
     return `
         <style id="executiveCSS">
@@ -1116,6 +1125,154 @@ function getExecutiveCSS() {
                 max-height: 400px !important;
                 width: 100% !important;
             }
+            
+            /* *** CORREÇÕES MOBILE ESPECÍFICAS *** */
+            @media (max-width: 768px) {
+                /* Header dashboard responsivo */
+                .dashboard-header-exec {
+                    padding: 15px !important;
+                    margin-bottom: 20px !important;
+                }
+                
+                .dashboard-header-exec h2 {
+                    font-size: 18px !important;
+                    margin-bottom: 0 !important;
+                    line-height: 1.2 !important;
+                }
+                
+                /* *** CORREÇÃO: KPIs GRID 2x4 EMBAIXO DO GAUGE *** */
+                .executive-kpis-grid {
+                    display: grid !important;
+                    grid-template-columns: 1fr !important;
+                    gap: 15px !important;
+                    margin-bottom: 20px !important;
+                }
+                
+                .kpi-gauge-principal {
+                    grid-column: 1 !important;
+                    grid-row: auto !important;
+                    padding: 15px !important;
+                }
+                
+                .gauge-container {
+                    height: 120px !important;
+                    margin: 10px 0 !important;
+                }
+                
+                .gauge-container canvas {
+                    max-height: 120px !important;
+                }
+                
+                .gauge-value {
+                    font-size: 24px !important;
+                }
+                
+                .gauge-label {
+                    font-size: 10px !important;
+                }
+                
+                /* KPIs pequenos em 2x4 */
+                .kpi-box {
+                    padding: 12px 8px !important;
+                    min-height: 60px !important;
+                }
+                
+                .kpi-value {
+                    font-size: 18px !important;
+                    margin-bottom: 4px !important;
+                }
+                
+                .kpi-label {
+                    font-size: 10px !important;
+                }
+                
+                /* Gráficos com bordas mínimas */
+                .executivo-grafico-card {
+                    padding: 10px !important;
+                    margin: 0 5px !important;
+                    border-radius: 8px !important;
+                }
+                
+                .chart-container {
+                    padding: 5px !important;
+                    height: 300px !important;
+                    margin: 10px 0 !important;
+                }
+                
+                .chart-container canvas {
+                    max-height: 290px !important;
+                }
+                
+                /* Header dos gráficos */
+                .chart-header {
+                    flex-direction: column !important;
+                    align-items: flex-start !important;
+                    gap: 5px !important;
+                    margin-bottom: 10px !important;
+                }
+                
+                .chart-header h3 {
+                    font-size: 14px !important;
+                    line-height: 1.2 !important;
+                }
+                
+                /* Botão toggle menor */
+                .toggle-fundo-btn {
+                    padding: 6px 12px !important;
+                    font-size: 12px !important;
+                    gap: 6px !important;
+                }
+                
+                /* Hospital items menores */
+                .hospital-item {
+                    font-size: 10px !important;
+                    padding: 2px 0 !important;
+                }
+                
+                .hospitais-percentuais {
+                    margin-top: 10px !important;
+                    padding-top: 10px !important;
+                }
+            }
+            
+            /* *** MOBILE PEQUENO - KPIs EM GRADE 2x2 *** */
+            @media (max-width: 480px) {
+                .executive-kpis-grid {
+                    display: grid !important;
+                    grid-template-columns: 1fr !important;
+                    gap: 10px !important;
+                }
+                
+                .kpi-gauge-principal {
+                    margin-bottom: 10px !important;
+                }
+                
+                /* Grid 2x2 para os 8 KPIs restantes */
+                .kpi-box:nth-child(n+2) {
+                    display: inline-block !important;
+                    width: calc(50% - 5px) !important;
+                    margin-right: 10px !important;
+                    margin-bottom: 10px !important;
+                    vertical-align: top !important;
+                }
+                
+                .kpi-box:nth-child(2n) {
+                    margin-right: 0 !important;
+                }
+                
+                .executivo-grafico-card {
+                    padding: 8px !important;
+                    margin: 0 2px !important;
+                }
+                
+                .chart-container {
+                    height: 250px !important;
+                }
+                
+                .chart-header h3 {
+                    font-size: 12px !important;
+                }
+            }
         </style>
     `;
 }
@@ -1133,4 +1290,4 @@ function logError(message) {
     console.error(`❌ [DASHBOARD EXECUTIVO] ${message}`);
 }
 
-console.log('Dashboard Executivo - Versão Limpa para Mobile');
+console.log('Dashboard Executivo - Mobile Corrigido - Header uma linha + KPIs 2x4 + Bordas mínimas + Legendas à esquerda');

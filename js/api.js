@@ -4,7 +4,7 @@
 // =================== CONFIGURAÇÃO DA API ===================
 const API_CONFIG = {
     // URL do Google Apps Script (substituir pela URL real do seu deployment)
-    BASE_URL: 'https://script.google.com/macros/s/AKfycbwjS4n74PmLnX-moIaX-fAAmF3Mv5gNtrFNUwvKH4SHgQkdACtr5POYJoHZUSxnymLr/exec',
+    BASE_URL: 'https://script.google.com/macros/s/AKfycbxAEyQKas6IEFPV5iQK8HSjm-xIRfcczzB9poXEKpJhvYkmJZ6vaBN_x74IiBe-8wHC/exec',
     TIMEOUT: 30000,
     RETRY_ATTEMPTS: 3,
     RETRY_DELAY: 2000

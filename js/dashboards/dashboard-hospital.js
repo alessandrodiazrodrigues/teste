@@ -1287,19 +1287,7 @@ function getHospitalCSS() {
     `;
 }
 
-// Funções de log
-function logInfo(message) {
-    console.log(`🔵 [DASHBOARD HOSPITALAR] ${message}`);
-}
-
-function logSuccess(message) {
-    console.log(`✅ [DASHBOARD HOSPITALAR] ${message}`);
-}
-
-function logError(message) {
-    console.error(`❌ [DASHBOARD HOSPITALAR] ${message}`);
-}
-// =================== EXPORTAÇÃO DE FUNÇÕES GLOBAIS ===================
+// =================== EXPORTAÇÃO DE FUNÇÕES GLOBAIS - CORREÇÃO CRÍTICA ===================
 // Exportar funções para uso em outros módulos
 window.calcularKPIsHospital = calcularKPIsHospital;
 window.renderGaugeHospital = renderGaugeHospital;
@@ -1320,5 +1308,4 @@ function logError(message) {
     console.error(`❌ [DASHBOARD HOSPITALAR] ${message}`);
 }
 
-console.log('Dashboard Hospitalar - Versão Final Corrigida - EM ALTA funcionando');
 console.log('Dashboard Hospitalar - Versão Final Corrigida - EM ALTA funcionando');

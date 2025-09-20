@@ -357,11 +357,10 @@ function calcularKPIsHospital(hospitalId) {
     const ocupados = ocupadosEnf + ocupadosApt + ocupadosUti;
     const vagos = total - ocupados;
     
-    // CORREÇÃO: Acessar prevAlta diretamente no leito, não em leito.paciente
+    // CORREÇÃO: Calcular altas
     const TIMELINE_ALTA = ['Hoje Ouro', 'Hoje 2R', 'Hoje 3R'];
     const altas = hospital.leitos.filter(l => {
         if (l.status === 'ocupado') {
-            // Verificar ambos os caminhos possíveis para prevAlta
             const prevAlta = l.prevAlta || (l.paciente && l.paciente.prevAlta);
             return prevAlta && TIMELINE_ALTA.includes(prevAlta);
         }
@@ -370,9 +369,9 @@ function calcularKPIsHospital(hospitalId) {
     
     const ocupacao = total > 0 ? Math.round((ocupados / total) * 100) : 0;
     
-    return { ocupacao, total, ocupados, vagos, altas };
+    // CORREÇÃO CRÍTICA: Incluir 'altas' no return
+    return { ocupacao, total, ocupados, vagos, altas }; // ← ESTA LINHA É A CORREÇÃO!
 }
-
 // Plugin para fundo branco/escuro nos gráficos (NÃO usado no gauge)
 const backgroundPlugin = {
     id: 'customBackground',

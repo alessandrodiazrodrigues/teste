@@ -773,17 +773,18 @@ function renderConcessoesExecutivo() {
                     ctx.fillStyle = corTexto;
                     const fontSize = window.innerWidth <= 768 ? 9.5 : 14;
                     ctx.font = `${fontSize}px Arial`;
-                    ctx.textAlign = 'left'; // Volta para left
-                    ctx.textBaseline = 'bottom';
+                    ctx.textAlign = 'left';
+                    ctx.textBaseline = 'middle'; // Mudança para middle
                     
                     ctx.save();
                     // Ajuste diferenciado para desktop e mobile
-                    const yOffset = window.innerWidth <= 768 ? 3 : 10; // Mobile 3px, Desktop 10px
+                    const yOffset = window.innerWidth <= 768 ? 8 : 10;
                     const yPosition = maxY - yOffset;
+                    // Centralizar no meio da barra (ajuste do X)
                     ctx.translate(bar.x, yPosition);
                     ctx.rotate(-Math.PI / 2); // ROTAÇÃO 90 GRAUS
-                    // Texto iniciando um pouco acima para não sobrepor
-                    ctx.fillText(hospitalName, 8, 0); // 8px de offset após rotação
+                    // Texto iniciando acima para centralizar após rotação
+                    ctx.fillText(hospitalName, 10, 0); // 10px de offset para ficar centralizado
                     ctx.restore();
                 });
                 
@@ -915,16 +916,16 @@ function renderLinhasExecutivo() {
                     ctx.fillStyle = corTexto;
                     const fontSize = window.innerWidth <= 768 ? 9.5 : 14;
                     ctx.font = `${fontSize}px Arial`;
-                    ctx.textAlign = 'left'; // Volta para left
-                    ctx.textBaseline = 'bottom';
+                    ctx.textAlign = 'left';
+                    ctx.textBaseline = 'middle'; // Mudança para middle
                     
                     ctx.save();
                     // Ajuste diferenciado para desktop e mobile
-                    const yOffset = window.innerWidth <= 768 ? 3 : 10;
+                    const yOffset = window.innerWidth <= 768 ? 8 : 10;
                     const yPosition = maxY - yOffset;
                     ctx.translate(bar.x, yPosition);
                     ctx.rotate(-Math.PI / 2); // ROTAÇÃO 90 GRAUS
-                    ctx.fillText(hospitalName, 8, 0); // 8px de offset
+                    ctx.fillText(hospitalName, 10, 0); // 10px centralizado
                     ctx.restore();
                 });
                 
@@ -1423,35 +1424,37 @@ function getExecutiveCSS() {
                     line-height: 1.2 !important;
                 }
                 
-                /* Gráficos: bordas mínimas */
+                /* Gráficos: MARGENS MÍNIMAS no mobile */
                 .executivo-grafico-card {
-                    padding: 5px !important;
-                    margin: 0 2px !important;
+                    padding: 2px !important; /* REDUZIDO de 5px */
+                    margin: 0 !important; /* Zerado completamente */
                     border-radius: 8px !important;
                 }
                 
-                /* Container do gráfico sem margem bottom */
+                /* Container do gráfico sem margem e menor altura */
                 .chart-container {
                     padding: 0 !important;
-                    height: 280px !important;
-                    margin: 0 !important; /* Zerado completamente */
+                    height: 250px !important; /* REDUZIDO de 280px */
+                    margin: 0 !important;
                     position: relative !important;
                 }
                 
                 .chart-container canvas {
-                    max-height: 280px !important;
-                    display: block !important; /* Remove espaços inline */
+                    max-height: 250px !important;
+                    display: block !important;
                 }
                 
-                /* Forçar legendas COLADAS no gráfico */
+                /* Forçar legendas MUITO COLADAS no gráfico */
                 .executivo-grafico-card .chart-legend-custom {
-                    margin-top: -15px !important; /* Margem mais negativa ainda */
-                    gap: 3px !important;
-                    padding: 6px !important;
+                    margin-top: -25px !important; /* MUITO NEGATIVO */
+                    margin-bottom: 10px !important;
+                    gap: 2px !important; /* Reduzido */
+                    padding: 4px 6px !important; /* Padding menor */
                     position: relative !important;
                     z-index: 10 !important;
                     display: flex !important;
                     flex-direction: column !important;
+                    background: rgba(255, 255, 255, 0.03) !important; /* Mais transparente */
                 }
                 
                 /* Header dos gráficos */

@@ -1392,26 +1392,33 @@ function getExecutiveCSS() {
                 .executive-kpis-grid {
                     display: grid !important;
                     grid-template-columns: 1fr 1fr !important; /* 2 colunas iguais */
-                    gap: 10px !important;
-                    margin-bottom: 20px !important;
-                    padding: 0 10px !important; /* Padding lateral para alinhar com gauge */
+                    grid-template-rows: auto !important;
+                    gap: 8px !important;
+                    margin-bottom: 15px !important;
+                    padding: 0 5px !important;
                 }
                 
                 /* Gauge ocupa as 2 colunas (linha completa) */
                 .kpi-gauge-principal {
-                    grid-column: 1 / -1 !important; /* De coluna 1 até o fim */
-                    grid-row: auto !important;
+                    grid-column: 1 / span 2 !important; /* Sintaxe mais específica */
                     padding: 15px !important;
-                    margin: 0 !important; /* Remove margens extras */
+                    margin: 0 !important;
+                    width: 100% !important;
+                    box-sizing: border-box !important;
                 }
                 
-                /* KPIs individuais - garantir 50% da largura */
+                /* KPIs individuais - forçar grid correto */
                 .kpi-box {
                     grid-column: span 1 !important;
-                    padding: 12px 8px !important;
-                    min-height: 70px !important;
-                    margin: 0 !important; /* Remove margens que podem quebrar o grid */
-                    width: 100% !important; /* Ocupar 100% da célula do grid */
+                    padding: 10px 8px !important;
+                    min-height: 65px !important;
+                    margin: 0 !important;
+                    width: 100% !important;
+                    box-sizing: border-box !important;
+                    display: flex !important;
+                    flex-direction: column !important;
+                    align-items: center !important;
+                    justify-content: center !important;
                 }
                 
                 .kpi-value {
@@ -1426,35 +1433,41 @@ function getExecutiveCSS() {
                 
                 /* Gráficos: MARGENS MÍNIMAS no mobile */
                 .executivo-grafico-card {
-                    padding: 2px !important; /* REDUZIDO de 5px */
-                    margin: 0 !important; /* Zerado completamente */
+                    padding: 2px !important;
+                    margin: 0 !important;
                     border-radius: 8px !important;
+                    position: relative !important; /* Para controlar z-index dos filhos */
                 }
                 
                 /* Container do gráfico sem margem e menor altura */
                 .chart-container {
                     padding: 0 !important;
-                    height: 250px !important; /* REDUZIDO de 280px */
+                    height: 250px !important;
                     margin: 0 !important;
                     position: relative !important;
+                    /* Forçar remoção de espaço reservado para legenda */
+                    overflow: visible !important;
                 }
                 
                 .chart-container canvas {
                     max-height: 250px !important;
                     display: block !important;
+                    margin-bottom: -30px !important; /* NEGATIVO para puxar legenda para cima */
                 }
                 
-                /* Forçar legendas MUITO COLADAS no gráfico */
+                /* Forçar legendas EXTREMAMENTE COLADAS no gráfico */
                 .executivo-grafico-card .chart-legend-custom {
-                    margin-top: -25px !important; /* MUITO NEGATIVO */
+                    margin-top: -35px !important; /* EXTREMAMENTE NEGATIVO */
                     margin-bottom: 10px !important;
-                    gap: 2px !important; /* Reduzido */
-                    padding: 4px 6px !important; /* Padding menor */
+                    gap: 2px !important;
+                    padding: 4px 6px !important;
                     position: relative !important;
-                    z-index: 10 !important;
+                    z-index: 20 !important; /* Aumentado */
                     display: flex !important;
                     flex-direction: column !important;
-                    background: rgba(255, 255, 255, 0.03) !important; /* Mais transparente */
+                    align-items: flex-start !important;
+                    background: rgba(30, 41, 59, 0.9) !important; /* Fundo mais sólido para legibilidade */
+                    border-radius: 4px !important;
                 }
                 
                 /* Header dos gráficos */

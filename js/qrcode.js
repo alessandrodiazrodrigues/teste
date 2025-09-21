@@ -136,23 +136,23 @@ window.generateQRCodes = function() {
         `;
         container.appendChild(qrDiv);
         
-        // *** QR CODE FIXO - SEM TIMESTAMP (PARA ACRÍLICO) ***
-        const qrData = {
-            hospital: hospitalId,
-            leito: leitoNumero,
-            hospitalNome: hospital.nome,
-            version: "V4.0"
-            // SEM timestamp - sempre o mesmo QR para impressão
-        };
+        // *** QR CODE COM URL FIXA (PARA ACRÍLICO) ***
+        const BASE_URL = 'https://teste-rho-gray.vercel.app'; // URL de teste atualizada
         
-        // Gerar QR Code fixo
-        new QRCode(document.getElementById(`qr-${hospitalId}-${leitoNumero}`), {
-            text: JSON.stringify(qrData),
+        const qrURL = `${BASE_URL}/?qr=true&h=${hospitalId}&l=${leitoNumero}`;
+        
+        // *** CORREÇÃO: LIMPAR CONTAINER ANTES DE GERAR QR ***
+        const qrContainer = document.getElementById(`qr-${hospitalId}-${leitoNumero}`);
+        qrContainer.innerHTML = ''; // Limpar qualquer QR anterior
+        
+        // Gerar QR Code com URL simples
+        new QRCode(qrContainer, {
+            text: qrURL,
             width: 150,
             height: 150,
             colorDark: "#000000",
             colorLight: "#ffffff",
-            correctLevel: QRCode.CorrectLevel.H
+            correctLevel: QRCode.CorrectLevel.M // M é suficiente para URLs
         });
     });
     
@@ -1315,8 +1315,85 @@ if (!document.getElementById('qrStyles')) {
 // =================== INICIALIZAÇÃO DO SISTEMA QR ===================
 document.addEventListener('DOMContentLoaded', function() {
     logSuccess('✅ QR Code V4.0 carregado com dados reais');
+    
+    // *** DETECTAR ACESSO VIA QR CODE E PULAR AUTENTICAÇÃO ***
+    const urlParams = new URLSearchParams(window.location.search);
+    const isQRAccess = urlParams.get('qr') === 'true';
+    const hospitalId = urlParams.get('h');
+    const leitoNumero = urlParams.get('l');
+    
+    if (isQRAccess && hospitalId && leitoNumero) {
+        logInfo(`🔍 Acesso via QR Code detectado: Hospital ${hospitalId}, Leito ${leitoNumero}`);
+        
+        // *** BYPASS DA AUTENTICAÇÃO PARA QR CODE ***
+        logInfo('🔐 Pulando autenticação para acesso via QR Code');
+        
+        // Simular login automático
+        if (typeof window.authenticate === 'function') {
+            // Marcar como autenticado sem pedir senha
+            window.isAuthenticated = true;
+            
+            // Esconder modal de autenticação
+            const authModal = document.getElementById('authModal');
+            if (authModal) {
+                authModal.classList.add('hidden');
+            }
+            
+            // Mostrar conteúdo principal
+            const mainHeader = document.getElementById('mainHeader');
+            const mainContent = document.getElementById('mainContent');
+            const mainFooter = document.getElementById('mainFooter');
+            
+            if (mainHeader) mainHeader.classList.remove('hidden');
+            if (mainContent) mainContent.classList.remove('hidden');
+            if (mainFooter) mainFooter.classList.remove('hidden');
+        }
+        
+        // Aguardar carregamento completo dos dados
+        const aguardarDados = setInterval(() => {
+            if (window.hospitalData && Object.keys(window.hospitalData).length > 0) {
+                clearInterval(aguardarDados);
+                
+                // Validar se hospital e leito existem
+                const hospital = window.hospitalData[hospitalId];
+                if (hospital && hospital.leitos) {
+                    const leito = hospital.leitos.find(l => (l.leito || l.numero) == leitoNumero);
+                    if (leito) {
+                        logSuccess(`✅ QR Code válido - abrindo formulário médico`);
+                        
+                        // Aguardar um pouco mais para garantir que tudo carregou
+                        setTimeout(() => {
+                            openMedicoForm(hospitalId, leitoNumero);
+                        }, 1000);
+                    } else {
+                        logError(`❌ Leito ${leitoNumero} não encontrado no hospital ${hospitalId}`);
+                        alert(`Leito ${leitoNumero} não encontrado. Verifique o QR Code.`);
+                        // Redirecionar para página principal
+                        window.location.href = window.location.origin;
+                    }
+                } else {
+                    logError(`❌ Hospital ${hospitalId} não encontrado`);
+                    alert(`Hospital ${hospitalId} não encontrado. Verifique o QR Code.`);
+                    window.location.href = window.location.origin;
+                }
+            }
+        }, 500);
+        
+        // Timeout de segurança - se dados não carregarem em 15 segundos
+        setTimeout(() => {
+            clearInterval(aguardarDados);
+            if (!window.hospitalData || Object.keys(window.hospitalData).length === 0) {
+                logError('❌ Timeout aguardando dados da planilha');
+                alert('Erro ao carregar dados. Tente novamente.');
+                window.location.href = window.location.origin;
+            }
+        }, 15000);
+    }
+    
     logInfo('🎯 Funcionalidades ativas:');
-    logInfo('  • QR Codes FIXOS para impressão em acrílico');
+    logInfo('  • QR Codes com URL para Vercel');
+    logInfo('  • Bypass de autenticação para QR Code');
+    logInfo('  • Detecção automática de acesso via QR');
     logInfo('  • Scanner com timeout rigoroso de 2 minutos');
     logInfo('  • Formulário com layout IGUAL ao cards.js mobile');
     logInfo('  • Integração com planilha V4.0 (44 colunas)');
@@ -1343,5 +1420,5 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     logSuccess('🏥 Sistema QR Code V4.0 100% FUNCIONAL');
-    logInfo('📱 QR fixo → Scanner → Formulário → API → Planilha');
+    logInfo('📱 QR com URL → Bypass autenticação → Formulário → API → Planilha');
 });

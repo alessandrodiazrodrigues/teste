@@ -1031,20 +1031,23 @@ function renderConcessoesHospital(hospitalId, type = 'bar') {
                 max: 4.5,
                 ticks: {
                     stepSize: 1, // IMPORTANTE: apenas valores inteiros
+                    autoSkip: false, // Forçar exibição de todas as labels
+                    includeBounds: false, // Evitar labels extras nas bordas
                     color: corTexto,
                     font: { size: 12, weight: 600 },
                     callback: function(value) {
-                        // Mostrar label apenas para valores inteiros
-                        if (Number.isInteger(value) && value >= 0 && value <= 4) {
-                            return categorias[value];
+                        // Mostrar label apenas para valores inteiros exatos
+                        const index = Math.round(value);
+                        if (Number.isInteger(value) && index >= 0 && index <= 4) {
+                            return categorias[index];
                         }
-                        return null;
+                        return ''; // Retornar string vazia em vez de null
                     }
                 },
                 grid: { 
                     color: corGrid,
                     drawOnChartArea: true,
-                    drawTicks: false
+                    drawTicks: true // Mostrar ticks no eixo
                 }
             },
             y: {
@@ -1283,20 +1286,23 @@ function renderLinhasHospital(hospitalId, type = 'bar') {
                 max: 4.5,
                 ticks: {
                     stepSize: 1, // IMPORTANTE: apenas valores inteiros
+                    autoSkip: false, // Forçar exibição de todas as labels
+                    includeBounds: false, // Evitar labels extras nas bordas
                     color: corTexto,
                     font: { size: 12, weight: 600 },
                     callback: function(value) {
-                        // Mostrar label apenas para valores inteiros
-                        if (Number.isInteger(value) && value >= 0 && value <= 4) {
-                            return categorias[value];
+                        // Mostrar label apenas para valores inteiros exatos
+                        const index = Math.round(value);
+                        if (Number.isInteger(value) && index >= 0 && index <= 4) {
+                            return categorias[index];
                         }
-                        return null;
+                        return ''; // Retornar string vazia em vez de null
                     }
                 },
                 grid: { 
                     color: corGrid,
                     drawOnChartArea: true,
-                    drawTicks: false
+                    drawTicks: true // Mostrar ticks no eixo
                 }
             },
             y: {

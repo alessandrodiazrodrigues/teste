@@ -279,11 +279,11 @@ window.renderDashboardExecutivo = function() {
                         <div>
                             <h3>Análise Preditiva de Altas em ${hoje}</h3>
                         </div>
-                        <div id="legendaAltasExec" class="chart-legend-custom"></div>
                     </div>
                     <div class="chart-container">
                         <canvas id="graficoAltasExecutivo"></canvas>
                     </div>
+                    <div id="legendaAltasExec" class="chart-legend-custom"></div>
                 </div>
                 
                 <!-- Gráfico de Concessões -->
@@ -292,11 +292,11 @@ window.renderDashboardExecutivo = function() {
                         <div>
                             <h3>Análise Preditiva de Concessões em ${hoje}</h3>
                         </div>
-                        <div id="legendaConcessoesExec" class="chart-legend-custom"></div>
                     </div>
                     <div class="chart-container">
                         <canvas id="graficoConcessoesExecutivo"></canvas>
                     </div>
+                    <div id="legendaConcessoesExec" class="chart-legend-custom"></div>
                 </div>
                 
                 <!-- Gráfico de Linhas -->
@@ -305,11 +305,11 @@ window.renderDashboardExecutivo = function() {
                         <div>
                             <h3>Análise Preditiva de Linhas de Cuidado em ${hoje}</h3>
                         </div>
-                        <div id="legendaLinhasExec" class="chart-legend-custom"></div>
                     </div>
                     <div class="chart-container">
                         <canvas id="graficoLinhasExecutivo"></canvas>
                     </div>
+                    <div id="legendaLinhasExec" class="chart-legend-custom"></div>
                 </div>
                 
             </div>
@@ -337,9 +337,10 @@ window.renderDashboardExecutivo = function() {
             /* Legendas HTML customizadas */
             .chart-legend-custom {
                 display: flex;
-                flex-wrap: wrap;
-                gap: 10px;
-                margin-top: 10px;
+                flex-direction: column; /* VERTICAL - um item por linha */
+                align-items: flex-start; /* Alinhado à esquerda */
+                gap: 6px;
+                margin-top: 15px;
                 padding: 10px;
                 background: rgba(255, 255, 255, 0.05);
                 border-radius: 8px;
@@ -356,6 +357,7 @@ window.renderDashboardExecutivo = function() {
                 color: white;
                 cursor: pointer;
                 transition: all 0.2s ease;
+                width: auto; /* Não ocupar largura total */
             }
             
             .legend-item-custom:hover {
@@ -375,8 +377,9 @@ window.renderDashboardExecutivo = function() {
             
             @media (max-width: 768px) {
                 .chart-legend-custom {
-                    gap: 6px;
+                    gap: 4px;
                     padding: 6px;
+                    margin-top: 10px;
                 }
                 
                 .legend-item-custom {

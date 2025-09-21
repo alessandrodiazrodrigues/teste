@@ -1,60 +1,13 @@
-// =================== QRCODE.JS V5.0 - CORREÇÃO COMPLETA ===================
-// SISTEMA QR CODE PARA MÉDICOS - DADOS REAIS SOMENTE
+// =================== QRCODE.JS V6.0 - COM URL DEDICADA ===================
+// SISTEMA QR CODE PARA IMPRESSÃO EM ACRÍLICO
+
+// =================== CONFIGURAÇÃO ===================
+const QR_BASE_URL = 'https://qrcode-seven-gamma.vercel.app';  // NOVA URL DEDICADA
 
 // =================== VARIÁVEIS GLOBAIS ===================
-window.qrScannerActive = false;
-window.qrTimeoutTimer = null;
-window.currentQRLeito = null;
-window.html5QrCodeScanner = null;
+window.hospitalData = window.hospitalData || {};
 
-// =================== CONSTANTES REAIS DA PLANILHA ===================
-const CONCESSOES_LIST_QR = [
-    "Transição Domiciliar",
-    "Aplicação domiciliar de medicamentos", 
-    "Fisioterapia",
-    "Fonoaudiologia",
-    "Aspiração",
-    "Banho",
-    "Curativos",
-    "Oxigenoterapia",
-    "Recarga de O2",
-    "Orientação Nutricional - com dispositivo",
-    "Orientação Nutricional - sem dispositivo",
-    "Clister",
-    "PICC"
-];
-
-const LINHAS_CUIDADO_LIST_QR = [
-    "Assiste",
-    "APS", 
-    "Cuidados Paliativos",
-    "ICO (Insuficiência Coronariana)",
-    "Oncologia",
-    "Pediatria",
-    "Programa Autoimune - Gastroenterologia",
-    "Programa Autoimune - Neuro-desmielinizante",
-    "Programa Autoimune - Neuro-muscular",
-    "Programa Autoimune - Reumatologia",
-    "Vida Mais Leve Care",
-    "Crônicos - Cardiologia",
-    "Crônicos - Endocrinologia",
-    "Crônicos - Geriatria",
-    "Crônicos - Melhor Cuidado",
-    "Crônicos - Neurologia",
-    "Crônicos - Pneumologia",
-    "Crônicos - Pós-bariátrica",
-    "Crônicos - Reumatologia"
-];
-
-const PREVISAO_ALTA_OPTIONS_QR = [
-    'Hoje Ouro', 'Hoje 2R', 'Hoje 3R',
-    '24h Ouro', '24h 2R', '24h 3R',
-    '48h', '72h', '96h', 'SP'
-];
-
-const PPS_OPTIONS_QR = ['10%', '20%', '30%', '40%', '50%', '60%', '70%', '80%', '90%', '100%'];
-
-// =================== GERAR QR CODES FIXOS (PARA IMPRESSÃO EM ACRÍLICO) ===================
+// =================== GERAR QR CODES PARA IMPRESSÃO ===================
 window.openQRCodes = function() {
     console.log('🔵 Abrindo gerador de QR Codes para impressão em acrílico...');
     
@@ -70,7 +23,7 @@ window.openQRCodes = function() {
     modal.innerHTML = `
         <div class="qr-modal-content">
             <div class="qr-modal-header">
-                <h2>QR Codes dos Leitos - Para Impressão em Acrílico</h2>
+                <h2>📱 QR Codes dos Leitos - Para Impressão em Acrílico</h2>
                 <button onclick="closeQRModal()" class="close-btn">✕</button>
             </div>
             <div class="qr-modal-body">
@@ -82,12 +35,15 @@ window.openQRCodes = function() {
                         <option value="H3">Santa Marcelina</option>
                         <option value="H4">Santa Clara</option>
                     </select>
+                    <button onclick="generateAllHospitals()" class="btn-generate-all">
+                        🏥 Gerar Todos os Hospitais
+                    </button>
                 </div>
                 <div id="qrCodesGrid" class="qr-codes-grid"></div>
                 <div class="qr-actions">
                     <button onclick="printQRCodes()" class="btn-print">🖨️ Imprimir QR Codes</button>
                     <p style="color: #666; font-size: 12px; margin-top: 10px;">
-                        ⚠️ QR Codes são fixos - ideais para impressão em acrílico
+                        ✅ QR Codes fixos apontando para: ${QR_BASE_URL}
                     </p>
                 </div>
             </div>
@@ -99,7 +55,7 @@ window.openQRCodes = function() {
     generateQRCodes();
 };
 
-// =================== GERAR QR CODES DO HOSPITAL (CORRIGIDO) ===================
+// =================== GERAR QR CODES DO HOSPITAL ===================
 window.generateQRCodes = function() {
     const hospitalId = document.getElementById('qrHospitalSelect').value;
     const hospital = window.hospitalData[hospitalId];
@@ -115,35 +71,40 @@ window.generateQRCodes = function() {
         return;
     }
     
-    // LIMPAR CONTAINER COMPLETAMENTE
+    // Limpar container
     container.innerHTML = '';
     
+    // Título do hospital
+    const title = document.createElement('h3');
+    title.style.cssText = 'grid-column: 1 / -1; text-align: center; color: #1a1f2e; margin: 20px 0;';
+    title.textContent = `${hospital.nome} - ${hospital.leitos.length} leitos`;
+    container.appendChild(title);
+    
+    // Gerar QR para cada leito
     hospital.leitos.forEach(leito => {
-        const leitoNumero = leito.leito || leito.numero || 'N/A';
+        const leitoNumero = leito.leito || leito.numero || leito.id || 'N/A';
         
-        // Criar div do QR code
+        // Container do QR
         const qrDiv = document.createElement('div');
         qrDiv.className = 'qr-code-item';
         qrDiv.innerHTML = `
             <div class="qr-label">
-                ${hospital.nome} - Leito ${leitoNumero}
+                <strong>${hospital.nome}</strong><br>
+                Leito ${leitoNumero}
             </div>
             <div id="qr-${hospitalId}-${leitoNumero}" class="qr-code-container"></div>
         `;
         container.appendChild(qrDiv);
         
-        // GERAR URL FIXA PARA O QR CODE
-        const BASE_URL = 'https://teste-rho-gray.vercel.app';
-        const qrURL = `${BASE_URL}/?qr=true&h=${hospitalId}&l=${leitoNumero}`;
+        // URL do QR Code - NOVA URL DEDICADA
+        const qrURL = `${QR_BASE_URL}/?h=${hospitalId}&l=${leitoNumero}`;
         
-        // Aguardar o DOM antes de gerar QR
+        // Gerar QR Code após DOM estar pronto
         setTimeout(() => {
             const qrContainer = document.getElementById(`qr-${hospitalId}-${leitoNumero}`);
             if (qrContainer) {
-                // LIMPAR QUALQUER QR ANTERIOR
-                qrContainer.innerHTML = '';
+                qrContainer.innerHTML = ''; // Limpar
                 
-                // Gerar novo QR Code
                 try {
                     new QRCode(qrContainer, {
                         text: qrURL,
@@ -151,12 +112,12 @@ window.generateQRCodes = function() {
                         height: 150,
                         colorDark: "#000000",
                         colorLight: "#ffffff",
-                        correctLevel: QRCode.CorrectLevel.M
+                        correctLevel: QRCode.CorrectLevel.H // Alta correção para impressão
                     });
                     console.log(`✅ QR gerado: ${qrURL}`);
                 } catch (error) {
                     console.error(`❌ Erro ao gerar QR para leito ${leitoNumero}:`, error);
-                    qrContainer.innerHTML = '<p style="color: red;">Erro ao gerar QR</p>';
+                    qrContainer.innerHTML = '<p style="color: red; font-size: 12px;">Erro ao gerar QR</p>';
                 }
             }
         }, 100);
@@ -165,7 +126,64 @@ window.generateQRCodes = function() {
     console.log(`✅ ${hospital.leitos.length} QR Codes gerados para ${hospital.nome}`);
 };
 
-// =================== FECHAR MODAL QR ===================
+// =================== GERAR TODOS OS HOSPITAIS ===================
+window.generateAllHospitals = function() {
+    const container = document.getElementById('qrCodesGrid');
+    container.innerHTML = '';
+    
+    // Gerar QR codes para todos os hospitais
+    ['H1', 'H2', 'H3', 'H4'].forEach(hospitalId => {
+        const hospital = window.hospitalData[hospitalId];
+        if (!hospital || !hospital.leitos) return;
+        
+        // Título do hospital
+        const title = document.createElement('h3');
+        title.style.cssText = 'grid-column: 1 / -1; text-align: center; color: #1a1f2e; margin: 30px 0 20px; padding-top: 30px; border-top: 2px solid #e5e7eb;';
+        title.textContent = `${hospital.nome} - ${hospital.leitos.length} leitos`;
+        container.appendChild(title);
+        
+        // Gerar QR para cada leito
+        hospital.leitos.forEach(leito => {
+            const leitoNumero = leito.leito || leito.numero || leito.id || 'N/A';
+            
+            const qrDiv = document.createElement('div');
+            qrDiv.className = 'qr-code-item';
+            qrDiv.innerHTML = `
+                <div class="qr-label">
+                    <strong>${hospital.nome}</strong><br>
+                    Leito ${leitoNumero}
+                </div>
+                <div id="qr-${hospitalId}-${leitoNumero}" class="qr-code-container"></div>
+            `;
+            container.appendChild(qrDiv);
+            
+            const qrURL = `${QR_BASE_URL}/?h=${hospitalId}&l=${leitoNumero}`;
+            
+            setTimeout(() => {
+                const qrContainer = document.getElementById(`qr-${hospitalId}-${leitoNumero}`);
+                if (qrContainer) {
+                    qrContainer.innerHTML = '';
+                    try {
+                        new QRCode(qrContainer, {
+                            text: qrURL,
+                            width: 150,
+                            height: 150,
+                            colorDark: "#000000",
+                            colorLight: "#ffffff",
+                            correctLevel: QRCode.CorrectLevel.H
+                        });
+                    } catch (error) {
+                        console.error(`Erro ao gerar QR:`, error);
+                    }
+                }
+            }, 100);
+        });
+    });
+    
+    console.log('✅ QR Codes gerados para TODOS os hospitais');
+};
+
+// =================== FECHAR MODAL ===================
 window.closeQRModal = function() {
     const modal = document.querySelector('.qr-modal');
     if (modal) {
@@ -179,478 +197,7 @@ window.printQRCodes = function() {
     window.print();
 };
 
-// =================== INICIAR SCANNER QR (MÉDICO) ===================
-window.startQRScanner = function() {
-    console.log('📱 Iniciando scanner QR para médico...');
-    
-    // Parar scanner anterior se existir
-    if (window.html5QrCodeScanner) {
-        try {
-            window.html5QrCodeScanner.stop();
-        } catch (e) {
-            console.error('Erro ao parar scanner anterior:', e);
-        }
-    }
-    
-    // Criar interface de scanner
-    const scannerDiv = document.createElement('div');
-    scannerDiv.id = 'qrScanner';
-    scannerDiv.className = 'qr-scanner-container';
-    scannerDiv.innerHTML = `
-        <div class="qr-scanner-header">
-            <h2>📱 Escaneie o QR Code do Leito</h2>
-            <div id="qrTimer" class="qr-timer">Tempo restante: 2:00</div>
-            <button onclick="stopQRScanner()" class="close-scanner-btn">✕ Fechar</button>
-        </div>
-        <div id="qrReader" class="qr-reader"></div>
-        <div id="qrResult" class="qr-result"></div>
-        <div class="qr-instructions">
-            <p>📋 Escaneie o QR Code fixo impresso no acrílico do leito</p>
-            <p>⏰ Você tem 2 minutos para escanear e preencher os dados</p>
-        </div>
-    `;
-    document.body.appendChild(scannerDiv);
-    
-    // Configurar scanner HTML5
-    window.html5QrCodeScanner = new Html5Qrcode("qrReader");
-    
-    const qrCodeSuccessCallback = (decodedText, decodedResult) => {
-        try {
-            console.log('📷 QR Code lido:', decodedText);
-            
-            // Verificar se é uma URL
-            if (decodedText.includes('http')) {
-                // Extrair parâmetros da URL
-                const url = new URL(decodedText);
-                const params = url.searchParams;
-                const hospital = params.get('h');
-                const leito = params.get('l');
-                
-                if (hospital && leito) {
-                    console.log(`✅ QR válido: Hospital ${hospital}, Leito ${leito}`);
-                    
-                    // Parar scanner
-                    window.html5QrCodeScanner.stop().then(() => {
-                        console.log('Scanner parado');
-                        // Abrir formulário
-                        openMedicoForm(hospital, leito);
-                    });
-                }
-            }
-        } catch (error) {
-            console.error('❌ Erro ao processar QR:', error);
-            document.getElementById('qrResult').innerHTML = 
-                '<p style="color: #ef4444;">❌ QR Code inválido. Tente novamente.</p>';
-        }
-    };
-    
-    // Configurar e iniciar câmera
-    const qrConfig = {
-        fps: 10,
-        qrbox: { width: 250, height: 250 },
-        aspectRatio: 1.0
-    };
-    
-    window.html5QrCodeScanner.start(
-        { facingMode: "environment" },
-        qrConfig,
-        qrCodeSuccessCallback
-    ).catch(err => {
-        console.error('❌ Erro ao iniciar câmera:', err);
-        document.getElementById('qrResult').innerHTML = 
-            '<p style="color: #ef4444;">❌ Erro ao acessar câmera. Verifique as permissões.</p>';
-    });
-    
-    // Iniciar timer de 2 minutos
-    startQRTimeout();
-    window.qrScannerActive = true;
-};
-
-// =================== PARAR SCANNER QR ===================
-window.stopQRScanner = function() {
-    console.log('Parando scanner QR...');
-    
-    if (window.html5QrCodeScanner) {
-        window.html5QrCodeScanner.stop().catch(err => {
-            console.error('Erro ao parar scanner:', err);
-        });
-        window.html5QrCodeScanner = null;
-    }
-    
-    const scannerDiv = document.getElementById('qrScanner');
-    if (scannerDiv) {
-        scannerDiv.remove();
-    }
-    
-    if (window.qrTimeoutTimer) {
-        clearInterval(window.qrTimeoutTimer);
-        window.qrTimeoutTimer = null;
-    }
-    
-    window.qrScannerActive = false;
-};
-
-// =================== TIMER DE 2 MINUTOS ===================
-function startQRTimeout() {
-    let timeLeft = 120; // 2 minutos
-    
-    if (window.qrTimeoutTimer) {
-        clearInterval(window.qrTimeoutTimer);
-    }
-    
-    window.qrTimeoutTimer = setInterval(() => {
-        const minutes = Math.floor(timeLeft / 60);
-        const seconds = timeLeft % 60;
-        
-        const timerDivs = document.querySelectorAll('.qr-timer');
-        timerDivs.forEach(div => {
-            div.textContent = `Tempo restante: ${minutes}:${seconds.toString().padStart(2, '0')}`;
-            
-            if (timeLeft <= 30) {
-                div.style.background = '#ef4444';
-                div.style.animation = 'pulse 1s infinite';
-            } else if (timeLeft <= 60) {
-                div.style.background = '#f59e0b';
-            }
-        });
-        
-        timeLeft--;
-        
-        if (timeLeft < 0) {
-            console.log('⏰ Timeout de 2 minutos expirado');
-            closeMedicoForm();
-            stopQRScanner();
-            setTimeout(() => startQRScanner(), 1000);
-        }
-    }, 1000);
-}
-
-// =================== FORMULÁRIO MÉDICO ===================
-window.openMedicoForm = function(hospitalId, leitoNumero) {
-    console.log(`📝 Abrindo formulário: ${hospitalId} - Leito ${leitoNumero}`);
-    
-    // Validar dados
-    if (!window.hospitalData || !window.hospitalData[hospitalId]) {
-        alert('Hospital não encontrado. Tente novamente.');
-        return;
-    }
-    
-    const hospital = window.hospitalData[hospitalId];
-    const leito = hospital.leitos.find(l => 
-        (l.leito || l.numero || l.id) == leitoNumero
-    );
-    
-    if (!leito) {
-        alert('Leito não encontrado. Verifique o QR Code.');
-        return;
-    }
-    
-    window.currentQRLeito = { hospitalId, leitoNumero };
-    
-    // Fechar scanner
-    stopQRScanner();
-    
-    // Determinar se leito está vago
-    const isVago = !leito.status || leito.status === 'vago' || leito.status === 'Vago';
-    
-    // Criar formulário
-    const formDiv = document.createElement('div');
-    formDiv.id = 'medicoForm';
-    formDiv.className = 'medico-form-container';
-    
-    formDiv.innerHTML = `
-        <div class="medico-form">
-            <div class="medico-form-header">
-                <h2>🏥 ${hospital.nome} - Leito ${leitoNumero}</h2>
-                <div class="qr-timer">Tempo restante: 2:00</div>
-            </div>
-            
-            <div class="medico-form-body">
-                <h3>${isVago ? 'ADMISSÃO DE PACIENTE' : 'ATUALIZAÇÃO DE DADOS'}</h3>
-                
-                ${isVago ? `
-                    <!-- ADMISSÃO -->
-                    <div class="form-grid">
-                        <div>
-                            <label>Nome Completo *</label>
-                            <input id="qrNome" type="text" required>
-                        </div>
-                        <div>
-                            <label>Matrícula *</label>
-                            <input id="qrMatricula" type="text" required>
-                        </div>
-                        <div>
-                            <label>Idade *</label>
-                            <input id="qrIdade" type="number" min="0" max="120" required>
-                        </div>
-                    </div>
-                ` : `
-                    <!-- ATUALIZAÇÃO -->
-                    <div class="form-grid">
-                        <div>
-                            <label>Paciente</label>
-                            <input value="${leito.nome || ''}" readonly>
-                        </div>
-                        <div>
-                            <label>Matrícula</label>
-                            <input value="${leito.matricula || ''}" readonly>
-                        </div>
-                        <div>
-                            <label>Idade *</label>
-                            <input id="qrIdade" type="number" value="${leito.idade || ''}" min="0" max="120" required>
-                        </div>
-                    </div>
-                `}
-                
-                <div class="form-grid">
-                    <div>
-                        <label>PPS % *</label>
-                        <select id="qrPPS" required>
-                            <option value="">Selecionar...</option>
-                            ${PPS_OPTIONS_QR.map(pps => 
-                                `<option value="${pps}" ${leito.pps == pps.replace('%','') ? 'selected' : ''}>${pps}</option>`
-                            ).join('')}
-                        </select>
-                    </div>
-                    <div>
-                        <label>SPICT-BR *</label>
-                        <select id="qrSPICT" required>
-                            <option value="nao_elegivel" ${leito.spict === 'nao_elegivel' ? 'selected' : ''}>Não elegível</option>
-                            <option value="elegivel" ${leito.spict === 'elegivel' ? 'selected' : ''}>Elegível</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label>Previsão Alta *</label>
-                        <select id="qrPrevAlta" required>
-                            ${PREVISAO_ALTA_OPTIONS_QR.map(opt => 
-                                `<option value="${opt}" ${leito.prevAlta === opt ? 'selected' : ''}>${opt}</option>`
-                            ).join('')}
-                        </select>
-                    </div>
-                </div>
-                
-                <div class="form-section">
-                    <h4>Concessões Previstas</h4>
-                    <div id="qrConcessoes" class="checkbox-grid">
-                        ${CONCESSOES_LIST_QR.map((c, i) => `
-                            <label>
-                                <input type="checkbox" id="conc${i}" value="${c}" 
-                                    ${(leito.concessoes || []).includes(c) ? 'checked' : ''}>
-                                <span>${c}</span>
-                            </label>
-                        `).join('')}
-                    </div>
-                </div>
-                
-                <div class="form-section">
-                    <h4>Linhas de Cuidado</h4>
-                    <div id="qrLinhas" class="checkbox-grid">
-                        ${LINHAS_CUIDADO_LIST_QR.map((l, i) => `
-                            <label>
-                                <input type="checkbox" id="linha${i}" value="${l}"
-                                    ${(leito.linhas || []).includes(l) ? 'checked' : ''}>
-                                <span>${l}</span>
-                            </label>
-                        `).join('')}
-                    </div>
-                </div>
-            </div>
-            
-            <div class="medico-form-actions">
-                <button onclick="saveMedicoForm()" class="btn-save">
-                    ${isVago ? '✅ ADMITIR PACIENTE' : '💾 ATUALIZAR DADOS'}
-                </button>
-                ${!isVago ? '<button onclick="darAltaQR()" class="btn-alta">🏠 DAR ALTA</button>' : ''}
-                <button onclick="closeMedicoForm()" class="btn-cancel">❌ CANCELAR</button>
-            </div>
-        </div>
-    `;
-    
-    document.body.appendChild(formDiv);
-    
-    // Reiniciar timer
-    startQRTimeout();
-};
-
-// =================== SALVAR FORMULÁRIO ===================
-window.saveMedicoForm = async function() {
-    console.log('💾 Salvando dados...');
-    
-    try {
-        const dados = coletarDadosFormulario();
-        
-        if (!validarCampos(dados)) {
-            return;
-        }
-        
-        // Determinar ação
-        const hospital = window.hospitalData[window.currentQRLeito.hospitalId];
-        const leito = hospital.leitos.find(l => 
-            (l.leito || l.numero || l.id) == window.currentQRLeito.leitoNumero
-        );
-        const isVago = !leito.status || leito.status === 'vago' || leito.status === 'Vago';
-        
-        // Chamar API
-        if (isVago) {
-            await window.admitirPaciente(dados.hospital, dados.leito, dados);
-            alert('✅ Paciente admitido com sucesso!');
-        } else {
-            await window.atualizarPaciente(dados.hospital, dados.leito, dados);
-            alert('✅ Dados atualizados com sucesso!');
-        }
-        
-        closeMedicoForm();
-        setTimeout(() => startQRScanner(), 500);
-        
-    } catch (error) {
-        console.error('❌ Erro ao salvar:', error);
-        alert('Erro ao salvar: ' + error.message);
-    }
-};
-
-// =================== DAR ALTA VIA QR ===================
-window.darAltaQR = async function() {
-    if (!confirm('⚠️ Confirma a ALTA deste paciente?')) return;
-    
-    try {
-        await window.darAltaPaciente(
-            window.currentQRLeito.hospitalId, 
-            window.currentQRLeito.leitoNumero
-        );
-        alert('✅ Alta processada com sucesso!');
-        closeMedicoForm();
-        setTimeout(() => startQRScanner(), 500);
-    } catch (error) {
-        alert('❌ Erro ao processar alta: ' + error.message);
-    }
-};
-
-// =================== FUNÇÕES AUXILIARES ===================
-function coletarDadosFormulario() {
-    const dados = {
-        hospital: window.currentQRLeito.hospitalId,
-        leito: window.currentQRLeito.leitoNumero
-    };
-    
-    // Campos básicos
-    const nomeEl = document.getElementById('qrNome');
-    if (nomeEl) dados.nome = nomeEl.value.trim();
-    
-    const matriculaEl = document.getElementById('qrMatricula');
-    if (matriculaEl) dados.matricula = matriculaEl.value.trim();
-    
-    const idadeEl = document.getElementById('qrIdade');
-    if (idadeEl) dados.idade = parseInt(idadeEl.value);
-    
-    const ppsEl = document.getElementById('qrPPS');
-    if (ppsEl) dados.pps = ppsEl.value.replace('%', '');
-    
-    dados.spict = document.getElementById('qrSPICT')?.value || 'nao_elegivel';
-    dados.prevAlta = document.getElementById('qrPrevAlta')?.value || 'SP';
-    dados.complexidade = 'I';
-    
-    // Concessões
-    dados.concessoes = [];
-    document.querySelectorAll('#qrConcessoes input:checked').forEach(cb => {
-        dados.concessoes.push(cb.value);
-    });
-    
-    // Linhas
-    dados.linhas = [];
-    document.querySelectorAll('#qrLinhas input:checked').forEach(cb => {
-        dados.linhas.push(cb.value);
-    });
-    
-    return dados;
-}
-
-function validarCampos(dados) {
-    const erros = [];
-    
-    if (dados.nome !== undefined && !dados.nome) {
-        erros.push('Nome é obrigatório');
-    }
-    
-    if (dados.matricula !== undefined && !dados.matricula) {
-        erros.push('Matrícula é obrigatória');
-    }
-    
-    if (!dados.idade || dados.idade < 0 || dados.idade > 120) {
-        erros.push('Idade inválida');
-    }
-    
-    if (!dados.pps) {
-        erros.push('PPS é obrigatório');
-    }
-    
-    if (!dados.prevAlta) {
-        erros.push('Previsão de Alta é obrigatória');
-    }
-    
-    if (erros.length > 0) {
-        alert('❌ Campos obrigatórios:\n\n• ' + erros.join('\n• '));
-        return false;
-    }
-    
-    return true;
-}
-
-window.closeMedicoForm = function() {
-    const formDiv = document.getElementById('medicoForm');
-    if (formDiv) formDiv.remove();
-    window.currentQRLeito = null;
-};
-
-// =================== DETECÇÃO DE ACESSO VIA QR CODE ===================
-function detectarAcessoQR() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const isQR = urlParams.get('qr') === 'true';
-    const hospitalId = urlParams.get('h');
-    const leitoNumero = urlParams.get('l');
-    
-    if (isQR && hospitalId && leitoNumero) {
-        console.log(`🔍 Acesso via QR detectado: ${hospitalId} - Leito ${leitoNumero}`);
-        
-        // BYPASS DE AUTENTICAÇÃO
-        window.isAuthenticated = true;
-        
-        // Esconder modal de auth se existir
-        const authModal = document.getElementById('authModal');
-        if (authModal) authModal.style.display = 'none';
-        
-        // Aguardar dados carregarem
-        const checkData = setInterval(() => {
-            if (window.hospitalData && window.hospitalData[hospitalId]) {
-                clearInterval(checkData);
-                
-                // Verificar se leito existe
-                const hospital = window.hospitalData[hospitalId];
-                const leito = hospital.leitos.find(l => 
-                    (l.leito || l.numero || l.id) == leitoNumero
-                );
-                
-                if (leito) {
-                    console.log('✅ Leito encontrado, abrindo formulário...');
-                    openMedicoForm(hospitalId, leitoNumero);
-                } else {
-                    alert(`Leito ${leitoNumero} não encontrado no ${hospital.nome}`);
-                    window.location.href = window.location.origin;
-                }
-            }
-        }, 500);
-        
-        // Timeout de segurança
-        setTimeout(() => {
-            clearInterval(checkData);
-            if (!window.hospitalData) {
-                alert('Erro ao carregar dados. Tente novamente.');
-                window.location.href = window.location.origin;
-            }
-        }, 10000);
-    }
-}
-
-// =================== CSS DO SISTEMA QR ===================
+// =================== CSS DO SISTEMA ===================
 const qrStyles = `
 <style>
 /* Modal de QR Codes */
@@ -665,22 +212,29 @@ const qrStyles = `
     align-items: center;
     justify-content: center;
     z-index: 9999;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
 }
 
 .qr-modal-content {
     background: white;
-    border-radius: 12px;
-    max-width: 90%;
+    border-radius: 16px;
+    max-width: 95%;
     max-height: 90%;
     overflow: auto;
-    padding: 20px;
+    padding: 25px;
+    box-shadow: 0 25px 50px rgba(0,0,0,0.3);
 }
 
 .qr-modal-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 20px;
+    margin-bottom: 25px;
     padding-bottom: 15px;
     border-bottom: 2px solid #e5e7eb;
 }
@@ -688,6 +242,7 @@ const qrStyles = `
 .qr-modal-header h2 {
     color: #1a1f2e;
     margin: 0;
+    font-size: 24px;
 }
 
 .close-btn {
@@ -695,30 +250,91 @@ const qrStyles = `
     color: white;
     border: none;
     border-radius: 8px;
-    padding: 8px 15px;
+    padding: 10px 20px;
     cursor: pointer;
     font-weight: bold;
+    font-size: 16px;
+    transition: all 0.3s;
+}
+
+.close-btn:hover {
+    background: #dc2626;
+    transform: scale(1.05);
+}
+
+.qr-hospital-selector {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 25px;
+    justify-content: center;
+}
+
+.qr-hospital-selector label {
+    font-weight: 600;
+    color: #374151;
+    font-size: 16px;
+}
+
+.qr-hospital-selector select {
+    padding: 12px 20px;
+    border: 2px solid #d1d5db;
+    border-radius: 8px;
+    background: white;
+    color: #1a1f2e;
+    font-size: 16px;
+    min-width: 200px;
+    cursor: pointer;
+}
+
+.btn-generate-all {
+    padding: 12px 24px;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.btn-generate-all:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(16, 185, 129, 0.3);
 }
 
 .qr-codes-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
     gap: 20px;
-    margin: 20px 0;
+    margin: 25px 0;
 }
 
 .qr-code-item {
     text-align: center;
-    padding: 15px;
+    padding: 20px;
     border: 2px solid #e5e7eb;
     border-radius: 12px;
     background: #f9fafb;
+    transition: all 0.3s;
+}
+
+.qr-code-item:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    border-color: #3b82f6;
 }
 
 .qr-label {
-    font-weight: 700;
-    margin-bottom: 10px;
+    font-size: 14px;
+    margin-bottom: 15px;
     color: #1a1f2e;
+    line-height: 1.4;
+}
+
+.qr-label strong {
+    color: #3b82f6;
+    font-size: 15px;
 }
 
 .qr-code-container {
@@ -726,224 +342,54 @@ const qrStyles = `
     justify-content: center;
     align-items: center;
     min-height: 150px;
+    background: white;
+    border-radius: 8px;
+    padding: 10px;
+}
+
+.qr-actions {
+    text-align: center;
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 2px solid #e5e7eb;
 }
 
 .btn-print {
-    padding: 12px 24px;
-    background: #3b82f6;
+    padding: 15px 40px;
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
     color: white;
     border: none;
-    border-radius: 8px;
+    border-radius: 10px;
     cursor: pointer;
     font-weight: 600;
-}
-
-/* Scanner QR */
-.qr-scanner-container {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: #1a1f2e;
-    z-index: 9999;
-    overflow: auto;
-}
-
-.qr-scanner-header {
-    background: #1e293b;
-    color: white;
-    padding: 20px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.qr-timer {
-    background: #22c55e;
-    color: white;
-    padding: 8px 16px;
-    border-radius: 20px;
-    font-weight: 600;
-}
-
-.close-scanner-btn {
-    background: rgba(255,255,255,0.2);
-    color: white;
-    border: 1px solid rgba(255,255,255,0.3);
-    padding: 10px 20px;
-    border-radius: 8px;
-    cursor: pointer;
-}
-
-.qr-reader {
-    max-width: 500px;
-    margin: 20px auto;
-}
-
-/* Formulário Médico */
-.medico-form-container {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0,0,0,0.9);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 9999;
-    overflow: auto;
-}
-
-.medico-form {
-    background: white;
-    border-radius: 12px;
-    max-width: 800px;
-    width: 95%;
-    max-height: 95vh;
-    overflow: auto;
-}
-
-.medico-form-header {
-    background: #1e293b;
-    color: white;
-    padding: 20px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.medico-form-body {
-    padding: 25px;
-}
-
-.medico-form-body h3 {
-    color: #1a1f2e;
-    margin-bottom: 20px;
-    text-align: center;
-}
-
-.form-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 15px;
-    margin-bottom: 20px;
-}
-
-.form-grid label {
-    display: block;
-    font-size: 12px;
-    font-weight: 600;
-    margin-bottom: 5px;
-    color: #374151;
-}
-
-.form-grid input,
-.form-grid select {
-    width: 100%;
-    padding: 10px;
-    border: 1px solid #d1d5db;
-    border-radius: 6px;
-    font-size: 14px;
-}
-
-.form-grid input[readonly] {
-    background: #f3f4f6;
-    color: #6b7280;
-}
-
-.form-section {
-    margin: 25px 0;
-}
-
-.form-section h4 {
-    background: #3b82f6;
-    color: white;
-    padding: 10px 15px;
-    border-radius: 6px;
-    margin-bottom: 15px;
-    font-size: 14px;
-}
-
-.checkbox-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
-    max-height: 200px;
-    overflow-y: auto;
-    padding: 10px;
-    background: #f9fafb;
-    border-radius: 6px;
-}
-
-.checkbox-grid label {
-    display: flex;
-    align-items: center;
-    padding: 8px;
-    background: white;
-    border-radius: 4px;
-    cursor: pointer;
-}
-
-.checkbox-grid input {
-    margin-right: 8px;
-}
-
-.medico-form-actions {
-    padding: 20px;
-    background: #f3f4f6;
-    display: flex;
-    gap: 12px;
-    justify-content: center;
-}
-
-.btn-save,
-.btn-alta,
-.btn-cancel {
-    padding: 12px 24px;
-    border: none;
-    border-radius: 8px;
-    font-weight: 600;
-    cursor: pointer;
+    font-size: 16px;
     text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: all 0.3s;
 }
 
-.btn-save {
-    background: #10b981;
-    color: white;
+.btn-print:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(59, 130, 246, 0.4);
 }
 
-.btn-alta {
-    background: #ef4444;
-    color: white;
+/* Scrollbar customizada */
+.qr-modal-content::-webkit-scrollbar {
+    width: 8px;
 }
 
-.btn-cancel {
-    background: #6b7280;
-    color: white;
+.qr-modal-content::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
 }
 
-/* Animação pulse */
-@keyframes pulse {
-    0% { opacity: 1; }
-    50% { opacity: 0.8; }
-    100% { opacity: 1; }
+.qr-modal-content::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 10px;
 }
 
-/* Mobile */
-@media (max-width: 768px) {
-    .form-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    .checkbox-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    .qr-codes-grid {
-        grid-template-columns: 1fr;
-    }
+.qr-modal-content::-webkit-scrollbar-thumb:hover {
+    background: #555;
 }
 
 /* Impressão */
@@ -962,6 +408,8 @@ const qrStyles = `
         left: 0;
         top: 0;
         width: 100%;
+        background: white;
+        box-shadow: none;
     }
     
     .qr-modal-header,
@@ -971,12 +419,20 @@ const qrStyles = `
     }
     
     .qr-codes-grid {
-        grid-template-columns: repeat(3, 1fr);
-        gap: 30px;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 15px;
+        margin: 0;
     }
     
     .qr-code-item {
+        border: 1px solid #000;
         page-break-inside: avoid;
+        break-inside: avoid;
+    }
+    
+    .qr-label {
+        font-size: 11px;
+        font-weight: bold;
     }
 }
 </style>
@@ -984,8 +440,6 @@ const qrStyles = `
 
 // =================== INICIALIZAÇÃO ===================
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('✅ Sistema QR Code V5.0 Inicializado');
-    
     // Adicionar estilos
     if (!document.getElementById('qrStyles')) {
         const styleElement = document.createElement('div');
@@ -994,27 +448,16 @@ document.addEventListener('DOMContentLoaded', function() {
         document.head.appendChild(styleElement);
     }
     
-    // Detectar acesso via QR
-    detectarAcessoQR();
-    
-    // Verificar dependências
-    if (typeof Html5Qrcode === 'undefined') {
-        console.warn('⚠️ Biblioteca HTML5-QRCode não carregada');
-    }
-    
-    if (typeof QRCode === 'undefined') {
-        console.warn('⚠️ Biblioteca QRCode.js não carregada');
-    }
-    
-    // Inicializar hospitalData se não existir
+    // Verificar se hospitalData existe
     if (!window.hospitalData) {
         window.hospitalData = {};
     }
     
-    console.log('🔷 Sistema QR Code Pronto:');
-    console.log('  • QR Codes fixos para impressão');
+    console.log('✅ Sistema QR Code V6.0 Carregado');
+    console.log(`📱 URL dos QR Codes: ${QR_BASE_URL}`);
+    console.log('🎯 Características:');
+    console.log('  • QR Codes fixos para impressão em acrílico');
+    console.log('  • Sistema dedicado sem autenticação');
     console.log('  • URL única por leito');
-    console.log('  • Acesso direto ao formulário do leito');
-    console.log('  • Timer de 2 minutos');
-    console.log('  • Bypass de autenticação para QR');
+    console.log('  • Alta correção de erro para impressão');
 });

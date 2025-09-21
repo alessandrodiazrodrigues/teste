@@ -1374,176 +1374,55 @@ function getExecutiveCSS() {
             
             /* =================== MOBILE - CORREÇÕES ESPECÍFICAS =================== */
             @media (max-width: 768px) {
-                /* Header corrigido: título em linha única */
+                /* Header PRINCIPAL do app reduzido */
+                #app-header, .app-header, header {
+                    padding: 8px 15px !important;
+                    height: auto !important;
+                    min-height: auto !important;
+                }
+                
+                /* Header do dashboard exec */
                 .dashboard-header-exec {
-                    padding: 15px !important;
-                    margin-bottom: 20px !important;
+                    padding: 10px !important;
+                    margin-bottom: 10px !important;
                 }
                 
                 .dashboard-header-exec h2 {
-                    font-size: 16px !important;
-                    white-space: nowrap !important;
-                    overflow: hidden !important;
-                    text-overflow: ellipsis !important;
-                    margin-bottom: 8px !important;
-                }
-                
-                /* CORREÇÃO PRINCIPAL: Layout vertical com KPIs 2x4 */
-                .executive-kpis-grid {
-                    display: grid !important;
-                    grid-template-columns: 1fr 1fr !important; /* 2 colunas iguais */
-                    grid-template-rows: auto !important;
-                    gap: 8px !important;
-                    margin-bottom: 15px !important;
-                    padding: 0 5px !important;
-                }
-                
-                /* Gauge ocupa as 2 colunas (linha completa) */
-                .kpi-gauge-principal {
-                    grid-column: 1 / span 2 !important; /* Sintaxe mais específica */
-                    padding: 15px !important;
-                    margin: 0 !important;
-                    width: 100% !important;
-                    box-sizing: border-box !important;
-                }
-                
-                /* KPIs individuais - forçar grid correto */
-                .kpi-box {
-                    grid-column: span 1 !important;
-                    padding: 10px 8px !important;
-                    min-height: 65px !important;
-                    margin: 0 !important;
-                    width: 100% !important;
-                    box-sizing: border-box !important;
-                    display: flex !important;
-                    flex-direction: column !important;
-                    align-items: center !important;
-                    justify-content: center !important;
-                }
-                
-                .kpi-value {
-                    font-size: 18px !important; /* Ajustado para caber melhor */
+                    font-size: 14px !important;
                     margin-bottom: 4px !important;
                 }
                 
-                .kpi-label {
-                    font-size: 9px !important; /* Reduzido para caber melhor */
-                    line-height: 1.2 !important;
-                }
-                
-                /* Gráficos: MARGENS MÍNIMAS no mobile */
-                .executivo-grafico-card {
-                    padding: 2px !important;
-                    margin: 0 !important;
-                    border-radius: 8px !important;
-                    position: relative !important; /* Para controlar z-index dos filhos */
-                }
-                
-                /* Container do gráfico sem margem e menor altura */
-                .chart-container {
-                    padding: 0 !important;
-                    height: 250px !important;
-                    margin: 0 !important;
-                    position: relative !important;
-                    /* Forçar remoção de espaço reservado para legenda */
-                    overflow: visible !important;
-                }
-                
-                .chart-container canvas {
-                    max-height: 250px !important;
-                    display: block !important;
-                    margin-bottom: -30px !important; /* NEGATIVO para puxar legenda para cima */
-                }
-                
-                /* Forçar legendas EXTREMAMENTE COLADAS no gráfico */
-                .executivo-grafico-card .chart-legend-custom {
-                    margin-top: -35px !important; /* EXTREMAMENTE NEGATIVO */
-                    margin-bottom: 10px !important;
-                    gap: 2px !important;
-                    padding: 4px 6px !important;
-                    position: relative !important;
-                    z-index: 20 !important; /* Aumentado */
-                    display: flex !important;
-                    flex-direction: column !important;
-                    align-items: flex-start !important;
-                    background: rgba(30, 41, 59, 0.9) !important; /* Fundo mais sólido para legibilidade */
-                    border-radius: 4px !important;
-                }
-                
-                /* Header dos gráficos */
-                .chart-header {
-                    flex-direction: column !important;
-                    align-items: flex-start !important;
+                /* FORÇAR Grid 2x4 dos KPIs */
+                .executive-kpis-grid {
+                    display: grid !important;
+                    grid-template-columns: 1fr 1fr !important;
+                    grid-auto-flow: row !important;
                     gap: 5px !important;
-                    margin-bottom: 8px !important;
-                    padding: 8px !important;
+                    margin: 0 !important;
+                    padding: 5px !important;
                 }
                 
-                .chart-header h3 {
-                    font-size: 13px !important;
-                    line-height: 1.2 !important;
-                    margin-bottom: 0 !important;
+                /* Gauge primeira linha completa */
+                .kpi-gauge-principal {
+                    grid-column: 1 / 3 !important;
+                    grid-row: 1 !important;
+                    padding: 10px !important;
+                    margin: 0 !important;
                 }
                 
-                /* Botão toggle menor */
-                .toggle-fundo-btn {
-                    padding: 6px 10px !important;
-                    font-size: 11px !important;
-                    gap: 4px !important;
-                }
-                
-                /* Hospital items menores */
-                .hospital-item {
-                    font-size: 9px !important;
-                    padding: 2px 0 !important;
-                }
-                
-                .hospitais-percentuais {
-                    margin-top: 8px !important;
-                    padding-top: 8px !important;
-                }
-                
-                /* Gauge menor no mobile */
-                .gauge-container {
-                    height: 120px !important;
-                    margin: 10px 0 !important;
-                }
-                
-                .gauge-container canvas {
-                    max-height: 120px !important;
-                }
-                
-                .gauge-value {
-                    font-size: 24px !important;
-                }
-                
-                .gauge-label {
-                    font-size: 10px !important;
-                }
-                
-                .legend-item-custom {
-                    font-size: 10px !important;
-                    padding: 3px 6px !important;
-                    gap: 4px !important;
-                }
-                
-                .legend-color-box {
-                    width: 10px !important;
-                    height: 10px !important;
-                }
-            }
-            
-            /* Mobile muito pequeno: ainda menor */
-            @media (max-width: 480px) {
-                .dashboard-header-exec h2 {
-                    font-size: 14px !important;
-                }
+                /* Forçar cada KPI em sua posição */
+                .kpi-box:nth-of-type(2) { grid-column: 1; grid-row: 2; }
+                .kpi-box:nth-of-type(3) { grid-column: 2; grid-row: 2; }
+                .kpi-box:nth-of-type(4) { grid-column: 1; grid-row: 3; }
+                .kpi-box:nth-of-type(5) { grid-column: 2; grid-row: 3; }
+                .kpi-box:nth-of-type(6) { grid-column: 1; grid-row: 4; }
+                .kpi-box:nth-of-type(7) { grid-column: 2; grid-row: 4; }
+                .kpi-box:nth-of-type(8) { grid-column: 1; grid-row: 5; }
+                .kpi-box:nth-of-type(9) { grid-column: 2; grid-row: 5; }
                 
                 .kpi-box {
                     padding: 8px !important;
-                    width: calc(50% - 5px) !important;
-                    margin-right: 10px !important;
-                    margin-bottom: 10px !important;
+                    margin: 0 !important;
                     min-height: 60px !important;
                 }
                 
@@ -1555,70 +1434,108 @@ function getExecutiveCSS() {
                     font-size: 9px !important;
                 }
                 
+                /* Gráficos SEM MARGENS */
                 .executivo-grafico-card {
-                    padding: 3px !important;
-                    margin: 0 1px !important;
+                    padding: 0 !important;
+                    margin: 0 !important;
+                    border-radius: 0 !important;
+                }
+                
+                .chart-header {
+                    padding: 5px !important;
+                    margin-bottom: 0 !important;
+                }
+                
+                .chart-header h3 {
+                    font-size: 12px !important;
+                    margin: 0 !important;
                 }
                 
                 .chart-container {
                     height: 240px !important;
+                    margin: 0 !important;
+                    padding: 0 5px !important;
                 }
                 
-                .chart-header h3 {
-                    font-size: 11px !important;
+                .chart-container canvas {
+                    max-height: 240px !important;
+                }
+                
+                /* Legenda SUPER COLADA */
+                .chart-legend-custom {
+                    margin: -40px 5px 10px 5px !important;
+                    padding: 5px !important;
+                    background: rgba(30, 41, 59, 0.95) !important;
+                    position: relative !important;
+                    z-index: 50 !important;
+                }
+                
+                .legend-item-custom {
+                    font-size: 10px !important;
+                    padding: 2px 4px !important;
+                }
+                
+                /* Gauge mobile */
+                .gauge-container {
+                    height: 100px !important;
+                }
+                
+                .hospitais-percentuais {
+                    margin-top: 5px !important;
+                    padding-top: 5px !important;
+                }
+                
+                .hospital-item {
+                    font-size: 8px !important;
                 }
             }
             
-            /* MOBILE LANDSCAPE (HORIZONTAL) - Header reduzido */
+            /* LANDSCAPE - Header ainda menor */
             @media (max-width: 768px) and (orientation: landscape) {
+                #app-header, .app-header, header {
+                    padding: 5px 10px !important;
+                    height: 40px !important;
+                    max-height: 40px !important;
+                }
+                
                 .dashboard-header-exec {
-                    padding: 8px 15px !important; /* Reduzido de 15px para 8px vertical */
-                    margin-bottom: 10px !important; /* Reduzido de 20px */
-                    min-height: auto !important;
+                    padding: 5px !important;
+                    margin-bottom: 5px !important;
                 }
                 
                 .dashboard-header-exec h2 {
-                    font-size: 14px !important; /* Fonte menor */
-                    margin-bottom: 4px !important; /* Margem menor */
-                    line-height: 1.2 !important;
+                    font-size: 12px !important;
+                    margin: 0 !important;
                 }
                 
                 .toggle-fundo-btn {
-                    padding: 4px 8px !important; /* Botão menor */
-                    font-size: 10px !important;
+                    padding: 3px 6px !important;
+                    font-size: 9px !important;
+                }
+                
+                .chart-container {
+                    height: 200px !important;
+                }
+                
+                .executive-kpis-grid {
                     gap: 3px !important;
                 }
                 
-                /* Ajustar altura dos gráficos para aproveitar espaço */
-                .chart-container {
-                    height: 220px !important; /* Reduzir altura para caber na tela */
-                }
-                
-                /* KPIs mais compactos no landscape */
-                .executive-kpis-grid {
-                    gap: 5px !important;
-                    margin-bottom: 10px !important;
-                }
-                
-                .kpi-gauge-principal {
-                    padding: 10px !important;
-                }
-                
-                .gauge-container {
-                    height: 100px !important; /* Gauge menor no landscape */
-                }
-                
                 .kpi-box {
-                    padding: 8px 6px !important;
-                    min-height: 50px !important;
+                    min-height: 45px !important;
+                    padding: 5px !important;
                 }
                 
                 .kpi-value {
-                    font-size: 16px !important;
+                    font-size: 14px !important;
                 }
                 
                 .kpi-label {
                     font-size: 8px !important;
+                }
+                
+                .gauge-container {
+                    height: 80px !important;
                 }
             }
         </style>

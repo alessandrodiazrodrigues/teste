@@ -771,17 +771,19 @@ function renderConcessoesExecutivo() {
                     
                     // Desenhar nome do hospital BEM ACIMA da barra
                     ctx.fillStyle = corTexto;
-                    const fontSize = window.innerWidth <= 768 ? 9.5 : 14; // Mobile reduzido 5%
+                    const fontSize = window.innerWidth <= 768 ? 9.5 : 14;
                     ctx.font = `${fontSize}px Arial`;
-                    ctx.textAlign = 'center'; // Centralizado
+                    ctx.textAlign = 'left'; // Volta para left
                     ctx.textBaseline = 'bottom';
                     
                     ctx.save();
-                    // Posicionar no topo da barra menos um offset fixo
-                    const yPosition = maxY - 5; // Posição logo acima da barra
+                    // Ajuste diferenciado para desktop e mobile
+                    const yOffset = window.innerWidth <= 768 ? 3 : 10; // Mobile 3px, Desktop 10px
+                    const yPosition = maxY - yOffset;
                     ctx.translate(bar.x, yPosition);
                     ctx.rotate(-Math.PI / 2); // ROTAÇÃO 90 GRAUS
-                    ctx.fillText(hospitalName, 0, 0); // Centralizado no ponto
+                    // Texto iniciando um pouco acima para não sobrepor
+                    ctx.fillText(hospitalName, 8, 0); // 8px de offset após rotação
                     ctx.restore();
                 });
                 
@@ -911,16 +913,18 @@ function renderLinhasExecutivo() {
                     
                     // ROTAÇÃO 90 GRAUS - posicionamento melhorado
                     ctx.fillStyle = corTexto;
-                    const fontSize = window.innerWidth <= 768 ? 9.5 : 14; // Mobile reduzido 5%
+                    const fontSize = window.innerWidth <= 768 ? 9.5 : 14;
                     ctx.font = `${fontSize}px Arial`;
-                    ctx.textAlign = 'center'; // Centralizado
+                    ctx.textAlign = 'left'; // Volta para left
                     ctx.textBaseline = 'bottom';
                     
                     ctx.save();
-                    const yPosition = maxY - 5; // Logo acima da barra
+                    // Ajuste diferenciado para desktop e mobile
+                    const yOffset = window.innerWidth <= 768 ? 3 : 10;
+                    const yPosition = maxY - yOffset;
                     ctx.translate(bar.x, yPosition);
                     ctx.rotate(-Math.PI / 2); // ROTAÇÃO 90 GRAUS
-                    ctx.fillText(hospitalName, 0, 0); // Centralizado
+                    ctx.fillText(hospitalName, 8, 0); // 8px de offset
                     ctx.restore();
                 });
                 
@@ -1426,24 +1430,28 @@ function getExecutiveCSS() {
                     border-radius: 8px !important;
                 }
                 
+                /* Container do gráfico sem margem bottom */
                 .chart-container {
                     padding: 0 !important;
                     height: 280px !important;
-                    margin: 5px 0 0 0 !important; /* Margem bottom zerada */
+                    margin: 0 !important; /* Zerado completamente */
                     position: relative !important;
                 }
                 
                 .chart-container canvas {
                     max-height: 280px !important;
+                    display: block !important; /* Remove espaços inline */
                 }
                 
-                /* Legendas COLADAS no gráfico */
-                .chart-legend-custom {
-                    margin-top: -5px !important; /* Margem NEGATIVA para colar no gráfico */
+                /* Forçar legendas COLADAS no gráfico */
+                .executivo-grafico-card .chart-legend-custom {
+                    margin-top: -15px !important; /* Margem mais negativa ainda */
                     gap: 3px !important;
                     padding: 6px !important;
                     position: relative !important;
                     z-index: 10 !important;
+                    display: flex !important;
+                    flex-direction: column !important;
                 }
                 
                 /* Header dos gráficos */

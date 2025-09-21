@@ -13,7 +13,10 @@
     <link rel="stylesheet" href="css/dashboards.css">
     
     <!-- BIBLIOTECAS EXTERNAS -->
+    <!-- Chart.js para gráficos -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- QRCode.js OBRIGATÓRIA - Necessária para gerar QR Codes -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 </head>
 <body>
@@ -144,15 +147,23 @@
     <!-- Scripts de Interface -->
     <script src="js/cards.js"></script>
     
-    <!-- Scripts de Funcionalidades -->
+    <!-- Scripts de Funcionalidades - QRCode.js DEVE vir APÓS a biblioteca -->
     <script src="js/qrcode.js"></script>
     <script src="js/admin.js"></script>
     <script src="js/main.js"></script>
     
     <!-- =================== INICIALIZAÇÃO =================== -->
     <script>
+        // Verificar se QRCode.js foi carregada
         document.addEventListener('DOMContentLoaded', function() {
             console.log('🚀 Archipelago Dashboard V5.0 - Inicializando...');
+            
+            // Verificar biblioteca QRCode
+            if (typeof QRCode !== 'undefined') {
+                console.log('✅ QRCode.js carregada com sucesso');
+            } else {
+                console.warn('⚠️ QRCode.js não encontrada - QR Codes podem não funcionar');
+            }
             
             // Inicialização normal do sistema
             setTimeout(() => {
@@ -171,6 +182,10 @@
                 }
             }, 200);
         });
+        
+        // Log de informações importantes
+        console.log('📱 QR Codes apontam para: https://qrcode-seven-gamma.vercel.app');
+        console.log('🖨️ Impressão configurada: 12 QR codes por A4 (3x4)');
     </script>
     
     <!-- =================== CSS BASE =================== -->

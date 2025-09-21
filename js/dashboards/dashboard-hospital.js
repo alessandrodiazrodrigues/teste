@@ -1030,24 +1030,35 @@ function renderConcessoesHospital(hospitalId, type = 'bar') {
                 min: -0.5,
                 max: 4.5,
                 ticks: {
-                    stepSize: 1, // IMPORTANTE: apenas valores inteiros
-                    autoSkip: false, // Forçar exibição de todas as labels
-                    includeBounds: false, // Evitar labels extras nas bordas
+                    stepSize: 1,
+                    autoSkip: false,
+                    maxTicksLimit: 5,
                     color: corTexto,
                     font: { size: 12, weight: 600 },
-                    callback: function(value) {
-                        // Mostrar label apenas para valores inteiros exatos
-                        const index = Math.round(value);
-                        if (Number.isInteger(value) && index >= 0 && index <= 4) {
-                            return categorias[index];
+                    // Forçar labels apenas em 0,1,2,3,4
+                    callback: function(value, index) {
+                        const intValue = Math.round(value);
+                        // Verificar se o valor está próximo de um inteiro
+                        if (Math.abs(value - intValue) < 0.01 && intValue >= 0 && intValue <= 4) {
+                            return categorias[intValue];
                         }
-                        return ''; // Retornar string vazia em vez de null
+                        return '';
                     }
                 },
                 grid: { 
                     color: corGrid,
                     drawOnChartArea: true,
-                    drawTicks: true // Mostrar ticks no eixo
+                    lineWidth: 1,
+                    tickLength: 8
+                },
+                afterBuildTicks: function(axis) {
+                    axis.ticks = [
+                        {value: 0, label: categorias[0]},
+                        {value: 1, label: categorias[1]},
+                        {value: 2, label: categorias[2]},
+                        {value: 3, label: categorias[3]},
+                        {value: 4, label: categorias[4]}
+                    ];
                 }
             },
             y: {
@@ -1285,24 +1296,35 @@ function renderLinhasHospital(hospitalId, type = 'bar') {
                 min: -0.5,
                 max: 4.5,
                 ticks: {
-                    stepSize: 1, // IMPORTANTE: apenas valores inteiros
-                    autoSkip: false, // Forçar exibição de todas as labels
-                    includeBounds: false, // Evitar labels extras nas bordas
+                    stepSize: 1,
+                    autoSkip: false,
+                    maxTicksLimit: 5,
                     color: corTexto,
                     font: { size: 12, weight: 600 },
-                    callback: function(value) {
-                        // Mostrar label apenas para valores inteiros exatos
-                        const index = Math.round(value);
-                        if (Number.isInteger(value) && index >= 0 && index <= 4) {
-                            return categorias[index];
+                    // Forçar labels apenas em 0,1,2,3,4
+                    callback: function(value, index) {
+                        const intValue = Math.round(value);
+                        // Verificar se o valor está próximo de um inteiro
+                        if (Math.abs(value - intValue) < 0.01 && intValue >= 0 && intValue <= 4) {
+                            return categorias[intValue];
                         }
-                        return ''; // Retornar string vazia em vez de null
+                        return '';
                     }
                 },
                 grid: { 
                     color: corGrid,
                     drawOnChartArea: true,
-                    drawTicks: true // Mostrar ticks no eixo
+                    lineWidth: 1,
+                    tickLength: 8
+                },
+                afterBuildTicks: function(axis) {
+                    axis.ticks = [
+                        {value: 0, label: categorias[0]},
+                        {value: 1, label: categorias[1]},
+                        {value: 2, label: categorias[2]},
+                        {value: 3, label: categorias[3]},
+                        {value: 4, label: categorias[4]}
+                    ];
                 }
             },
             y: {

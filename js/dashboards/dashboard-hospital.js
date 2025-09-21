@@ -897,7 +897,7 @@ function renderAltasHospital(hospitalId) {
     }, 50);
 }
 
-// Gráfico de Concessões - COM LEGENDAS HTML E JITTER
+// Gráfico de Concessões - CORRIGIDO COM JITTER ADEQUADO
 function renderConcessoesHospital(hospitalId, type = 'bar') {
     const canvas = document.getElementById(`graficoConcessoes${hospitalId}`);
     if (!canvas || typeof Chart === 'undefined') return;
@@ -1021,6 +1021,7 @@ function renderConcessoesHospital(hospitalId, type = 'bar') {
     
     const ctx = canvas.getContext('2d');
     
+    // CONFIGURAÇÃO CORRIGIDA PARA SCATTER
     const scatterOptions = type === 'scatter' ? {
         scales: {
             x: {
@@ -1029,15 +1030,15 @@ function renderConcessoesHospital(hospitalId, type = 'bar') {
                 min: -0.5,
                 max: 4.5,
                 ticks: {
-                    stepSize: 1,
+                    stepSize: 1, // IMPORTANTE: apenas valores inteiros
                     color: corTexto,
                     font: { size: 12, weight: 600 },
                     callback: function(value) {
-                        const index = Math.round(value);
-                        if (index >= 0 && index < categorias.length && Math.abs(value - index) < 0.3) {
-                            return categorias[index];
+                        // Mostrar label apenas para valores inteiros
+                        if (Number.isInteger(value) && value >= 0 && value <= 4) {
+                            return categorias[value];
                         }
-                        return '';
+                        return null;
                     }
                 },
                 grid: { 
@@ -1123,6 +1124,16 @@ function renderConcessoesHospital(hospitalId, type = 'bar') {
                         label: function(context) {
                             const value = context.parsed.y;
                             return `${context.dataset.label}: ${value} beneficiário${value !== 1 ? 's' : ''}`;
+                        },
+                        title: function(context) {
+                            // Para scatter, mostrar o label correto baseado no x
+                            if (type === 'scatter' && context.length > 0) {
+                                const xValue = Math.round(context[0].parsed.x);
+                                if (xValue >= 0 && xValue <= 4) {
+                                    return categorias[xValue];
+                                }
+                            }
+                            return context[0]?.label || '';
                         }
                     }
                 }
@@ -1138,7 +1149,7 @@ function renderConcessoesHospital(hospitalId, type = 'bar') {
     }, 50);
 }
 
-// Gráfico de Linhas de Cuidado - COM LEGENDAS HTML E JITTER
+// Gráfico de Linhas de Cuidado - CORRIGIDO COM JITTER ADEQUADO
 function renderLinhasHospital(hospitalId, type = 'bar') {
     const canvas = document.getElementById(`graficoLinhas${hospitalId}`);
     if (!canvas || typeof Chart === 'undefined') return;
@@ -1262,6 +1273,7 @@ function renderLinhasHospital(hospitalId, type = 'bar') {
     
     const ctx = canvas.getContext('2d');
     
+    // CONFIGURAÇÃO CORRIGIDA PARA SCATTER
     const scatterOptions = type === 'scatter' ? {
         scales: {
             x: {
@@ -1270,15 +1282,15 @@ function renderLinhasHospital(hospitalId, type = 'bar') {
                 min: -0.5,
                 max: 4.5,
                 ticks: {
-                    stepSize: 1,
+                    stepSize: 1, // IMPORTANTE: apenas valores inteiros
                     color: corTexto,
                     font: { size: 12, weight: 600 },
                     callback: function(value) {
-                        const index = Math.round(value);
-                        if (index >= 0 && index < categorias.length && Math.abs(value - index) < 0.3) {
-                            return categorias[index];
+                        // Mostrar label apenas para valores inteiros
+                        if (Number.isInteger(value) && value >= 0 && value <= 4) {
+                            return categorias[value];
                         }
-                        return '';
+                        return null;
                     }
                 },
                 grid: { 
@@ -1364,6 +1376,16 @@ function renderLinhasHospital(hospitalId, type = 'bar') {
                         label: function(context) {
                             const value = context.parsed.y;
                             return `${context.dataset.label}: ${value} beneficiário${value !== 1 ? 's' : ''}`;
+                        },
+                        title: function(context) {
+                            // Para scatter, mostrar o label correto baseado no x
+                            if (type === 'scatter' && context.length > 0) {
+                                const xValue = Math.round(context[0].parsed.x);
+                                if (xValue >= 0 && xValue <= 4) {
+                                    return categorias[xValue];
+                                }
+                            }
+                            return context[0]?.label || '';
                         }
                     }
                 }
@@ -1883,11 +1905,11 @@ function logError(message, error) {
     console.error(`❌ [DASHBOARD HOSPITALAR] ${message}`, error || '');
 }
 
-console.log('🎯 Dashboard Hospitalar VERSÃO FINAL COMPLETA COM JITTER:');
+console.log('🎯 Dashboard Hospitalar VERSÃO FINAL COMPLETA COM CORREÇÕES:');
+console.log('✅ SCATTER CORRIGIDO: stepSize: 1, apenas labels em inteiros');
+console.log('✅ JITTER APLICADO: Evita sobreposição de bolinhas');
 console.log('✅ LEGENDAS HTML: Verticais, fora do Chart.js, interativas');
 console.log('✅ CORES DINÂMICAS: Texto, fundo e grid com toggle claro/escuro');
-console.log('✅ SCATTER COM JITTER: Evita sobreposição de bolinhas');
-console.log('✅ POSIÇÕES INTEIRAS: Scatter apenas em 0,1,2,3,4 + jitter');
 console.log('✅ CORES PANTONE: 55+ cores preservadas');
 console.log('✅ MOBILE RESPONSIVO: Jitter menor em telas pequenas');
 console.log('✅ DADOS REAIS: Zero mock data, apenas planilha Google');

@@ -771,9 +771,9 @@ function renderConcessoesExecutivo() {
                     
                     // Desenhar nome do hospital BEM ACIMA da barra
                     ctx.fillStyle = corTexto;
-                    const fontSize = window.innerWidth <= 768 ? 10 : 14;
+                    const fontSize = window.innerWidth <= 768 ? 9.5 : 14; // Mobile reduzido 5%
                     ctx.font = `${fontSize}px Arial`;
-                    ctx.textAlign = 'left';
+                    ctx.textAlign = 'center'; // Centralizado
                     ctx.textBaseline = 'bottom';
                     
                     ctx.save();
@@ -781,7 +781,7 @@ function renderConcessoesExecutivo() {
                     const yPosition = maxY - 5; // Posição logo acima da barra
                     ctx.translate(bar.x, yPosition);
                     ctx.rotate(-Math.PI / 2); // ROTAÇÃO 90 GRAUS
-                    ctx.fillText(hospitalName, 5, 0); // Offset de 5px para não colar na barra
+                    ctx.fillText(hospitalName, 0, 0); // Centralizado no ponto
                     ctx.restore();
                 });
                 
@@ -911,16 +911,16 @@ function renderLinhasExecutivo() {
                     
                     // ROTAÇÃO 90 GRAUS - posicionamento melhorado
                     ctx.fillStyle = corTexto;
-                    const fontSize = window.innerWidth <= 768 ? 10 : 14;
+                    const fontSize = window.innerWidth <= 768 ? 9.5 : 14; // Mobile reduzido 5%
                     ctx.font = `${fontSize}px Arial`;
-                    ctx.textAlign = 'left';
+                    ctx.textAlign = 'center'; // Centralizado
                     ctx.textBaseline = 'bottom';
                     
                     ctx.save();
                     const yPosition = maxY - 5; // Logo acima da barra
                     ctx.translate(bar.x, yPosition);
                     ctx.rotate(-Math.PI / 2); // ROTAÇÃO 90 GRAUS
-                    ctx.fillText(hospitalName, 5, 0); // Offset de 5px
+                    ctx.fillText(hospitalName, 0, 0); // Centralizado
                     ctx.restore();
                 });
                 
@@ -1429,18 +1429,21 @@ function getExecutiveCSS() {
                 .chart-container {
                     padding: 0 !important;
                     height: 280px !important;
-                    margin: 5px 0 !important;
+                    margin: 5px 0 0 0 !important; /* Margem bottom zerada */
+                    position: relative !important;
                 }
                 
                 .chart-container canvas {
                     max-height: 280px !important;
                 }
                 
-                /* Legendas mais próximas do gráfico */
+                /* Legendas COLADAS no gráfico */
                 .chart-legend-custom {
-                    margin-top: 5px !important; /* REDUZIDO para eliminar espaço */
-                    gap: 4px !important;
+                    margin-top: -5px !important; /* Margem NEGATIVA para colar no gráfico */
+                    gap: 3px !important;
                     padding: 6px !important;
+                    position: relative !important;
+                    z-index: 10 !important;
                 }
                 
                 /* Header dos gráficos */

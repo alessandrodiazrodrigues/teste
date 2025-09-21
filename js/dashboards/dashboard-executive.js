@@ -778,7 +778,7 @@ function renderConcessoesExecutivo() {
                     ctx.textBaseline = 'middle';
                     
                     ctx.save();
-                    ctx.translate(bar.x, maxY - 12); // Posição mais alta para não sobrepor
+                    ctx.translate(bar.x, maxY - 20); // AUMENTADO para -20 para dar mais espaço
                     ctx.rotate(-Math.PI / 2); // ROTAÇÃO 90 GRAUS
                     ctx.fillText(hospitalName, 0, 0);
                     ctx.restore();
@@ -917,7 +917,7 @@ function renderLinhasExecutivo() {
                     ctx.textBaseline = 'middle';
                     
                     ctx.save();
-                    ctx.translate(bar.x, maxY - 12); // Posição mais alta para não sobrepor
+                    ctx.translate(bar.x, maxY - 20); // AUMENTADO para -20 para dar mais espaço
                     ctx.rotate(-Math.PI / 2); // ROTAÇÃO 90 GRAUS
                     ctx.fillText(hospitalName, 0, 0);
                     ctx.restore();
@@ -1206,13 +1206,15 @@ function getExecutiveCSS() {
             /* =================== LAYOUT DESKTOP (MANTIDO 100%) =================== */
             .executive-kpis-grid {
                 display: grid;
-                grid-template-columns: repeat(4, 1fr); /* 4 colunas totais */
+                grid-template-columns: repeat(6, 1fr);
+                grid-template-rows: auto auto;
                 gap: 20px;
                 margin-bottom: 30px;
             }
             
             .kpi-gauge-principal {
-                grid-column: span 4; /* Gauge ocupa toda a largura (4 colunas) */
+                grid-column: span 2;
+                grid-row: span 2;
                 background: #1a1f2e;
                 border-radius: 12px;
                 padding: 20px;
@@ -1279,7 +1281,6 @@ function getExecutiveCSS() {
             }
             
             .kpi-box {
-                grid-column: span 2; /* CADA BOX OCUPA 2 COLUNAS (50%) */
                 background: #1a1f2e;
                 border-radius: 12px;
                 padding: 20px;
@@ -1381,48 +1382,26 @@ function getExecutiveCSS() {
                     margin-bottom: 8px !important;
                 }
                 
-                /* CORREÇÃO PRINCIPAL: Layout Gauge + 2x4 grid */
+                /* CORREÇÃO PRINCIPAL: Layout vertical com KPIs 2x4 */
                 .executive-kpis-grid {
-                    display: flex !important;
-                    flex-direction: column !important;
-                    gap: 15px !important;
+                    display: grid !important;
+                    grid-template-columns: repeat(2, 1fr) !important;
+                    gap: 10px !important;
                     margin-bottom: 20px !important;
                 }
                 
-                /* Gauge ocupa linha completa */
+                /* Gauge ocupa as 2 colunas (linha completa) */
                 .kpi-gauge-principal {
-                    grid-column: auto !important;
+                    grid-column: span 2 !important;
                     grid-row: auto !important;
                     padding: 15px !important;
-                    order: 1;
-                    width: 100% !important;
                 }
                 
-                /* Container dos 8 KPIs em grid 2x4 */
-                .kpis-grid-mobile {
-                    order: 2;
-                    display: grid !important;
-                    grid-template-columns: 1fr 1fr !important;
-                    grid-template-rows: repeat(4, 1fr) !important;
-                    gap: 10px !important;
-                    width: 100% !important;
-                }
-                
-                /* KPIs individuais em 2 colunas */
-                .executive-kpis-grid .kpi-box {
-                    order: 2;
+                /* KPIs individuais - cada um ocupa 1 coluna */
+                .kpi-box {
+                    grid-column: span 1 !important;
                     padding: 12px !important;
-                    width: calc(50% - 7.5px) !important;
-                    display: inline-block !important;
-                    vertical-align: top !important;
-                    margin-right: 15px !important;
-                    margin-bottom: 15px !important;
                     min-height: 70px !important;
-                }
-                
-                /* Remover margin da segunda coluna (pares) */
-                .executive-kpis-grid .kpi-box:nth-child(even) {
-                    margin-right: 0 !important;
                 }
                 
                 .kpi-value {

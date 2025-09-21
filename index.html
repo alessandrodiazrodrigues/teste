@@ -11,7 +11,6 @@
     <link rel="stylesheet" href="css/cards.css">
     <link rel="stylesheet" href="css/modals.css">
     <link rel="stylesheet" href="css/dashboards.css">
-    <!-- MOBILE.CSS REMOVIDO - RESPONSIVIDADE CONSOLIDADA NOS ARQUIVOS JS -->
     
     <!-- BIBLIOTECAS EXTERNAS -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -63,7 +62,7 @@
         
         <div class="menu-footer">
             <div class="menu-divider"></div>
-            <a href="#" class="menu-qr" onclick="openQRGenerator()">
+            <a href="#" class="menu-qr" onclick="openQRCodes()">
                 <span>📱</span> Gerar QR Codes
             </a>
         </div>
@@ -89,7 +88,7 @@
                 </div>
             </div>
             
-            <!-- CONTAINER DOS CARDS - RESPONSIVO INTEGRADO NO cards.js -->
+            <!-- CONTAINER DOS CARDS -->
             <div id="cardsContainer" class="cards-grid"></div>
         </section>
 
@@ -140,7 +139,6 @@
     
     <!-- Scripts de Dashboards -->
     <script src="js/dashboards/charts-config.js"></script>
-    <!-- CHARTS.JS REMOVIDO - CONFLITO COM DASHBOARDS -->
     <script src="js/dashboards/dashboard-hospital.js"></script>
     <script src="js/dashboards/dashboard-executive.js"></script>
     
@@ -154,40 +152,135 @@
     <!-- Script Principal -->
     <script src="js/main.js"></script>
     
-    <!-- =================== INICIALIZAÇÃO DO SISTEMA =================== -->
+    <!-- =================== BYPASS QR CODE E INICIALIZAÇÃO =================== -->
     <script>
-        // Inicializar sistema após carregar todos os módulos
+        // ========== BYPASS DE AUTENTICAÇÃO PARA QR CODE ==========
+        (function checkQRAccessImmediately() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const isQR = urlParams.get('qr') === 'true';
+            const hospitalId = urlParams.get('h');
+            const leitoNumero = urlParams.get('l');
+            
+            if (isQR && hospitalId && leitoNumero) {
+                console.log('🔓 ACESSO VIA QR CODE DETECTADO - BYPASS AUTOMÁTICO');
+                console.log(`📍 Hospital: ${hospitalId}, Leito: ${leitoNumero}`);
+                
+                // BYPASS COMPLETO DE AUTENTICAÇÃO
+                window.isAuthenticated = true;
+                window.qrAccessMode = true;
+                window.qrHospital = hospitalId;
+                window.qrLeito = leitoNumero;
+                
+                // Esconder modal de autenticação IMEDIATAMENTE
+                const authModal = document.getElementById('authModal');
+                if (authModal) {
+                    authModal.style.display = 'none';
+                    authModal.classList.add('hidden');
+                }
+                
+                // Mostrar conteúdo principal SEM NAVEGAÇÃO
+                const mainHeader = document.getElementById('mainHeader');
+                const mainContent = document.getElementById('mainContent');
+                const mainFooter = document.getElementById('mainFooter');
+                const sideMenu = document.getElementById('sideMenu');
+                const menuOverlay = document.getElementById('menuOverlay');
+                
+                // Esconder elementos de navegação
+                if (mainHeader) mainHeader.style.display = 'none';
+                if (sideMenu) sideMenu.style.display = 'none';
+                if (menuOverlay) menuOverlay.style.display = 'none';
+                if (mainFooter) mainFooter.style.display = 'none';
+                
+                // Mostrar apenas área de conteúdo
+                if (mainContent) {
+                    mainContent.classList.remove('hidden');
+                    mainContent.style.display = 'block';
+                    mainContent.style.padding = '20px';
+                    mainContent.style.minHeight = '100vh';
+                }
+                
+                // Esconder seletores de hospital e leitos view
+                setTimeout(() => {
+                    const leitosView = document.getElementById('leitosView');
+                    if (leitosView) leitosView.style.display = 'none';
+                }, 100);
+                
+                // Informar sistema que está em modo QR
+                console.log('⏳ Aguardando carregamento dos dados para abrir formulário...');
+            }
+        })();
+        
+        // ========== INICIALIZAÇÃO DO SISTEMA ==========
         document.addEventListener('DOMContentLoaded', function() {
             console.log('🚀 Archipelago Dashboard V4.0 - Inicializando sistema...');
             
-            // Aguardar carregamento completo dos módulos
-            setTimeout(() => {
-                if (typeof window.initApp === 'function') {
-                    window.initApp();
-                    console.log('✅ Sistema inicializado com sucesso');
-                } else {
-                    console.error('❌ initApp não encontrada - verificar carregamento dos módulos');
-                    
-                    // Retry após mais tempo
-                    setTimeout(() => {
-                        if (typeof window.initApp === 'function') {
-                            window.initApp();
-                            console.log('✅ Sistema inicializado após retry');
+            // Se está em modo QR, aguardar dados e abrir formulário
+            if (window.qrAccessMode) {
+                console.log('📱 Modo QR ativo - preparando formulário médico...');
+                
+                // Tentar abrir formulário após dados carregarem
+                const tryOpenForm = setInterval(() => {
+                    if (window.hospitalData && window.hospitalData[window.qrHospital]) {
+                        clearInterval(tryOpenForm);
+                        
+                        const hospital = window.hospitalData[window.qrHospital];
+                        const leito = hospital.leitos.find(l => 
+                            (l.leito || l.numero || l.id) == window.qrLeito
+                        );
+                        
+                        if (leito) {
+                            console.log('✅ Dados carregados - abrindo formulário do leito');
+                            
+                            // Chamar função do qrcode.js
+                            if (typeof window.openMedicoForm === 'function') {
+                                window.openMedicoForm(window.qrHospital, window.qrLeito);
+                            } else {
+                                console.error('❌ Função openMedicoForm não encontrada');
+                                alert('Erro ao abrir formulário. Recarregue a página.');
+                            }
+                        } else {
+                            alert(`Leito ${window.qrLeito} não encontrado no hospital.`);
+                            window.location.href = window.location.origin;
                         }
-                    }, 1000);
-                }
-            }, 200);
+                    }
+                }, 500);
+                
+                // Timeout de segurança
+                setTimeout(() => {
+                    clearInterval(tryOpenForm);
+                    if (!window.hospitalData || !window.hospitalData[window.qrHospital]) {
+                        alert('Erro ao carregar dados do hospital. Tente novamente.');
+                        window.location.href = window.location.origin;
+                    }
+                }, 15000);
+            } else {
+                // Modo normal - inicializar sistema completo
+                setTimeout(() => {
+                    if (typeof window.initApp === 'function') {
+                        window.initApp();
+                        console.log('✅ Sistema inicializado em modo normal');
+                    } else {
+                        console.error('❌ initApp não encontrada - verificar carregamento dos módulos');
+                        
+                        // Retry
+                        setTimeout(() => {
+                            if (typeof window.initApp === 'function') {
+                                window.initApp();
+                                console.log('✅ Sistema inicializado após retry');
+                            }
+                        }, 1000);
+                    }
+                }, 200);
+            }
         });
         
-        // Log de debug para carregamento
-        console.log('📄 Index.html carregado - Versão V4.1 Corrigida');
-        console.log('🔧 Charts.js removido - Conflito resolvido');
-        console.log('🎯 Mobile.css removido - Responsividade nos arquivos JS');
+        // Log de debug
+        console.log('📄 Index.html V4.2 - Com bypass QR Code');
+        console.log('🔐 Autenticação: Normal ou QR bypass');
     </script>
     
-    <!-- =================== META INFORMAÇÕES =================== -->
+    <!-- =================== CSS MINIMAL =================== -->
     <style>
-        /* CSS MINIMAL PARA ESTRUTURA BÁSICA */
         * {
             box-sizing: border-box;
         }
@@ -205,13 +298,73 @@
             display: none !important;
         }
         
-        /* RESPONSIVIDADE BÁSICA ESTRUTURAL */
+        /* Modal de autenticação */
+        .modal-auth {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.95);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+        }
+        
+        .auth-container {
+            background: #1e293b;
+            padding: 40px;
+            border-radius: 16px;
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+        }
+        
+        .auth-container h1 {
+            margin: 0 0 20px;
+            color: #60a5fa;
+        }
+        
+        .auth-container input {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: 1px solid #334155;
+            background: #0f172a;
+            color: white;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+        
+        .auth-container button {
+            width: 100%;
+            padding: 12px;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        
+        .auth-container button:hover {
+            background: #2563eb;
+        }
+        
+        .error-msg {
+            color: #ef4444;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+        
+        /* RESPONSIVIDADE BÁSICA */
         @media (max-width: 768px) {
             body {
                 overflow-x: hidden;
             }
             
-            /* Header mobile */
             .header {
                 flex-direction: column;
                 gap: 10px;
@@ -227,7 +380,6 @@
                 justify-content: space-between;
             }
             
-            /* Menu lateral mobile */
             .side-menu {
                 width: 100%;
                 left: -100%;
@@ -238,14 +390,12 @@
                 left: 0;
             }
             
-            /* Cards responsivos */
             .cards-grid {
                 grid-template-columns: 1fr;
                 gap: 15px;
                 padding: 10px;
             }
             
-            /* Botões de hospital mobile */
             .hospital-selector {
                 flex-direction: column;
                 gap: 10px;
@@ -260,7 +410,6 @@
                 font-size: 14px;
             }
             
-            /* Footer mobile */
             .footer {
                 padding: 20px 10px;
                 font-size: 12px;
@@ -272,7 +421,6 @@
         }
         
         @media (max-width: 480px) {
-            /* Ajustes para telas muito pequenas */
             .cards-grid {
                 padding: 5px;
                 gap: 10px;

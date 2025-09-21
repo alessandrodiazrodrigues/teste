@@ -728,7 +728,7 @@ function renderConcessoesExecutivo() {
                 y: {
                     stacked: true,
                     beginAtZero: true,
-                    max: valorMaximo + 10, // ADICIONAR 10 PARA DAR ESPAÇO AOS LABELS
+                    max: valorMaximo + 6, // ADICIONAR 6 PARA DAR ESPAÇO AOS LABELS
                     title: {
                         display: true,
                         text: 'Beneficiários',
@@ -771,12 +771,14 @@ function renderConcessoesExecutivo() {
                     
                     // Desenhar nome do hospital acima da barra com ROTAÇÃO 90°
                     ctx.fillStyle = corTexto;
-                    ctx.font = window.innerWidth <= 768 ? '9px Arial' : '11px Arial';
+                    // TAMANHO DA FONTE: Mobile +10%, Desktop +25%
+                    const fontSize = window.innerWidth <= 768 ? 10 : 14; // Era 9px e 11px
+                    ctx.font = `${fontSize}px Arial`;
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'middle';
                     
                     ctx.save();
-                    ctx.translate(bar.x, maxY - 8); // Ajustado para usar o espaço extra
+                    ctx.translate(bar.x, maxY - 12); // Posição mais alta para não sobrepor
                     ctx.rotate(-Math.PI / 2); // ROTAÇÃO 90 GRAUS
                     ctx.fillText(hospitalName, 0, 0);
                     ctx.restore();
@@ -866,7 +868,7 @@ function renderLinhasExecutivo() {
                 y: {
                     stacked: true,
                     beginAtZero: true,
-                    max: valorMaximo + 10, // ADICIONAR 10 PARA DAR ESPAÇO AOS LABELS
+                    max: valorMaximo + 6, // ADICIONAR 6 PARA DAR ESPAÇO AOS LABELS
                     title: {
                         display: true,
                         text: 'Beneficiários',
@@ -908,12 +910,14 @@ function renderLinhasExecutivo() {
                     
                     // ROTAÇÃO 90 GRAUS
                     ctx.fillStyle = corTexto;
-                    ctx.font = window.innerWidth <= 768 ? '9px Arial' : '11px Arial';
+                    // TAMANHO DA FONTE: Mobile +10%, Desktop +25%
+                    const fontSize = window.innerWidth <= 768 ? 10 : 14; // Era 9px e 11px
+                    ctx.font = `${fontSize}px Arial`;
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'middle';
                     
                     ctx.save();
-                    ctx.translate(bar.x, maxY - 8); // Ajustado para usar o espaço extra
+                    ctx.translate(bar.x, maxY - 12); // Posição mais alta para não sobrepor
                     ctx.rotate(-Math.PI / 2); // ROTAÇÃO 90 GRAUS
                     ctx.fillText(hospitalName, 0, 0);
                     ctx.restore();
@@ -1202,15 +1206,13 @@ function getExecutiveCSS() {
             /* =================== LAYOUT DESKTOP (MANTIDO 100%) =================== */
             .executive-kpis-grid {
                 display: grid;
-                grid-template-columns: repeat(6, 1fr);
-                grid-template-rows: auto auto;
+                grid-template-columns: repeat(4, 1fr); /* 4 colunas totais */
                 gap: 20px;
                 margin-bottom: 30px;
             }
             
             .kpi-gauge-principal {
-                grid-column: span 2;
-                grid-row: span 2;
+                grid-column: span 4; /* Gauge ocupa toda a largura (4 colunas) */
                 background: #1a1f2e;
                 border-radius: 12px;
                 padding: 20px;
@@ -1277,6 +1279,7 @@ function getExecutiveCSS() {
             }
             
             .kpi-box {
+                grid-column: span 2; /* CADA BOX OCUPA 2 COLUNAS (50%) */
                 background: #1a1f2e;
                 border-radius: 12px;
                 padding: 20px;

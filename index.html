@@ -5,47 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Archipelago Dashboard</title>
     
-    <!-- ========== BYPASS QR IMEDIATO - ANTES DE TUDO ========== -->
-    <script>
-        (function() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const isQR = urlParams.get('qr') === 'true';
-            const hospitalId = urlParams.get('h');
-            const leitoNumero = urlParams.get('l');
-            
-            if (isQR && hospitalId && leitoNumero) {
-                console.log('🔓 QR CODE DETECTADO - BYPASS IMEDIATO');
-                
-                // Marcar bypass ANTES de qualquer coisa carregar
-                window.isAuthenticated = true;
-                window.qrAccessMode = true;
-                window.qrHospital = hospitalId;
-                window.qrLeito = leitoNumero;
-                
-                // Esconder auth modal via CSS imediato
-                document.addEventListener('DOMContentLoaded', function() {
-                    const style = document.createElement('style');
-                    style.innerHTML = `
-                        #authModal { display: none !important; }
-                        #mainHeader { display: none !important; }
-                        #sideMenu { display: none !important; }
-                        #menuOverlay { display: none !important; }
-                        #mainFooter { display: none !important; }
-                        #hospitalSelector { display: none !important; }
-                        .leitos-header { display: none !important; }
-                        #leitosView { display: none !important; }
-                        #cardsContainer { display: none !important; }
-                    `;
-                    document.head.appendChild(style);
-                });
-                
-                // Prevenir qualquer inicialização normal
-                window.skipNormalInit = true;
-            }
-        })();
-    </script>
-    
-    <!-- CSS MODULAR RESPONSIVO CONSOLIDADO -->
+    <!-- CSS MODULAR -->
     <link rel="stylesheet" href="css/variables.css">
     <link rel="stylesheet" href="css/layout.css">
     <link rel="stylesheet" href="css/cards.css">
@@ -54,7 +14,6 @@
     
     <!-- BIBLIOTECAS EXTERNAS -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://unpkg.com/html5-qrcode"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 </head>
 <body>
@@ -81,7 +40,7 @@
         </div>
     </header>
 
-    <!-- =================== MENU LATERAL SIMPLIFICADO =================== -->
+    <!-- =================== MENU LATERAL =================== -->
     <aside id="sideMenu" class="side-menu">
         <div class="menu-header">
             <h2>Menu</h2>
@@ -148,7 +107,7 @@
     <footer id="mainFooter" class="footer hidden">
         <p>Sistema em versão BETA - não pode ser usado como única fonte de referência</p>
         <p>Para decisões críticas, consulte sempre fontes adicionais e profissionais qualificados</p>
-        <p><strong>Desenvolvido por: Alessandro Rodrigues - Versão V4.0 - Setembro/2025</strong></p>
+        <p><strong>Desenvolvido por: Alessandro Rodrigues - Versão V5.0 - Dezembro/2024</strong></p>
     </footer>
 
     <!-- =================== MODAL DE PACIENTE =================== -->
@@ -171,170 +130,50 @@
         </div>
     </div>
 
-    <!-- =================== CARREGAMENTO DE SCRIPTS MODULARES =================== -->
+    <!-- =================== SCRIPTS MODULARES =================== -->
     
     <!-- Scripts Core -->
-    <script>
-        // Prevenir inicialização normal se em modo QR
-        if (!window.qrAccessMode) {
-            document.write('<script src="js/app.js"><\/script>');
-        }
-    </script>
+    <script src="js/app.js"></script>
     <script src="js/api.js"></script>
     
     <!-- Scripts de Dashboards -->
-    <script>
-        if (!window.qrAccessMode) {
-            document.write('<script src="js/dashboards/charts-config.js"><\/script>');
-            document.write('<script src="js/dashboards/dashboard-hospital.js"><\/script>');
-            document.write('<script src="js/dashboards/dashboard-executive.js"><\/script>');
-        }
-    </script>
+    <script src="js/dashboards/charts-config.js"></script>
+    <script src="js/dashboards/dashboard-hospital.js"></script>
+    <script src="js/dashboards/dashboard-executive.js"></script>
     
     <!-- Scripts de Interface -->
-    <script>
-        if (!window.qrAccessMode) {
-            document.write('<script src="js/cards.js"><\/script>');
-        }
-    </script>
+    <script src="js/cards.js"></script>
     
     <!-- Scripts de Funcionalidades -->
     <script src="js/qrcode.js"></script>
-    <script>
-        if (!window.qrAccessMode) {
-            document.write('<script src="js/admin.js"><\/script>');
-            document.write('<script src="js/main.js"><\/script>');
-        }
-    </script>
+    <script src="js/admin.js"></script>
+    <script src="js/main.js"></script>
     
-    <!-- =================== BYPASS QR CODE - EXECUTAR PRIMEIRO =================== -->
+    <!-- =================== INICIALIZAÇÃO =================== -->
     <script>
-        // ========== BYPASS IMEDIATO - ANTES DE QUALQUER SCRIPT ==========
-        (function() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const isQR = urlParams.get('qr') === 'true';
-            const hospitalId = urlParams.get('h');
-            const leitoNumero = urlParams.get('l');
-            
-            if (isQR && hospitalId && leitoNumero) {
-                console.log('🔓 ACESSO VIA QR CODE DETECTADO - BYPASS AUTOMÁTICO');
-                console.log(`📍 Hospital: ${hospitalId}, Leito: ${leitoNumero}`);
-                
-                // BYPASS COMPLETO DE AUTENTICAÇÃO
-                window.isAuthenticated = true;
-                window.qrAccessMode = true;
-                window.qrHospital = hospitalId;
-                window.qrLeito = leitoNumero;
-                
-                // Esconder modal de autenticação IMEDIATAMENTE
-                const authModal = document.getElementById('authModal');
-                if (authModal) {
-                    authModal.style.display = 'none';
-                    authModal.classList.add('hidden');
-                }
-                
-                // Mostrar conteúdo principal SEM NAVEGAÇÃO
-                const mainHeader = document.getElementById('mainHeader');
-                const mainContent = document.getElementById('mainContent');
-                const mainFooter = document.getElementById('mainFooter');
-                const sideMenu = document.getElementById('sideMenu');
-                const menuOverlay = document.getElementById('menuOverlay');
-                
-                // Esconder elementos de navegação
-                if (mainHeader) mainHeader.style.display = 'none';
-                if (sideMenu) sideMenu.style.display = 'none';
-                if (menuOverlay) menuOverlay.style.display = 'none';
-                if (mainFooter) mainFooter.style.display = 'none';
-                
-                // Mostrar apenas área de conteúdo
-                if (mainContent) {
-                    mainContent.classList.remove('hidden');
-                    mainContent.style.display = 'block';
-                    mainContent.style.padding = '20px';
-                    mainContent.style.minHeight = '100vh';
-                }
-                
-                // Esconder seletores de hospital e leitos view
-                setTimeout(() => {
-                    const leitosView = document.getElementById('leitosView');
-                    if (leitosView) leitosView.style.display = 'none';
-                }, 100);
-                
-                // Informar sistema que está em modo QR
-                console.log('⏳ Aguardando carregamento dos dados para abrir formulário...');
-            }
-        })();
-        
-        // ========== INICIALIZAÇÃO DO SISTEMA ==========
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('🚀 Archipelago Dashboard V4.0 - Inicializando sistema...');
+            console.log('🚀 Archipelago Dashboard V5.0 - Inicializando...');
             
-            // Se está em modo QR, aguardar dados e abrir formulário
-            if (window.qrAccessMode) {
-                console.log('📱 Modo QR ativo - preparando formulário médico...');
-                
-                // Tentar abrir formulário após dados carregarem
-                const tryOpenForm = setInterval(() => {
-                    if (window.hospitalData && window.hospitalData[window.qrHospital]) {
-                        clearInterval(tryOpenForm);
-                        
-                        const hospital = window.hospitalData[window.qrHospital];
-                        const leito = hospital.leitos.find(l => 
-                            (l.leito || l.numero || l.id) == window.qrLeito
-                        );
-                        
-                        if (leito) {
-                            console.log('✅ Dados carregados - abrindo formulário do leito');
-                            
-                            // Chamar função do qrcode.js
-                            if (typeof window.openMedicoForm === 'function') {
-                                window.openMedicoForm(window.qrHospital, window.qrLeito);
-                            } else {
-                                console.error('❌ Função openMedicoForm não encontrada');
-                                alert('Erro ao abrir formulário. Recarregue a página.');
-                            }
-                        } else {
-                            alert(`Leito ${window.qrLeito} não encontrado no hospital.`);
-                            window.location.href = window.location.origin;
+            // Inicialização normal do sistema
+            setTimeout(() => {
+                if (typeof window.initApp === 'function') {
+                    window.initApp();
+                    console.log('✅ Sistema inicializado com sucesso');
+                } else {
+                    console.error('❌ initApp não encontrada');
+                    // Retry
+                    setTimeout(() => {
+                        if (typeof window.initApp === 'function') {
+                            window.initApp();
+                            console.log('✅ Sistema inicializado após retry');
                         }
-                    }
-                }, 500);
-                
-                // Timeout de segurança
-                setTimeout(() => {
-                    clearInterval(tryOpenForm);
-                    if (!window.hospitalData || !window.hospitalData[window.qrHospital]) {
-                        alert('Erro ao carregar dados do hospital. Tente novamente.');
-                        window.location.href = window.location.origin;
-                    }
-                }, 15000);
-            } else {
-                // Modo normal - inicializar sistema completo
-                setTimeout(() => {
-                    if (typeof window.initApp === 'function') {
-                        window.initApp();
-                        console.log('✅ Sistema inicializado em modo normal');
-                    } else {
-                        console.error('❌ initApp não encontrada - verificar carregamento dos módulos');
-                        
-                        // Retry
-                        setTimeout(() => {
-                            if (typeof window.initApp === 'function') {
-                                window.initApp();
-                                console.log('✅ Sistema inicializado após retry');
-                            }
-                        }, 1000);
-                    }
-                }, 200);
-            }
+                    }, 1000);
+                }
+            }, 200);
         });
-        
-        // Log de debug
-        console.log('📄 Index.html V4.2 - Com bypass QR Code');
-        console.log('🔐 Autenticação: Normal ou QR bypass');
     </script>
     
-    <!-- =================== CSS MINIMAL =================== -->
+    <!-- =================== CSS BASE =================== -->
     <style>
         * {
             box-sizing: border-box;
@@ -414,80 +253,30 @@
             font-size: 14px;
         }
         
-        /* RESPONSIVIDADE BÁSICA */
+        /* Responsividade */
         @media (max-width: 768px) {
-            body {
-                overflow-x: hidden;
-            }
-            
             .header {
                 flex-direction: column;
                 gap: 10px;
                 padding: 10px;
             }
             
-            .header h1 {
-                font-size: 18px;
-            }
-            
-            .header-right {
-                width: 100%;
-                justify-content: space-between;
-            }
-            
             .side-menu {
                 width: 100%;
                 left: -100%;
-                transition: left 0.3s ease;
             }
             
             .side-menu.open {
                 left: 0;
             }
             
-            .cards-grid {
-                grid-template-columns: 1fr;
-                gap: 15px;
-                padding: 10px;
-            }
-            
             .hospital-selector {
                 flex-direction: column;
                 gap: 10px;
-                padding: 15px;
             }
             
             .hospital-btn {
                 width: 100%;
-                min-width: auto;
-                flex: none;
-                padding: 12px 16px;
-                font-size: 14px;
-            }
-            
-            .footer {
-                padding: 20px 10px;
-                font-size: 12px;
-            }
-            
-            .footer p {
-                margin: 5px 0;
-            }
-        }
-        
-        @media (max-width: 480px) {
-            .cards-grid {
-                padding: 5px;
-                gap: 10px;
-            }
-            
-            .hospital-selector {
-                padding: 10px;
-            }
-            
-            .footer {
-                padding: 15px 5px;
-                font-size: 11px;
             }
         }
     </style>

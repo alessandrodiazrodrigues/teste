@@ -340,7 +340,7 @@ window.renderDashboardExecutivo = function() {
                 flex-direction: column; /* VERTICAL - um item por linha */
                 align-items: flex-start; /* Alinhado à esquerda */
                 gap: 6px;
-                margin-top: 15px;
+                margin-top: 10px; /* REDUZIDO de 15px para 10px */
                 padding: 10px;
                 background: rgba(255, 255, 255, 0.05);
                 border-radius: 8px;
@@ -761,7 +761,7 @@ function renderConcessoesExecutivo() {
                     let maxY = bar.y;
                     for (let i = 0; i < chart.data.datasets.length; i++) {
                         const dataset = chart.getDatasetMeta(i);
-                        if (dataset.data[index]) {
+                        if (dataset.data[index] && !dataset.hidden) {
                             const currentY = dataset.data[index].y;
                             if (currentY < maxY) {
                                 maxY = currentY;
@@ -769,18 +769,19 @@ function renderConcessoesExecutivo() {
                         }
                     }
                     
-                    // Desenhar nome do hospital acima da barra com ROTAÇÃO 90°
+                    // Desenhar nome do hospital BEM ACIMA da barra
                     ctx.fillStyle = corTexto;
-                    // TAMANHO DA FONTE: Mobile +10%, Desktop +25%
-                    const fontSize = window.innerWidth <= 768 ? 10 : 14; // Era 9px e 11px
+                    const fontSize = window.innerWidth <= 768 ? 10 : 14;
                     ctx.font = `${fontSize}px Arial`;
-                    ctx.textAlign = 'center';
-                    ctx.textBaseline = 'middle';
+                    ctx.textAlign = 'left';
+                    ctx.textBaseline = 'bottom';
                     
                     ctx.save();
-                    ctx.translate(bar.x, maxY - 20); // AUMENTADO para -20 para dar mais espaço
+                    // Posicionar no topo da barra menos um offset fixo
+                    const yPosition = maxY - 5; // Posição logo acima da barra
+                    ctx.translate(bar.x, yPosition);
                     ctx.rotate(-Math.PI / 2); // ROTAÇÃO 90 GRAUS
-                    ctx.fillText(hospitalName, 0, 0);
+                    ctx.fillText(hospitalName, 5, 0); // Offset de 5px para não colar na barra
                     ctx.restore();
                 });
                 
@@ -900,7 +901,7 @@ function renderLinhasExecutivo() {
                     let maxY = bar.y;
                     for (let i = 0; i < chart.data.datasets.length; i++) {
                         const dataset = chart.getDatasetMeta(i);
-                        if (dataset.data[index]) {
+                        if (dataset.data[index] && !dataset.hidden) {
                             const currentY = dataset.data[index].y;
                             if (currentY < maxY) {
                                 maxY = currentY;
@@ -908,18 +909,18 @@ function renderLinhasExecutivo() {
                         }
                     }
                     
-                    // ROTAÇÃO 90 GRAUS
+                    // ROTAÇÃO 90 GRAUS - posicionamento melhorado
                     ctx.fillStyle = corTexto;
-                    // TAMANHO DA FONTE: Mobile +10%, Desktop +25%
-                    const fontSize = window.innerWidth <= 768 ? 10 : 14; // Era 9px e 11px
+                    const fontSize = window.innerWidth <= 768 ? 10 : 14;
                     ctx.font = `${fontSize}px Arial`;
-                    ctx.textAlign = 'center';
-                    ctx.textBaseline = 'middle';
+                    ctx.textAlign = 'left';
+                    ctx.textBaseline = 'bottom';
                     
                     ctx.save();
-                    ctx.translate(bar.x, maxY - 20); // AUMENTADO para -20 para dar mais espaço
+                    const yPosition = maxY - 5; // Logo acima da barra
+                    ctx.translate(bar.x, yPosition);
                     ctx.rotate(-Math.PI / 2); // ROTAÇÃO 90 GRAUS
-                    ctx.fillText(hospitalName, 0, 0);
+                    ctx.fillText(hospitalName, 5, 0); // Offset de 5px
                     ctx.restore();
                 });
                 
@@ -1385,32 +1386,37 @@ function getExecutiveCSS() {
                 /* CORREÇÃO PRINCIPAL: Layout vertical com KPIs 2x4 */
                 .executive-kpis-grid {
                     display: grid !important;
-                    grid-template-columns: repeat(2, 1fr) !important;
+                    grid-template-columns: 1fr 1fr !important; /* 2 colunas iguais */
                     gap: 10px !important;
                     margin-bottom: 20px !important;
+                    padding: 0 10px !important; /* Padding lateral para alinhar com gauge */
                 }
                 
                 /* Gauge ocupa as 2 colunas (linha completa) */
                 .kpi-gauge-principal {
-                    grid-column: span 2 !important;
+                    grid-column: 1 / -1 !important; /* De coluna 1 até o fim */
                     grid-row: auto !important;
                     padding: 15px !important;
+                    margin: 0 !important; /* Remove margens extras */
                 }
                 
-                /* KPIs individuais - cada um ocupa 1 coluna */
+                /* KPIs individuais - garantir 50% da largura */
                 .kpi-box {
                     grid-column: span 1 !important;
-                    padding: 12px !important;
+                    padding: 12px 8px !important;
                     min-height: 70px !important;
+                    margin: 0 !important; /* Remove margens que podem quebrar o grid */
+                    width: 100% !important; /* Ocupar 100% da célula do grid */
                 }
                 
                 .kpi-value {
-                    font-size: 20px !important;
+                    font-size: 18px !important; /* Ajustado para caber melhor */
                     margin-bottom: 4px !important;
                 }
                 
                 .kpi-label {
-                    font-size: 10px !important;
+                    font-size: 9px !important; /* Reduzido para caber melhor */
+                    line-height: 1.2 !important;
                 }
                 
                 /* Gráficos: bordas mínimas */
@@ -1428,6 +1434,13 @@ function getExecutiveCSS() {
                 
                 .chart-container canvas {
                     max-height: 280px !important;
+                }
+                
+                /* Legendas mais próximas do gráfico */
+                .chart-legend-custom {
+                    margin-top: 5px !important; /* REDUZIDO para eliminar espaço */
+                    gap: 4px !important;
+                    padding: 6px !important;
                 }
                 
                 /* Header dos gráficos */
@@ -1480,6 +1493,17 @@ function getExecutiveCSS() {
                 .gauge-label {
                     font-size: 10px !important;
                 }
+                
+                .legend-item-custom {
+                    font-size: 10px !important;
+                    padding: 3px 6px !important;
+                    gap: 4px !important;
+                }
+                
+                .legend-color-box {
+                    width: 10px !important;
+                    height: 10px !important;
+                }
             }
             
             /* Mobile muito pequeno: ainda menor */
@@ -1515,6 +1539,59 @@ function getExecutiveCSS() {
                 
                 .chart-header h3 {
                     font-size: 11px !important;
+                }
+            }
+            
+            /* MOBILE LANDSCAPE (HORIZONTAL) - Header reduzido */
+            @media (max-width: 768px) and (orientation: landscape) {
+                .dashboard-header-exec {
+                    padding: 8px 15px !important; /* Reduzido de 15px para 8px vertical */
+                    margin-bottom: 10px !important; /* Reduzido de 20px */
+                    min-height: auto !important;
+                }
+                
+                .dashboard-header-exec h2 {
+                    font-size: 14px !important; /* Fonte menor */
+                    margin-bottom: 4px !important; /* Margem menor */
+                    line-height: 1.2 !important;
+                }
+                
+                .toggle-fundo-btn {
+                    padding: 4px 8px !important; /* Botão menor */
+                    font-size: 10px !important;
+                    gap: 3px !important;
+                }
+                
+                /* Ajustar altura dos gráficos para aproveitar espaço */
+                .chart-container {
+                    height: 220px !important; /* Reduzir altura para caber na tela */
+                }
+                
+                /* KPIs mais compactos no landscape */
+                .executive-kpis-grid {
+                    gap: 5px !important;
+                    margin-bottom: 10px !important;
+                }
+                
+                .kpi-gauge-principal {
+                    padding: 10px !important;
+                }
+                
+                .gauge-container {
+                    height: 100px !important; /* Gauge menor no landscape */
+                }
+                
+                .kpi-box {
+                    padding: 8px 6px !important;
+                    min-height: 50px !important;
+                }
+                
+                .kpi-value {
+                    font-size: 16px !important;
+                }
+                
+                .kpi-label {
+                    font-size: 8px !important;
                 }
             }
         </style>
